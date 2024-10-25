@@ -28,9 +28,9 @@ comment |*******************************************************************
 * BUILT WITH:   NewBasic Assembler                                         *
 *                 http://www.fysnet/newbasic.htm                           *
 *               NBASM ver 00.27.08                                         *
-*          Command line: nbasm i44fx /z<enter>                             *
+*          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 19 Oct 2024                                                *
+* Last Updated: 25 Oct 2024                                                *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -55,7 +55,7 @@ bx_version_str      db  BIOS_VERSION,0
 bx_socket_dest_str  db  'CPU ?',0
 bx_dimm_str         db  'DIMM ?',0
 
-.if (SYSMAN_VER >= 0x0203)
+;.if (SYSMAN_VER >= 0x0203)
 bx_date_str         db  ___DATE___,0  ; mm/dd/yyyy
 .else
 bx_date_str         db  ___DATE__,0   ; mm/dd/yy
