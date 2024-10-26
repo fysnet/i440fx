@@ -27,10 +27,10 @@ comment |*******************************************************************
 *                                                                          *
 * BUILT WITH:   NewBasic Assembler                                         *
 *                 http://www.fysnet/newbasic.htm                           *
-*               NBASM ver 00.27.08                                         *
+*               NBASM ver 00.27.14                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 25 Oct 2024                                                *
+* Last Updated: 26 Oct 2024                                                *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -343,7 +343,7 @@ boot_type_try_bev:
            jne  short nonbootable_device
            
            mov  eax,es:[bx+IPL_ENTRY->vector]
-           mov  boot_offset,bx
+           mov  boot_offset,ax
            shr  eax,16
            mov  boot_segment,ax
            mov  byte boot_drive,0x00
