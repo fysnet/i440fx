@@ -397,7 +397,7 @@ usb_drive_capacity proc near
 ;           call usb_drive_capacity_uasp
 ;           ret
 
-@@:        xchg cx,cx  ; ben ;;;;;;;;;;;;;;;;;;;
+@@:        ;xchg cx,cx  ; ben ;;;;;;;;;;;;;;;;;;;
 
            ret
 usb_drive_capacity endp
@@ -793,8 +793,8 @@ mt_tx_buffer   equ  [bp-4]
            call usb_drive_capacity
 ;.endif
            call usb_drive_capacity
-           cmp  eax,-1
-           jle  usb_mount_error
+           cmp  eax,8                   ; we are expecting 8 bytes
+           jl   usb_mount_error
 
            ; 8-byte return has last LBA, size of sector
            mov  edi,mt_tx_buffer
