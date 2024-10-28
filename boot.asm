@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.14                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 26 Oct 2024                                                *
+* Last Updated: 27 Oct 2024                                                *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -176,8 +176,10 @@ boot_invalid_boot_device:
            jz   short boot_invalid_boot_device
            cmp  ax,IPL_TYPE_BEV
            ja   short boot_invalid_boot_device
+           jb   short @f
+           mov  ax,IPL_TYPE_NET
 
-           mov  si,offset booting_from_str
+@@:        mov  si,offset booting_from_str
            call display_string
            imul si,ax,DRIVETYPES_LEN
            add  si,offset drivetypes

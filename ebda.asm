@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.14                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 25 Oct 2024                                                *
+* Last Updated: 27 Oct 2024                                                *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -939,7 +939,10 @@ ipl_entry_loop:
            add  sp,2
 
            movzx ax,byte es:[bx+IPL_ENTRY->type]
-           imul si,ax,DRIVETYPES_LEN
+           test al, 0x80
+           jz   short @f
+           mov  ax,IPL_TYPE_NET
+@@:        imul si,ax,DRIVETYPES_LEN
            add  si,offset drivetypes
            call display_string
 

@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.14                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 25 Oct 2024                                                *
+* Last Updated: 27 Oct 2024                                                *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -105,6 +105,7 @@ IPL_TYPE_HARDDISK     equ  0x02       ; BIOS Spec compliant type number 2
 IPL_TYPE_CDROM        equ  0x03       ; BIOS Spec compliant type number 3
 IPL_TYPE_PCMCIA       equ  0x04       ; BIOS Spec compliant type number 4
 IPL_TYPE_USB          equ  0x05       ; BIOS Spec compliant type number 5
+IPL_TYPE_NET          equ  0x06       ; BIOS Spec compliant type number 6
 IPL_TYPE_BEV          equ  0x80       ; BIOS Spec compliant type number 128
 
 IPL_FLAGS_NSATA       equ  (0 << 0)   ; not SATA hard drive (any device that is not an SATA device)

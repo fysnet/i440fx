@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.14                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 25 Oct 2024                                                *
+* Last Updated: 27 Oct 2024                                                *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -138,6 +138,9 @@ unreal_post_00:
            mov  cr0,eax
            jmp  far offset unreal_post_01,BIOS_BASE
 unreal_post_01:
+           xor  ax,ax            ; make sure fs = 0
+           mov  fs,ax
+
            pop  bx               ; previous state of A20 line
            pop  eax
            mov  ax,bx
