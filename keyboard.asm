@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.14                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 25 Oct 2024                                                *
+* Last Updated: 02 Nov 2024                                                *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -625,9 +625,12 @@ scroll_lock3:
            mov  ax,[bx+SCANCODES->sc_alt]
            cmp  ah,0
            jne  short int09_function_enqueue
+           mov  al,int09_altkp_val
            imul ax,ax,10
            add  al,[bx+SCANCODES->sc_alt]
            mov  int09_altkp_val,al
+           push 0x0040
+           pop  ds
            jmp  short int09_function_done
 
 @@:        test byte int09_shift_flags,0x04 ; ctrl
