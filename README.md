@@ -94,7 +94,7 @@ Note: =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 Note: =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
  A list of known issues:
-  - Booting from a CD-ROM is not yet supported. However, it doesn't need
+  - Booting from a USB CD-ROM is not yet supported. However, it doesn't need
     much to finish this function.
   - This BIOS will print to the console, panics or warnings indicating that
     something went wrong, or isn't supported. It will display this text
