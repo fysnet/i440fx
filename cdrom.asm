@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.14                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 25 Oct 2024                                                *
+* Last Updated: 05 Dec 2024                                                *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -159,7 +159,7 @@ cdrom_segment    equ  [bp-0x810]  ; word
            jnz  short @f
            inc  cx
            cmp  cx,BX_MAX_ATA_DEVICES
-           jb   short @f
+           jb   short @b
 
            ; error, didn't find a cdrom
            mov  ax,0x0002
@@ -217,7 +217,7 @@ cdrom_segment    equ  [bp-0x810]  ; word
            ; check for valid items
 @@:        cmp  byte [bx+0],0x00
            je   short @f
-           mov  ax,4
+           mov  ax,0x0004
            jmp  cdrom_boot_done
 
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -719,7 +719,7 @@ cdrom_emu_transfer:
            cmp  cx,ax
            jae  cdrom_emu_fail
 
-           ; now that we verified goot parameters,
+           ; now that we verified good parameters,
            ;  if verify call, simply return good
            cmp  byte REG_AH,0x04
            je   cdrom_emu_success
