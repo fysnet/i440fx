@@ -776,14 +776,14 @@ pnp_node_list  db  1                  ; handle
                dw  offset pnp_node_01 ; offset of node
 
                db  2                  ; handle
-               db  4 ;3                  ; next handle (or 0xFF for none)
+               db  3                  ; next handle (or 0xFF for none)
                dw  66                 ; size of node
                dw  offset pnp_node_02 ; offset of node
 
-               ;db  3                  ; handle
-               ;db  4                  ; next handle (or 0xFF for none)
-               ;dw  42                 ; size of node
-               ;dw  offset pnp_node_03 ; offset of node
+               db  3                  ; handle
+               db  4                  ; next handle (or 0xFF for none)
+               dw  42                 ; size of node
+               dw  offset pnp_node_03 ; offset of node
 
                db  4                  ; handle
                db  5                  ; next handle (or 0xFF for none)
