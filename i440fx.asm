@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.14                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 25 Oct 2024                                                *
+* Last Updated: 8 Dec 2024                                                 *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -105,9 +105,9 @@ outfile 'i440fx.bin'
            ;  the video rom.
            mov  ax,0x10                ; interrtupt 10h
            mov  bx,offset int10_handler
-           mov  cx,0xE000
+           mov  cx,BIOS_BASE
            call set_int_vector
-
+           
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
            ; Reset and initialize the DMA controller(s)
            xor  ax,ax
@@ -364,7 +364,7 @@ normal_post:
            mov  bx,offset int10_handler
            mov  cx,BIOS_BASE
            call set_int_vector
-
+           
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
            ; Initialize the PIC
            call init_pic
@@ -751,7 +751,7 @@ int0F_handler:
 int0F_handler_0:
            ;
            ; do whatever we are going to do here...
-           ;           
+           ;
            push ax
            mov  al,0x20
            out  PORT_PIC_MASTER_CMD,al
@@ -1263,7 +1263,7 @@ dummy_handler:
            ; int 5Ch, ah = 0, NetBIOS interface???
 
            ; to find out what (software) interrupt
-           ;  step once, then dump the memory before current cs:IP value
+           ;  step once, then dump the memory before current cs:IP value (ex: 0xCD 0x10 = int 10h)
            ;xchg cx,cx ; ben ;;;;;;;;;;;;;;;;;;
            iret
 
@@ -1479,12 +1479,12 @@ pnpbios_structure:
   db  ?            ; checksum (calculated in-line below)
   dd  ((BIOS_BASE << 4) + pnp_event_flag) ; event notification flag address
   dw  pnpbios_real ; real mode 16 bit offset
-  dw  0xE000       ; real mode 16 bit segment
+  dw  BIOS_BASE    ; real mode 16 bit segment
   dw  pnpbios_prot ; 16 bit protected mode offset
-  dd  0x0000E0000  ; 16 bit protected mode segment base
+  dd  (BIOS_BASE << 4) ; 16 bit protected mode segment base
   dd  0x00         ; OEM device identifier
-  dw  0xE000       ; real mode 16 bit data segment
-  dd  0x000E0000   ; 16 bit protected mode segment base
+  dw  BIOS_BASE    ; real mode 16 bit data segment
+  dd  (BIOS_BASE << 4) ; 16 bit protected mode segment base
 .checksum 0x21 0x08  ; do a byte checksum of the last 0x21 bytes, placing the result at offset 8
 
 ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -1500,7 +1500,7 @@ bios_table_address:
            ; don't place anything between here and the ESCD below. It will be overwritten...
 
 ; this many bytes left in the second block (before ESCD)
-; %print (0x20000 - 0x4000 - $)  ; roughly 30k+ still
+; %print (0x20000 - 0x4000 - $)  ; roughly 27k still
 
 ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -1566,7 +1566,7 @@ pci_rom_copied_str  db  'PCI ROM copied to 0x%08lX (size = 0x%08lX)',13,10,0
 apic_found_str      db  'Found APIC%i with version 0x%02X, with %i lvt entries.',13,10,0
 
 ; this many bytes left in the second block (after ESCD)
-; %print (0x1FFF0 - $)  ; 7,187
+; %print (0x1FFF0 - $)  ; 7,003
 
 ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.14                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 27 Oct 2024                                                *
+* Last Updated: 8 Dec 2024                                                 *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -45,7 +45,7 @@ BIOS_BASE2        equ  0xF000
 
 ; set to 1 to add debug code
 DO_DEBUG          equ  0
-DO_SERIAL_DEBUG   equ  1
+DO_SERIAL_DEBUG   equ  0
 
 ; set to 1 to do the pci32/smp/acpi/etc bios setup
 ; (setting to 0 is more like the 'legacy' bios)
@@ -171,6 +171,7 @@ USB_DEVICE struct
   media            byte              ; emulated media type
   boot_dl          byte              ; emulated BIOS DL number
   block_size       word              ; size of a sector
+  log_size         word              ; logical size of a sector
   sectors          qword             ; count of sectors
   base_lba         qword             ; base lba of (emulated) image
 
@@ -182,7 +183,7 @@ USB_DEVICE struct
   next_tag         dword
   event_status     qword
 
-  reserved         dup 628
+  reserved         dup 626
 
   xhci_protocol    byte              ; xhci: protocol of the port (XHCI_USB2 or XHCI_USB3)
   slot_id          byte              ; xhci: slot id for this device

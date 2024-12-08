@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.14                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 27 Oct 2024                                                *
+* Last Updated: 8 Dec 2024                                                 *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -215,19 +215,11 @@ boot_invalid_boot_device:
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
            ; first see if we are a SATA disk
 .if DO_INIT_BIOS32
-           push es
-           call bios_get_ebda
-           mov  es,ax
            test word es:[bx+IPL_ENTRY->flags],IPL_FLAGS_SATA
-           pop  es
            jz   short @f
            ; call the sata boot code
-           push es
-           call bios_get_ebda
-           mov  es,ax
            mov  eax,es:[bx+IPL_ENTRY->base_lba]
            call boot_sata_funtion
-           pop  es
            or   al,al
            jz   short boot_usb_good
 .endif
@@ -266,7 +258,7 @@ boot_media_okay:
            cmp  ax,0xAA55
            je   boot_jump_to_sector
            cmp  ax,0x55AA        ; some incorrectly use this too
-           je   boot_jump_to_sector
+           je   short boot_jump_to_sector
            
            mov  si,offset boot_failure_str1
            call display_string
@@ -282,14 +274,9 @@ boot_type_type_usb:
            cmp  word boot_dev_type,IPL_TYPE_USB
            jne  short boot_type_type_cdrom
 
-           push es
-           call bios_get_ebda
-           mov  es,ax
-
            ; call the usb boot code
            mov  eax,es:[bx+IPL_ENTRY->base_lba]
            call boot_usb_funtion
-           pop  es
            or   al,al
            jz   short boot_usb_good
 
@@ -298,7 +285,7 @@ boot_type_type_usb:
            mov  si,offset boot_failure_str3
            call bios_printf
            add  sp,2
-           jmp  nonbootable_device
+           jmp  short nonbootable_device
 
 boot_usb_good:
            mov  boot_drive,ah
@@ -312,17 +299,12 @@ boot_type_type_cdrom:
            cmp  word boot_dev_type,IPL_TYPE_CDROM
            jne  short boot_type_try_bev
 
-           push es
-           call bios_get_ebda
-           mov  es,ax
-
            ; call the cdrom boot code
            call boot_cdrom_funtion
            or   al,al
            jz   short boot_cdrom_good
 
            ; print error code
-           pop  es
            push ax
            mov  si,offset boot_failure_str2
            call bios_printf
@@ -334,7 +316,6 @@ boot_cdrom_good:
            mov  ax,es:[EBDA_DATA->cdemu_load_segment]
            mov  boot_segment,ax
            mov  word boot_offset,0x0000
-           pop  es
            jmp  short boot_jump_to_sector
 
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -359,7 +340,7 @@ boot_jump_to_sector:
            pushf
            push cs
            push offset int18_handler
-
+           
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
            ; disable the ioapic and restore the 8259 pic
            call ioapic_disable

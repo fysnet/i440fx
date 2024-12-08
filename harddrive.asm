@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.14                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 05 Dec 2023                                                *
+* Last Updated: 8 Dec 2024                                                 *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -1843,7 +1843,7 @@ hd_sv_lba_high  equ  [bp-0x12]
            ; ds = segment of EBDA
            ; ah = service
            ; bx ->EBDA_DATA->device
-           
+
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
            ; controller reset
            cmp  ah,0x00
@@ -1937,7 +1937,7 @@ hd_int13_translate:
            dec  eax
            mov  hd_sv_lba_low,eax
            mov  dword hd_sv_lba_high,0
-           mov  word,hd_sv_sector,0x0000 ; force LBA
+           mov  word hd_sv_sector,0x0000 ; force LBA
 hd_int13_notranslate:
            xor  ax,ax                 ; ioflag (0 = read)
            mov  cx,ATA_CMD_READ_SECTORS
@@ -2305,13 +2305,13 @@ INT13_DPT  ends
 int13_edd  proc near uses ebx ecx edx
            push bp
            mov  bp,sp
-           sub  sp,0x0A
+           sub  sp,10
 
-dpt_req_sz   equ  [bp-0x02]
-dpt_type     equ  [bp-0x04]
-dpt_device   equ  [bp-0x06]
-dpt_iface    equ  [bp-0x08]
-dpt_len_flag equ  [bp-0x09]
+dpt_req_sz   equ  [bp-2]
+dpt_type     equ  [bp-4]
+dpt_device   equ  [bp-6]
+dpt_iface    equ  [bp-8]
+dpt_len_flag equ  [bp-9]
 
            push eax              ; do not put above with 'uses'
            
@@ -2338,7 +2338,7 @@ dpt_len_flag equ  [bp-0x09]
            jne  short dpt_is_atapi
 
            ; get and save the count of phys cylinders
-           mov  ecx,[bx+EBDA_DATA->ata_0_0_pchs_cyl]
+           movzx ecx,word [bx+EBDA_DATA->ata_0_0_pchs_cyl]
            mov  ax,(1<<1)        ; assume valid
            
            ; is the information we have valid?
@@ -2475,10 +2475,10 @@ dpt_is_not_atapi1:
            
            ; if the requested 66 bytes, then do t13
            ; else do phoenix device path length
-           mov  byte dpt_len_flag,0x00
+           mov  byte dpt_len_flag,0
            cmp  word dpt_req_sz,74
            jb   short @f
-           mov  byte dpt_len_flag,0x01
+           mov  byte dpt_len_flag,1
 
 @@:        ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
            ; size is at least 66, so do EDD 3.x

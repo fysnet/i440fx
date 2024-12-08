@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.14                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 25 Oct 2024                                                *
+* Last Updated: 8 Dec 2024                                                 *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -1104,7 +1104,7 @@ banner_icon_get_next endp
 ;  nothing
 ; destroys none
 banner_icon proc near uses alld ds es
-           ; ds -> ebda
+           ; es -> ebda
            call bios_get_ebda
            mov  es,ax
            

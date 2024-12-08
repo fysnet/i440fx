@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.14                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 27 Oct 2024                                                *
+* Last Updated: 8 Dec 2024                                                 *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -106,7 +106,8 @@ unreal_post_gdt:
 ; setup unreal mode (4gig limits) for fs
 ;  this is only used during POST boot. As soon as
 ;   we give up control to the first boot sector,
-;   we no longer call this routine.
+;   we no longer call this routine. (except for
+;   calls via USB emulation)
 ; on entry:
 ;  nothing
 ; on return
@@ -447,14 +448,22 @@ int15_rmode:
            ;  reserved. Therefore, since we use the upper-end memory
            ;  area for ACPI and BIOS usage, we decrement the amount
            ;  of total memory returned to account for this.
+           ; (if EBDA_DATA->mem_base_ram_alloc > 64meg, no need to do the following 'sub')
+           push ds
+           call bios_get_ebda
+           mov  ds,ax
+           cmp  dword [EBDA_DATA->mem_base_ram_alloc],0x03FF0000
+           pop  ds
+           jae  short int15_func_88_limit0
            sub  bx,((((BIOS_EXT_MEMORY_USE + ACPI_DATA_SIZE) + 65535) / 65536) * 64)
+int15_func_88_limit0:
 
            ; According to Ralf Brown's interrupt the limit should be 15M,
            ;  but real machines mostly return max 63M.
            cmp  bx,0xFFC0   ; 64512   ; (63 * 1024)
-           jna  short int15_func_88_limit
+           jna  short int15_func_88_limit1
            mov  bx,0xFFC0   ; 64512
-int15_func_88_limit:
+int15_func_88_limit1:
            mov  REG_AX,bx           
            jmp  int15_func_success_noah
 

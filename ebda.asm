@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.14                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 27 Oct 2024                                                *
+* Last Updated: 8 Dec 2024                                                 *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -564,17 +564,17 @@ post_init_ivt proc near
            ; Processor extension not available (INT 7)
            mov  ax,offset int07_handler
            mov  [bx],ax
-           add  bx,4
+          ;add  bx,4
            
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
            ; master PIC vector
-           mov  bx,0x0020
-           mov  cx,0x08
+           mov  bx,(8 * 4)
+           mov  cx,8
            mov  ax,offset eoi_master_pic  ; BIOS_BASE:eoi_master_pic
 @@:        mov  [bx],ax
            add  bx,4
            loop @b
-
+           
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
            ; slave PIC vector
            mov  bx,0x01C0
@@ -669,7 +669,7 @@ post_init_ivt endp
 ;  nothing
 ;  destroys all general
 post_init_ebda proc near uses cx di
-
+           
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
            ; set the first byte of the ebda to the size
            push es

@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.14                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 25 Oct 2024                                                *
+* Last Updated: 8 Dec 2024                                                 *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -397,7 +397,7 @@ usb_drive_capacity proc near
 ;           call usb_drive_capacity_uasp
 ;           ret
 
-@@:        ;xchg cx,cx  ; ben ;;;;;;;;;;;;;;;;;;;
+@@:        ;xchg cx,cx  ;;;;;;;;;;;;;;;;;;;;
 
            ret
 usb_drive_capacity endp
@@ -583,7 +583,7 @@ usb_rxtx_sector proc near
 ;           call usb_drive_capacity_uasp
 ;           ret
 
-@@:        xchg cx,cx  ; ben ;;;;;;;;;;;;;;;;;;;
+@@:        xchg cx,cx  ;;;;;;;;;;;;;;;;;;;;
 
            ret
 usb_rxtx_sector endp
@@ -630,7 +630,7 @@ usb_rxtx_bbb_dir  equ  [bp-21]  ; byte
            cmp  byte usb_rxtx_bbb_dir,PID_IN
            je   short @f
            mov  dx,0x2A00      ; dh = write(10) command, dl = 0x00 = flags
-
+           
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
            ; build a command block wrapper
 @@:        mov  edi,usb_rxtx_bbb_cbw
@@ -778,7 +778,7 @@ usb_mount_device proc near uses ebx ecx edx esi edi ds
            sub  sp,4
 
 mt_tx_buffer   equ  [bp-4]
-           
+
            lea  eax,[ebx+USB_DEVICE->rxtx_buffer]
            mov  mt_tx_buffer,eax
 
@@ -806,6 +806,7 @@ mt_tx_buffer   equ  [bp-4]
            mov  eax,fs:[edi+4]
            bswap eax
            mov  fs:[ebx+USB_DEVICE->block_size],ax
+           mov  fs:[ebx+USB_DEVICE->log_size],ax
 
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
            ; try to read a sector from the device
@@ -833,7 +834,7 @@ mt_tx_buffer   equ  [bp-4]
            cmp  word fs:[ebx+USB_DEVICE->block_size],2048
            jne  short usb_mount_test_floppy
            call usb_mount_hdd_cdrom
-           jmp  short usb_mount_done
+           jmp  usb_mount_done
            
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
            ; is it a floppy
@@ -850,6 +851,7 @@ usb_mount_test_floppy:
            mov  byte fs:[ebx+USB_DEVICE->media],USB_MSD_MEDIA_FLOPPY
            mov  byte fs:[ebx+USB_DEVICE->boot_dl],0
            mov  dword fs:[ebx+USB_DEVICE->base_lba],0
+           mov  word fs:[ebx+USB_DEVICE->log_size],512
            ; convert from LBAs to CHS
            mov  cl,18   ; sectors per track
            mov  al,2    ; heads
@@ -883,6 +885,7 @@ usb_mount_test_floppy:
            mov  byte fs:[ebx+USB_DEVICE->media],USB_MSD_MEDIA_HARDDRIVE
            mov  byte fs:[ebx+USB_DEVICE->boot_dl],0x80
            mov  dword fs:[ebx+USB_DEVICE->base_lba],0
+           mov  word fs:[ebx+USB_DEVICE->log_size],512
            ; convert from LBAs to CHS
            mov  cl,63
            mov  al,16
@@ -1139,7 +1142,7 @@ usb_mount_isfloppy_jmp:
            cmp  byte fs:[edi+16],0
            je   usb_mount_isfloppy_error
            cmp  byte fs:[edi+16],2
-           ja   short usb_mount_isfloppy_error
+           ja   usb_mount_isfloppy_error
 
            ; check the system type value to be 'FAT12   '
            cmp  dword fs:[edi+54],0x31544146
@@ -1164,6 +1167,7 @@ usb_mount_isfloppy_jmp:
            mov  dword fs:[ebx+USB_DEVICE->sectors+0],2880
            mov  dword fs:[ebx+USB_DEVICE->sectors+4],0
            mov  dword fs:[ebx+USB_DEVICE->base_lba],0
+           mov  word fs:[ebx+USB_DEVICE->log_size],512
            call usb_add_boot_vector
            call usb_mount_display
            
@@ -1187,7 +1191,7 @@ usb_mount_hdd_floppy endp
 ;     = 0 = no bootable image found
 ; destroys nothing
 usb_mount_hdd_cdrom proc near
-         
+           
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
            ; try to read sector 16 from the device
            mov  eax,17
@@ -1212,7 +1216,7 @@ usb_mount_hdd_cdrom proc near
            call memcmp32
            add  sp,12
            or   ax,ax
-           jne  usb_mount_iscdrom_error
+           jnz  usb_mount_iscdrom_error
 
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
            ; string at [edi+7] should be 'EL TORITO SPECIFICATION'
@@ -1225,7 +1229,7 @@ usb_mount_hdd_cdrom proc near
            call memcmp32
            add  sp,12
            or   ax,ax
-           jne  usb_mount_iscdrom_error
+           jnz  usb_mount_iscdrom_error
 
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
            ; Get the Boot Catalog address
@@ -1296,6 +1300,7 @@ usb_mount_hdd_cdrom proc near
            mov  dword fs:[ebx+USB_DEVICE->sectors+0],0
            mov  dword fs:[ebx+USB_DEVICE->sectors+4],0
            mov  dword fs:[ebx+USB_DEVICE->base_lba],0
+           mov  word fs:[ebx+USB_DEVICE->log_size],2048
            call usb_add_boot_vector
            call usb_mount_display
            
@@ -1316,6 +1321,7 @@ usb_mount_hdd_cdrom proc near
            mov  dword fs:[ebx+USB_DEVICE->sectors+4],0
            mov  eax,fs:[edi+0x20+0x08]    ; 2048-byte lba
            mov  fs:[ebx+USB_DEVICE->base_lba],eax
+           mov  word fs:[ebx+USB_DEVICE->log_size],512
            call usb_add_boot_vector
            call usb_mount_display
            
@@ -1333,6 +1339,7 @@ usb_mount_hdd_cdrom proc near
            mov  dword fs:[ebx+USB_DEVICE->sectors+4],0
            mov  eax,fs:[edi+0x20+0x08]    ; 2048-byte lba
            mov  fs:[ebx+USB_DEVICE->base_lba],eax
+           mov  word fs:[ebx+USB_DEVICE->log_size],512
            call usb_add_boot_vector
            call usb_mount_display
            
@@ -1386,9 +1393,7 @@ boot_usb_device  equ  [bp-2]
            cmp  eax,-1
            jle  short usb_boot_done
 
-
-           ;; if we are a cdrom, we need to find the boot catalog (like cdemu does)
-
+           ;xchg  cx,cx ; ben
 
            lea  esi,[ebx+USB_DEVICE->rxtx_buffer]
 
@@ -1448,7 +1453,7 @@ usb_sv_lba_low   equ  [bp-14]  ; dword
 usb_sv_cur_gdt   equ  [bp-22]  ; qword (fword + 2 filler)
 usb_sv_cur_a20   equ  [bp-23]  ; byte
 usb_sv_direction equ  [bp-24]  ; byte
-           
+
            ; retrieve the current GDT, and set it to ours
            push fs                 ; preserve the fs segment register
            sgdt far usb_sv_cur_gdt ; save the current GDT address
@@ -1591,7 +1596,7 @@ int13_usb_tx_sectors_loop:
 
 int13_usb_tx_sectors_0:
            ; move to next sector
-          ;movzx eax,word fs:[ebx+USB_DEVICE->block_size]
+           movzx eax,word fs:[ebx+USB_DEVICE->block_size]
            add  edi,eax
 
            inc  dword usb_sv_lba_low

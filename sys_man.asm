@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.14                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 25 Oct 2024                                                *
+* Last Updated: 8 Dec 2024                                                 *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -70,7 +70,7 @@ bx_date_str         db  ___DATE__,0   ; mm/dd/yy
 ;  nothing
 ; destroys none
 smbios_init proc near uses alld
-           
+
            mov  eax,[EBDA_DATA->bios_table_cur_addr]
            add  eax,15
            and  eax,(~15)

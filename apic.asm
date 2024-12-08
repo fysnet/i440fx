@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.14                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 25 Oct 2024                                                *
+* Last Updated: 8 Dec 2024                                                 *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -94,19 +94,25 @@ IA32_APIC_BASE  equ  0x1B
 ;  carry set if no apic found
 ; destroys none
 init_apic  proc near uses eax ecx esi
-           
+
            mov  esi,APIC_BASE_ADDR
            mov  eax,fs:[esi+APIC_REG_VER]
            mov  ecx,eax
+           ; check the version
+           ; Pentium and above return 0x10 to 0x14
            and  al,0xFF
+           cmp  al,0x10
+           jb   init_apic_error
            cmp  al,0x14
-           jne  init_apic_error
+           ja   init_apic_error
            mov  [EBDA_DATA->apic_version],al
            
-           and  ecx,0x00FF0000
+           ; count of lvt entries are in bits 23:16
+          ;and  ecx,0x00FF0000
            shr  ecx,16
            mov  [EBDA_DATA->apic_lvt_entries],cl
 
+           ; get the id (bits 31:24)
            mov  eax,fs:[esi+APIC_REG_ID]
            shr  eax,24
            mov  [EBDA_DATA->apic_id],al
@@ -129,50 +135,42 @@ init_apic  proc near uses eax ecx esi
            pop  ds
 
            ; local destination register
-           xor  eax,eax
-           mov  fs:[esi+APIC_REG_LDR],eax
+           mov  dword fs:[esi+APIC_REG_LDR],0x00000000
            
            ; destination format register
-           mov  eax,0xFFFFFFFF
-           mov  fs:[esi+APIC_REG_DFR],eax
+           mov  dword fs:[esi+APIC_REG_DFR],0xFFFFFFFF
 
-           ; task priority register
-           xor  eax,eax
-           mov  fs:[esi+APIC_REG_TRP],eax
+           ; task priority register (disable softint delivery)
+           mov  dword fs:[esi+APIC_REG_TRP],0x00000020
            
-           ; timer interrupt vector
-           mov  eax,(1 << 16)
-           mov  fs:[esi+APIC_REG_TIMER],eax
+           ; timer interrupt vector (disable timer interrupts)
+           mov  dword fs:[esi+APIC_REG_TIMER],0x00010000
            
-           ; performance counter interrupt
-          ;mov  eax,(1 << 16)
-           mov  fs:[esi+APIC_REG_PERFORM],eax
+           ; performance counter interrupt (disable performance counter interrupts)
+           mov  dword fs:[esi+APIC_REG_PERFORM],0x00010000
            
            ; local interrupt 0, 1
-          ;mov  eax,(1 << 16)
-           mov  fs:[esi+APIC_REG_LINT0],eax
-           mov  fs:[esi+APIC_REG_LINT1],eax
+           ; enable normal external interrupts)
+           mov  dword fs:[esi+APIC_REG_LINT0],0x00008700
+           ; enable normal NMI processing)
+           mov  dword fs:[esi+APIC_REG_LINT1],0x00000400
            
-           ; error interrupt
-          ;mov  eax,(1 << 16)
-           mov  fs:[esi+APIC_REG_LERROR],eax
+           ; error interrupt (disable error interrupts)
+           mov  dword fs:[esi+APIC_REG_LERROR],0x00010000
 
            ; thermal sensor (if present)
            cmp  byte [EBDA_DATA->apic_lvt_entries],6
            jb   short @f
-           mov  eax,((0 << 16) | (0 << 8))
-           mov  fs:[esi+APIC_REG_THERM],eax
+           mov  dword fs:[esi+APIC_REG_THERM],0x00000000  ; ((0 << 16) | (0 << 8))
 
-           ; now enable the APIC, and give it a Spourios interrupt vector
+           ; now enable the APIC, and give it a spurious interrupt vector
 @@:        mov  ax,0x7F                ; interrtupt 7Fh
            mov  bx,offset int7F_handler
            mov  cx,0xE000
            call set_int_vector
            
-           mov  eax,fs:[esi+APIC_REG_SIV]
-           or   eax,(1<<8)
-           mov  al,0x7F          ; must have bits 3:0 = 00001111b
-           mov  fs:[esi+APIC_REG_SIV],eax
+           ; enable and set spurious (P6 must have bits 3:0 = 1111b)
+           mov  dword fs:[esi+APIC_REG_SIV],0x0000017F
 
            ; we found an apic
            clc
@@ -385,12 +383,14 @@ init_ioapic endp
 ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 ; 'disable' the IO APIC and restore the 8259
 ; on entry:
-;  es -> EBDA
+;  nothing
 ; on return
 ;  nothing
 ; destroys none
-ioapic_disable proc near uses eax ebx esi
-           
+ioapic_disable proc near uses eax ebx esi es
+           call bios_get_ebda
+           mov  es,ax
+
            ; do we have an APIC installed?
            test dword es:[EBDA_DATA->cpuid_features],CPUID_APIC
            jz   short ioapic_disable_done
@@ -408,7 +408,7 @@ ioapic_disable proc near uses eax ebx esi
                         (0 << 16));   ; unmasked (let the 8259a handle it)
            call ioapic_write
            inc  ebx
-           movzx byte eax,[EBDA_DATA->ioapic_id]
+           movzx byte eax,es:[EBDA_DATA->ioapic_id]
            shl  eax,(56-32)      ; id in bits 31:24 of high dword
            call ioapic_write
            inc  ebx
@@ -426,7 +426,6 @@ ioapic_disable endp
 ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 ; read a register of the IOAPIC
 ; on entry:
-;  ds -> EBDA
 ;  esi = IOAPIC base
 ;  ebx = address
 ; on return
@@ -441,7 +440,6 @@ ioapic_read endp
 ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 ; read a register of the IOAPIC
 ; on entry:
-;  ds -> EBDA
 ;  esi = IOAPIC base
 ;  ebx = address
 ;  eax = value to write

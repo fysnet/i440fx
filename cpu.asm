@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.14                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 25 Oct 2024                                                *
+* Last Updated: 8 Dec 2024                                                 *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -665,8 +665,7 @@ mp_irq_entries:
            or   bx,bx
            jz   short @f
            mov       fs:[edi+7],bl       ; 
-@@:
-           add  edi,8                    ; entries are 8 bytes in length
+@@:        add  edi,8                    ; entries are 8 bytes in length
            inc  cx                       ; add to entry count
 mp_irq_entries2:
            inc  bx                       ;

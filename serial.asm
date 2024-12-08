@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.14                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 25 Oct 2024                                                *
+* Last Updated: 8 Dec 2024                                                 *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -78,53 +78,89 @@ init_serial endp
 ;  dx = port value
 ;  bx = index (0, 1, 2, or 3)
 ; on return
+;  al = type: 0 = none, 1 = 8250, 2 = 16450 (or 8250 w/ scratch reg), 3 = 16550, 4 = 16550A
 ;  bx = new index
-; destroys all general
-detect_serial proc near
-           inc  dx               ; base + 1
-           xor  al,al            ; disable all interrupts
-           out  dx,al            ;
+; destroys ax bx dx
+detect_serial proc near uses si
+           mov  si,dx            ; save port base address
 
-           add  dx,2             ; base + 3
-           mov  al,0x80          ; enable DLAB (so we can set baud rate divisor)
-           out  dx,al            ;
-
-           ; set the baud rate
-           ; baud rate = (115200 / word written)
-           sub  dx,3             ; base + 0
-           mov  al,0x03          ; set divisor to 3 (lo byte)
-           out  dx,al            ;  0x0003 = 38400 baud
-           inc  dx               ; base + 1
-           xor  al,al            ;  (hi byte)
-           out  dx,al
-
-           add  dx,2             ; base + 3
-           mov  al,00_000_0_11b  ; xx0b = no parity, 0b = 1 stop bit, 11b = 8 bit chars
-           out  dx,al
-
-           dec  dx               ; base + 2
-           mov  al,0xC7          ; enable FIFO, clear them, 14-byte threshold
-           out  dx,al
-
-           add  dx,2             ; base + 4
-           mov  al,0x12          ; set to loopback mode to test the chip
-           out  dx,al
-
-           sub  dx,4             ; base + 0
-           mov  al,0xA5          ; 
-           out  dx,al
-
-           in   al,dx            ; read it back
-           cmp  al,0xA5
-           jne  short @f
-
-           ; found a serial port
+           ; try to toggle the CTS, DSR, RI, and DCD bits (clear)
            add  dx,4             ; base + 4
-           mov  al,0x03          ; IQR's disabled, TRS/DSR set
+           in   al,dx
+           mov  ah,al            ; save the byte read
+           mov  al,0x10          ; put in loop mode (CTS, DSR, RI, and DCD = 0)
            out  dx,al
+           add  dx,2             ; base + 6
+           in   al,dx            ; read modem status
+           and  al,0xF0          ; inverted CTS, DSR, RI, or DCD are set, no UART
+           mov  al,0             ; assume no UART attached
+           jnz  short detect_serial_none
 
+           ; try to toggle the CTS, DSR, RI, and DCD bits (set)
+           sub  dx,2             ; base + 4
+           mov  al,0x1F          ; put in loop mode (CTS, DSR, RI, and DCD = 1)
+           out  dx,al            ; 
+           add  dx,2             ; base + 6
+           in   al,dx            ; read modem status
+           and  al,0xF0          ; 
+           cmp  al,0xF0          ; CTS, DSR, RI, or DCD should all be set
+           mov  al,0             ; assume no UART attached
+           jne  short detect_serial_none
+
+           ; we have an UART, so restore the Modem Control Register
+           sub  dx,2             ; base + 4
+           mov  al,ah            ;
+           out  dx,al            ;
+
+           ; we have at least a 8250
+           ; see if we have a scratch register
+           ; write 0x55/0xAA and read them back to see if it matches
+           add  dx,3             ; base + 7
+           in   al,dx            ;
+           mov  ah,al            ; save the value read
+           mov  al,0x55          ; try 0x55
+           out  dx,al            ;
+           in   al,dx            ;
+           cmp  al,0x55          ; did we read 0x55
+           mov  al,1             ; no? then an 8250
+           jne  short detect_serial_done
+           mov  al,0xAA          ; try 0xAA
+           out  dx,al            ;
+           in   al,dx            ;
+           cmp  al,0xAA          ; did we read 0xAA
+           mov  al,1             ; no? then an 8250
+           jne  short detect_serial_done
+
+           ; we have an UART with a scratch register (8250 or 16450)
+           ;  restore the original value
+           mov  al,ah            ;
+           out  dx,al            ;
+
+           ; now check if there is a FIFO
+           sub  dx,5             ; base + 2
+           mov  al,1             ; enable FIFO
+           out  dx,al            ;
+           in   al,dx            ;
+           mov  ah,al            ; save value read
+           xor  al,al            ; some older software relies that the FIFO is not enabled
+           out  dx,al            ;
+
+           ; test the result     ; bit 7:6 = 00 = no FIFO, = 01 = unusable, 1x = enabled
+           mov  al,2             ; assume a UART with a scratch register (8250 or 16450)
+           test ah,0x80          ; bit 7 set = enabled
+           jz   short detect_serial_done
+
+           mov  al,3             ; assume a UART with a scratch register (16550, no FIFO)
+           test ah,0x40          ; bit 6 set = unusable FIFO
+           jz   short detect_serial_done
+
+           ; else we have a 16550A, with scratch register and usable FIFO
+           mov  al,4
+
+detect_serial_done:
+           ; (remember to preserve 'al' here)
            ; write the address to the BDA
-           sub  dx,4             ; base + 0
+           mov  dx,si            ; restore port base address
            push bx
            shl  bx,1
            mov  es:[bx+0x400],dx ; Serial I/O address
@@ -132,7 +168,8 @@ detect_serial proc near
            mov  es:[bx+0x47C],cl ; Serial timeout
            inc  bx
 
-@@:        ret
+detect_serial_none:
+           ret
 detect_serial endp
 
 ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

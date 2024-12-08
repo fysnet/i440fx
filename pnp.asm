@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.14                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 25 Oct 2024                                                *
+* Last Updated: 8 Dec 2024                                                 *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -776,14 +776,14 @@ pnp_node_list  db  1                  ; handle
                dw  offset pnp_node_01 ; offset of node
 
                db  2                  ; handle
-               db  3                  ; next handle (or 0xFF for none)
+               db  4 ;3                  ; next handle (or 0xFF for none)
                dw  66                 ; size of node
                dw  offset pnp_node_02 ; offset of node
 
-               db  3                  ; handle
-               db  4                  ; next handle (or 0xFF for none)
-               dw  42                 ; size of node
-               dw  offset pnp_node_03 ; offset of node
+               ;db  3                  ; handle
+               ;db  4                  ; next handle (or 0xFF for none)
+               ;dw  42                 ; size of node
+               ;dw  offset pnp_node_03 ; offset of node
 
                db  4                  ; handle
                db  5                  ; next handle (or 0xFF for none)
