@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.14                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 8 Dec 2024                                                 *
+* Last Updated: 11 Dec 2024                                                *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -1529,15 +1529,14 @@ atapi_is_ready endp
 atapi_cmd_packet proc near ; don't add anything here
            push bp
            mov  bp,sp
-           sub  sp,16
+           sub  sp,12
 
 atapi_loop      equ  [bp-2]   ; word
 atapi_count     equ  [bp-4]   ; word
 atapi_lcount    equ  [bp-6]   ; word
 atapi_lbefore   equ  [bp-8]   ; word
 atapi_lafter    equ  [bp-10]  ; word
-atapi_transfer  equ  [bp-14]  ; dword
-atapi_mode      equ  [bp-15]  ; byte
+atapi_mode      equ  [bp-11]  ; byte
 
            ; save the registers we use
            push edx
@@ -1572,7 +1571,8 @@ atapi_mode      equ  [bp-15]  ; byte
            cmp  ax,12
            jnb  short @f
            mov  ax,12
-@@:        jna  short @f
+@@:        cmp  ax,16
+           jna  short @f
            mov  ax,16
 @@:        shr  ax,1             ; words
            mov  [bp+6],ax        ; save it
@@ -1580,7 +1580,6 @@ atapi_mode      equ  [bp-15]  ; byte
            ; reset the counters
            mov  word es:[EBDA_DATA->trsfsectors],0x0000
            mov  dword es:[EBDA_DATA->trsfbytes],0x00000000
-           mov  dword atapi_transfer,0
 
            ; get the status of the device
            mov  dx,di            ; iobase1
@@ -1686,7 +1685,7 @@ atapi_mode      equ  [bp-15]  ; byte
 ata_cmd_packet_loop:
            mov  al,NOT_BSY       ; assume wait for BSY
            cmp  word atapi_loop,0
-           jnz  short @f
+           jne  short @f
            ; first time we need to wait DRQ
            mov  dx,si            ; iobase2
            add  dx,ATA_CB_ASTAT
@@ -1736,7 +1735,7 @@ ata_cmd_packet_loop:
            mov  atapi_lcount,ax
 
            ; if (header > lcount)
-           mov  ax,atapi_lcount
+          ;mov  ax,atapi_lcount
            cmp  [bp+12],ax
            jna  short @f
            mov  atapi_lbefore,ax
@@ -1798,7 +1797,7 @@ ata_cmd_next1:
 @@:        mov  dx,di            ; iobase1
            mov  cx,atapi_lbefore
            jcxz short ata_packet_no_before
-           cmp  byte,atapi_mode ATA_MODE_PIO32
+           cmp  byte atapi_mode,ATA_MODE_PIO32
            je   short atapi_do_32bit
            ; 16-bit
 @@:        in   ax,dx
@@ -1817,7 +1816,7 @@ ata_packet_no_before:
            mov  di,[bp+22]
            mov  ax,[bp+20]
            mov  es,ax
-           cmp  byte,atapi_mode ATA_MODE_PIO32
+           cmp  byte atapi_mode,ATA_MODE_PIO32
            je   short @f
            ; 16-bit
            rep
@@ -1832,7 +1831,7 @@ ata_packet_after:
            
            mov  cx,atapi_lafter
            jcxz short ata_packet_done
-           cmp  byte,atapi_mode ATA_MODE_PIO32
+           cmp  byte atapi_mode,ATA_MODE_PIO32
            je   short atapi_do_32bit_1
            ; 16-bit
 @@:        in   ax,dx
@@ -1842,12 +1841,11 @@ atapi_do_32bit_1:
            in   eax,dx
            loop short atapi_do_32bit_1
 
-ata_packet_done:           
+ata_packet_done:
            ; new buffer address
            movzx eax,word atapi_count
            add  [bp+22],ax
-           add  atapi_transfer,eax
-           mov  es:[EBDA_DATA->trsfbytes],eax
+           add  es:[EBDA_DATA->trsfbytes],eax
            jmp  ata_cmd_packet_loop
 
 ata_cmd_packet_status_done:
