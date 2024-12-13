@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.14                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 11 Dec 2024                                                *
+* Last Updated: 12 Dec 2024                                                *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -538,6 +538,7 @@ int13_eltorito_4B:
            
            push ds
            mov  ax,REG_DS
+           mov  ds,ax
            mov  bx,REG_SI
            mov  al,0x13
            mov  [bx+0x00],al
@@ -907,9 +908,15 @@ int13_cdrom_function proc near ; don't put anything here
 
 cd_sv_device    equ  [bp-0x02]
 cd_atapi_cmd    equ  [bp-0x0E]  ; cd_atapi_cmd[12]
-
+           
            ; get the device
            movzx bx,byte REG_DL
+           cmp  bl,0xE0
+           jb   cd_int13_fail
+           cmp  bl,(0xE0 + BX_MAX_ATA_DEVICES)
+           jae  cd_int13_fail
+           
+           ; else, valid DL number
            sub  bx,0xE0
            mov  al,es:[bx+EBDA_DATA->ata_0_0_cdidmap]
            cmp  al,BX_MAX_ATA_DEVICES
@@ -1044,6 +1051,7 @@ cd_int13_ext_transfer:
            mov  edx,es:[si+EXT_SERV_PACKET->ex_lba+4] ; get high 32-bits
            mov  cx,es:[si+EXT_SERV_PACKET->ex_size]
            pop  es
+           
            ; if size of packet < 16, error
            cmp  cx,16
            jb   cd_int13_fail
