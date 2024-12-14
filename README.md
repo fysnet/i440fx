@@ -1,8 +1,6 @@
 # i440fx
 i440fx BIOS source code intended for Bochs
 
-Dated: 19 Oct 2024
-
 This is the assembly source code to an Intel i440fx compatible BIOS I wrote based on the .C source code included with the original [BOCHS BIOS](https://github.com/bochs-emu/Bochs/tree/master/bochs/bios). I have fixed many issues that came with that BIOS as well as added more function. It has been tested using most (MS)DOS Operating Systems up to and including recent Windows(tm) Operating Systems that still boot via BIOS.
 
 It is intended to by used in the [BOCHS environment](https://github.com/bochs-emu/Bochs), but can be built and used in the [QEMU environment](https://www.qemu.org/). See the notes below for more information.
