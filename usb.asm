@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.14                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 8 Dec 2024                                                 *
+* Last Updated: 19 Dec 2024                                                *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -1393,7 +1393,7 @@ boot_usb_device  equ  [bp-2]
            cmp  eax,-1
            jle  short usb_boot_done
 
-           ;xchg  cx,cx ; ben
+           ;xchg cx,cx ; ben
 
            lea  esi,[ebx+USB_DEVICE->rxtx_buffer]
 

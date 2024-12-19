@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.14                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 8 Dec 2024                                                 *
+* Last Updated: 19 Dec 2024                                                *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -875,8 +875,19 @@ int13_handler:
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
            ; it is a hard drive
 @@:        call int13_harddisk_function
+
+           ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+           ; some old software expects the interrupt flag to
+           ;  be active on return from (hard)disk services (dl >= 0x80 only?)
+int13_out: xchg cx,cx
+           push bp 
+           mov  bp,sp
+           or   word [bp+42],(1<<9)   ; 'REG_FLAGS' minus size of the 'return' that is no longer on the stack
+           pop  bp           
            
-int13_out: popad
+           ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+           ; we're done, we can return
+           popad
            pop  ds
            pop  es
            iret
