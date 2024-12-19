@@ -879,8 +879,7 @@ int13_handler:
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
            ; some old software expects the interrupt flag to
            ;  be active on return from (hard)disk services (dl >= 0x80 only?)
-int13_out: xchg cx,cx
-           push bp 
+int13_out: push bp 
            mov  bp,sp
            or   word [bp+42],(1<<9)   ; 'REG_FLAGS' minus size of the 'return' that is no longer on the stack
            pop  bp           
