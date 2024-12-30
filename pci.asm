@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.14                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 8 Dec 2024                                                 *
+* Last Updated: 30 Dec 2024                                                *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -1303,6 +1303,15 @@ bios_lock_shadow_ram proc far uses ax bx dx ds
            or   al,0x10
            call pci_config_write_byte
 
+           ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+           ; the following two actions break Jemm386 v5.79
+           ; and/or HimemX v3.36. One or the other will re-map
+           ; address range 0xE0000 -> 0xE3FFF to 0x149000
+           ; which will then break this BIOS. Using standard
+           ; MS-DOS memory handlers work as expected.
+           ; Work-around: build with /DHIMEMHACK
+           ; See: https://github.com/fysnet/i440fx/issues/4
+.ifndef HIMEMHACK
            ; 0x5E = PAM5.0 = 0xE0000->0xE3FFF
            ;        PAM5.1 = 0xE4000->0xE7FFF
            mov  bx,0x5E
@@ -1314,6 +1323,7 @@ bios_lock_shadow_ram proc far uses ax bx dx ds
            mov  bx,0x5F
            mov  al,0x11
            call pci_config_write_byte
+.endif
 
            retf
 bios_lock_shadow_ram endp
