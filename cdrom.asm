@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.14                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 12 Dec 2024                                                *
+* Last Updated: 31 Dec 2024                                                *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -468,26 +468,34 @@ cdrom_segment    equ  [bp-0x810]  ; word
 
 cdrom_boot_done_emu:
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-           ; Increase bios installed hardware number of devices
+           ; Increase bios installed hardware number of devices?
            cmp  byte es:[EBDA_DATA->cdemu_media],0
-           je   short @f
+           je   short cdrom_boot_done_1
            
-           ;;;;;; todo:
-           ; I think this is wrong. If no emulation, should we add to hdcount
-           ;                                                 vv---> should be !=  ????
-           ; if(read_byte_DS(&EbdaData->cdemu.emulated_drive)==0x00)
-           ;   write_byte(0x40,0x10,read_byte(0x40,0x10)|0x41);
-           ; else
-           ;   write_byte_DS(&EbdaData->ata.hdcount, read_byte_DS(&EbdaData->ata.hdcount) + 1);
-           ;;;;;;
+           ; increment the count of drives installed
+           cmp  byte es:[EBDA_DATA->cdemu_emulated_drive],0
+           jne  short @f
 
+           ; increment the count of floppy drives installed
+           push ds
+           xor  ax,ax
+           mov  ds,ax
+           or   byte [0x0410],0x41
+           pop  ds
+           jmp  short cdrom_boot_done_0
+           
+           ; increment the count of hard drives installed
+@@:        inc  byte es:[EBDA_DATA->ata_hdcount]
+           
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
            ; if there was an emulation specified, it should now be active
+cdrom_boot_done_0:
            mov  byte es:[EBDA_DATA->cdemu_active],0x01
 
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
            ; set return value to ah = drive, al = 0 = no error
-@@:        mov  ah,es:[EBDA_DATA->cdemu_emulated_drive]
+cdrom_boot_done_1:
+           mov  ah,es:[EBDA_DATA->cdemu_emulated_drive]
            xor  al,al            ; no error
 
 cdrom_boot_done:
@@ -808,8 +816,10 @@ cdrom_emu_transfer:
            jne  short @f
 
            mov  ax,es:[EBDA_DATA->cdemu_vchs_cyl]
+           dec  ax
            mov  bx,es:[EBDA_DATA->cdemu_vchs_spt]
            mov  cx,es:[EBDA_DATA->cdemu_vchs_heads]
+           dec  cx
            mov  byte REG_AL,0x00
            mov  byte REG_BL,0x00
            mov  REG_CH,al
