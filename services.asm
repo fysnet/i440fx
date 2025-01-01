@@ -1,5 +1,5 @@
 comment |*******************************************************************
-*  Copyright (c) 1984-2024    Forever Young Software  Benjamin David Lunt  *
+*  Copyright (c) 1984-2025    Forever Young Software  Benjamin David Lunt  *
 *                                                                          *
 *                         i440FX BIOS ROM v1.0                             *
 * FILE: services.asm                                                       *
@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.14                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 31 Dec 2024                                                *
+* Last Updated: 1 Jan 2025                                                 *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -472,7 +472,7 @@ int15_func_88_limit0:
            jna  short int15_func_88_limit1
            mov  bx,0xFFC0   ; 64512
 int15_func_88_limit1:
-           mov  REG_AX,bx           
+           mov  REG_AX,bx
            jmp  int15_func_success_noah
 
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -719,7 +719,6 @@ int15_func32_E8_01_0:
            jnc  short int15_func32_E8_01_1
            xor  dx,dx
 int15_func32_E8_01_1:
-           
            mov  REG_AX,cx   ; 1M -> 16M (in K)
            mov  REG_CX,cx   ; 1M -> 16M (in K)
            mov  REG_BX,dx   ; 16M -> end (in 64k)

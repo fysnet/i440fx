@@ -1,5 +1,5 @@
 comment |*******************************************************************
-*  Copyright (c) 1984-2024    Forever Young Software  Benjamin David Lunt  *
+*  Copyright (c) 1984-2025    Forever Young Software  Benjamin David Lunt  *
 *                                                                          *
 *                         i440FX BIOS ROM v1.0                             *
 * FILE: pci.asm                                                            *
@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.14                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 30 Dec 2024                                                *
+* Last Updated: 1 Jan 2025                                                 *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -282,9 +282,10 @@ bios32_structure:
   db  0x5F, 0x33, 0x32, 0x5F          ; '_32_' signature
   dd  ((BIOS_BASE << 4) + bios32_entry_point)  ; 32 bit physical address
   db  0                               ; revision level
-  ; length in paragraphs and checksum stored in a word to prevent errors in assembling
-  dw  (((~(((bios32_entry_point >> 8) + (bios32_entry_point & 0xFF) + 0x32) & 0xFF) << 8) + 0x01) & 0xFFFF)
+  db  1                               ; length of structure in para's
+  db  ?                               ; checksum (calculated below)
   db  0, 0, 0, 0, 0                   ; reserved
+.checksum 0x10 0x0A  ; do a byte checksum of the last 16 bytes, placing the result at offset 10
 
 .para
 pci_routing_table_structure:
