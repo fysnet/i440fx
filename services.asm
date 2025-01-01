@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.14                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 8 Dec 2024                                                 *
+* Last Updated: 31 Dec 2024                                                *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -604,7 +604,7 @@ int15_func_88_limit1:
            jmp  short int15_func_fail_noah
 
 int15_func_fail:
-           ;mov  byte REG_AH,0x00  ;;;; ??????
+           mov  byte REG_AH,0x86 ; unsupported function
 int15_func_fail_noah:
            or   word REG_FLAGS,0x0001
            mov  sp,bp
@@ -694,7 +694,7 @@ int1586_tick_end:
            jna  short int15_func32_E8_01_0
            mov  cx,0x3C00
 int15_func32_E8_01_0:
-
+           
            mov  ah,0x34
            call cmos_get_byte
            mov  dl,al
@@ -711,12 +711,12 @@ int15_func32_E8_01_0:
            jnc  short int15_func32_E8_01_1
            xor  dx,dx
 int15_func32_E8_01_1:
-
+           
            mov  REG_AX,cx   ; 1M -> 16M (in K)
            mov  REG_CX,cx   ; 1M -> 16M (in K)
            mov  REG_BX,dx   ; 16M -> end (in 64k)
            mov  REG_DX,dx   ; 16M -> end (in 64k)
-           jmp  int15_func32_success
+           jmp  int15_func32_success_noah
 
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
            ; Get system memory map (AX = 0xE820)
