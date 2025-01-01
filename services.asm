@@ -207,8 +207,16 @@ int15_function proc near ; don't put anything here
            mov  ax,REG_AX
            
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+           ; build ABIOS system parameter table?
+           ; OS2Warp40 calls this one
+           cmp  ah,0x04          ; 
+           jne  short @f
+           
+           jmp  int15_func_fail
+           
+           ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
            ; A20 control
-           cmp  ah,0x24          ; 
+@@:        cmp  ah,0x24          ; 
            jne  short @f
 
            cmp  al,0x00          ; disable a20
@@ -541,7 +549,7 @@ int15_func_88_limit1:
 @@:        cmp  ah,0xC7          ; 
            jne  short @f
 
-           xchg cx,cx  ; ben ;;;;;;;;;;;;;;;;;;;;;;;;;;;
+           ;xchg cx,cx  ; ben ;;;;;;;;;;;;;;;;;;;;;;;;;;;
            ; need to set the bit in "Feature byte 2" of the ebda_bios_config_table if we support this function
 
            jmp  short int15_func_fail
