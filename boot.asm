@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.14                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 8 Dec 2024                                                 *
+* Last Updated: 31 Dec 2024                                                *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -226,9 +226,11 @@ boot_invalid_boot_device:
 
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
            ; read from the disk
-@@:        mov  ax,0x07C0        ; 0x07C0:0000
+           ; (OS2Warp40 assumes cs == 0x0000 !!!)
+@@:        xor  ax,ax            ; 0x0000:7C00
            mov  es,ax            ; segment
-           xor  bx,bx            ; offset
+           mov  bx,0x7C00        ; offset
+
            mov  boot_segment,ax  ;  save for later
            mov  boot_offset,bx   ;  
            mov  boot_drive,dl    ;  
@@ -254,7 +256,7 @@ boot_media_okay:
            call cmos_get_byte
            test al,1
            jnz  boot_jump_to_sector
-@@:        mov  ax,es:[0x01FE]
+@@:        mov  ax,es:[0x7DFE]
            cmp  ax,0xAA55
            je   boot_jump_to_sector
            cmp  ax,0x55AA        ; some incorrectly use this too
