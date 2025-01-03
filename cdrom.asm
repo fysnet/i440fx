@@ -1,5 +1,5 @@
 comment |*******************************************************************
-*  Copyright (c) 1984-2024    Forever Young Software  Benjamin David Lunt  *
+*  Copyright (c) 1984-2025    Forever Young Software  Benjamin David Lunt  *
 *                                                                          *
 *                         i440FX BIOS ROM v1.0                             *
 * FILE: cdrom.asm                                                          *
@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.14                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 31 Dec 2024                                                *
+* Last Updated: 3 Jan 2025                                                 *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -658,6 +658,7 @@ cdrom_emu_atapi_cmd  equ  [bp-0x0E]  ; cdrom_emu_atapi_cmd[12]
 
            ; service call
            mov  ah,REG_AH
+           
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
            ; these functions simply return success
            cmp  ah,0x00          ; disk controller reset
@@ -1216,12 +1217,16 @@ cd_int13_lock_1:
            ; IBM/MS get drive parameters
 @@:        cmp  ah,0x48
            jne  short @f
+           push ds
+           call bios_get_ebda
+           mov  ds,ax
            push es
            mov  es,REG_DS
            mov  di,REG_SI
            mov  ax,cd_sv_device
            call int13_edd
            pop  es
+           pop  ds
            or   ax,ax
            jnz  short cd_int13_fail
            jmp  short cd_int13_success

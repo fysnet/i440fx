@@ -1,5 +1,5 @@
 comment |*******************************************************************
-*  Copyright (c) 1984-2024    Forever Young Software  Benjamin David Lunt  *
+*  Copyright (c) 1984-2025    Forever Young Software  Benjamin David Lunt  *
 *                                                                          *
 *                         i440FX BIOS ROM v1.0                             *
 * FILE: harddrive.asm                                                      *
@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.14                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 8 Dec 2024                                                 *
+* Last Updated: 2 Jan 2025                                                 *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -1394,7 +1394,7 @@ blksize_io  equ  [bp-0x02]  ;  word
            jne  short @f
            shr  cx,1        ; dwords
 @@:        mov  blksize_io,cx    ; blksize
-
+           
            ; reset count of transferred data
            mov  word [EBDA_DATA->trsfsectors],0
            mov  dword [EBDA_DATA->trsfbytes],0
@@ -1431,8 +1431,7 @@ blksize_io  equ  [bp-0x02]  ;  word
            movzx ecx,word [bp+10] ; count
            sub  eax,ecx
            cmp  [bp+18],eax      ; lba_low
-           jae  short @f
-           jmp  short ata_sector_28_bit
+           jnae short ata_sector_28_bit
 
            ; send the High Order bytes
 @@:        mov  dx,di            ; iobase1
@@ -1843,7 +1842,7 @@ hd_sv_lba_high  equ  [bp-0x12]
            ; ds = segment of EBDA
            ; ah = service
            ; bx ->EBDA_DATA->device
-
+           
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
            ; controller reset
            cmp  ah,0x00
@@ -2085,7 +2084,7 @@ hd_int13_ext_transfer:
            mov  es,ax
            mov  eax,es:[si+EXT_SERV_PACKET->ex_lba+0] ; get low 32-bits
            mov  edx,es:[si+EXT_SERV_PACKET->ex_lba+4] ; get high 32-bits
-           mov  cx,es:[si+EXT_SERV_PACKET->ex_size]
+           movzx cx,byte es:[si+EXT_SERV_PACKET->ex_size]
            pop  es
            ; if size of packet < 16, error
            cmp  cx,16
@@ -2116,7 +2115,7 @@ hd_int13_read1:
            mov  si,REG_SI
            mov  dx,REG_DS
            mov  es,dx
-
+           
 .if INT13_FLAT_ADDR
            ; if seg:off == 0xFFFF:FFFF and ex_size >= 18, use the flat address
            mov  di,es:[si+EXT_SERV_PACKET->ex_offset]  ; offset of buffer
@@ -2131,8 +2130,9 @@ hd_int13_read1:
            and  di,0x000F ; di = offset
            ; there is an error if high 16-bit of edx is non zero
            test edx,0xFFFF0000
+           jz   short int13_flat_0
            pop  es
-           jnz  hd_int13_fail
+           jmp  hd_int13_fail
 int13_flat_0:
 .endif
            ; on entry to ata_cmd_data_io, bx -> EBDA_device[]
