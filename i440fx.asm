@@ -1,5 +1,5 @@
 comment |*******************************************************************
-*  Copyright (c) 1984-2024    Forever Young Software  Benjamin David Lunt  *
+*  Copyright (c) 1984-2025    Forever Young Software  Benjamin David Lunt  *
 *                                                                          *
 *                         i440FX BIOS ROM v1.0                             *
 * FILE: cmos.asm                                                           *
@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.14                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 19 Dec 2024                                                *
+* Last Updated: 3 jan 2025                                                 *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -607,9 +607,16 @@ int09_handler:
            push ax
            mov  al,0xAD          ; disable keyboard
            out  PORT_PS2_STATUS,al
-           mov  al,0x0B
+           
+           ;mov  al,0x0B
+           ;out  PORT_PIC_MASTER_CMD,al
+           ;in   al,PORT_PIC_MASTER_CMD
+           ;and  al,0x02
+           ;jz   short int09_finish
+           
            in   al,PORT_PS2_DATA ; read key from keyboard controller
            sti
+           
            push es
            push ds
            pushad
@@ -648,6 +655,7 @@ int09_done:
            popad
            pop  ds
            pop  es
+           
            cli
            call  eoi_master_pic
            
@@ -879,10 +887,10 @@ int13_handler:
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
            ; some old software expects the interrupt flag to
            ;  be active on return from (hard)disk services (dl >= 0x80 only?)
-int13_out: push bp 
+int13_out: push bp
            mov  bp,sp
            or   word [bp+42],(1<<9)   ; 'REG_FLAGS' minus size of the 'return' that is no longer on the stack
-           pop  bp           
+           pop  bp
            
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
            ; we're done, we can return

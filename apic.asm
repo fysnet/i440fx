@@ -1,5 +1,5 @@
 comment |*******************************************************************
-*  Copyright (c) 1984-2024    Forever Young Software  Benjamin David Lunt  *
+*  Copyright (c) 1984-2025    Forever Young Software  Benjamin David Lunt  *
 *                                                                          *
 *                         i440FX BIOS ROM v1.0                             *
 * FILE: apic.asm                                                           *
@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.14                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 8 Dec 2024                                                 *
+* Last Updated: 3 Jan 2025                                                 *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -381,6 +381,31 @@ init_ioapic_error:
 init_ioapic endp
 
 ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+; 'disable' the APIC
+; on entry:
+;  nothing
+; on return
+;  nothing
+; destroys none
+apic_disable proc near uses eax esi es
+           call bios_get_ebda
+           mov  es,ax
+           
+           ; do we have an APIC installed?
+           test dword es:[EBDA_DATA->cpuid_features],CPUID_APIC
+           jz   short @f
+           
+           ; software disable the apic by clearing bit 8
+           ;  in the Spurious-Interrupt Vector register
+           mov  esi,APIC_BASE_ADDR
+           mov  eax,fs:[esi+APIC_REG_SIV]
+           and  ah,0xFE
+           mov  fs:[esi+APIC_REG_SIV],eax
+           
+@@:        ret
+apic_disable endp
+
+; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 ; 'disable' the IO APIC and restore the 8259
 ; on entry:
 ;  nothing
@@ -399,13 +424,13 @@ ioapic_disable proc near uses eax ebx esi es
            ; so the 8259 will handle them.
            mov  esi,IOAPIC_BASE_ADDR
            mov  ebx,IOAPIC_REG_REDIR ; start at 0x10
-           mov  eax,0x50           ; start at 0x50
+           xor  eax,eax              ; start at 0x00
 @@:        push eax
            or   eax,((111b << 8)  | \ ; delivery mode: ExtINT (8259a)
                         (0 << 11) | \ ; destination mode: phys
                         (0 << 13) | \ ; active: high
                         (0 << 15) | \ ; trigger: edge
-                        (0 << 16));   ; unmasked (let the 8259a handle it)
+                        (1 << 16));   ; masked (let the 8259a handle it)
            call ioapic_write
            inc  ebx
            movzx byte eax,es:[EBDA_DATA->ioapic_id]
@@ -414,7 +439,7 @@ ioapic_disable proc near uses eax ebx esi es
            inc  ebx
            pop  eax
            inc  eax
-           cmp  eax,0x60
+           cmp  eax,0x10
            jb   short @b
 
 ioapic_disable_done:

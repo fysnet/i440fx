@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.14                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 2 Jan 2025                                                 *
+* Last Updated: 3 Jan 2025                                                 *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -2398,7 +2398,7 @@ dpt_is_not_atapi:
            call bios_get_ebda
            mov  word es:[di+INT13_DPT->dpt_size],30
            mov  es:[di+INT13_DPT->dpt_dpte_segment],ax
-           lea  ax,[bx+EBDA_DATA->dpte_iobase1]
+           mov  ax,EBDA_DATA->dpte_iobase1
            mov  es:[di+INT13_DPT->dpt_dpte_offset],ax
            
            ; get translation and mode values
