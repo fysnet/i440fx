@@ -1,5 +1,5 @@
 comment |*******************************************************************
-*  Copyright (c) 1984-2024    Forever Young Software  Benjamin David Lunt  *
+*  Copyright (c) 1984-2025    Forever Young Software  Benjamin David Lunt  *
 *                                                                          *
 *                         i440FX BIOS ROM v1.0                             *
 * FILE: pnp.asm                                                            *
@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.14                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 8 Dec 2024                                                 *
+* Last Updated: 4 Jan 2025                                                 *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -319,7 +319,7 @@ pnp_node_03:
    db  3                   ; handle
    db  41h, 0D0h, 00h, 03h ; 0_10000_01110_10000__0000_0000_0000_0011b = PNP0003 = APIC
    db  8,0x80,0            ; Other System Peripheral
-   dw  0x0003              ; is configurable, cannot be disabled
+   dw  0x0003              ; is not configurable, cannot be disabled
 
    ; allocated resource configuration descriptor
    db  1_0000110b          ; 32-bit fixed location memory range descriptor
@@ -349,7 +349,7 @@ pnp_node_04:
    db  4                   ; handle
    db  41h, 0D0h, 0Ch, 02h ; 0_10000_01110_10000__0000_1100_0000_0010b = PNP0C02 = General ID for system board device
    db  8,0x80,0            ; Other System Peripheral
-   dw  0x0003              ; is configurable, cannot be disabled
+   dw  0x0003              ; is not configurable, cannot be disabled
 
    ; allocated resource configuration descriptor
    db  1_0000110b          ; 32-bit fixed location memory range descriptor
@@ -400,7 +400,7 @@ pnp_node_06:
    db  6                   ; handle
    db  41h, 0D0h, 0Ch, 01h ; 0_10000_01110_10000__0000_1100_0000_0001b = PNP0C01 = System Board
    db  5,0,0               ; General RAM
-   dw  0x0003              ; is configurable, cannot be disabled
+   dw  0x0003              ; is not configurable, cannot be disabled
 
    ; allocated resource configuration descriptor
    db  1_0000110b          ; 32-bit fixed location memory range descriptor
@@ -465,7 +465,7 @@ pnp_node_07:
    db  7                   ; handle
    db  41h, 0D0h, 00h, 00h ; 0_10000_01110_10000__0000_0000_0000_0000b = PNP0000 = AT Interrupt Controller
    db  8,0,1               ; ISA PIC (8259 Compatible)
-   dw  0x0003              ; is configurable, cannot be disabled
+   dw  0x0003              ; is not configurable, cannot be disabled
 
    ; allocated resource configuration descriptor
    db  0_0100_010b         ; IRQ format, 2 more bytes
@@ -505,7 +505,7 @@ pnp_node_08:
    db  8                   ; handle
    db  41h, 0D0h, 01h, 00h ; 0_10000_01110_10000__0000_0001_0000_0000b = PNP0100 = AT Timer
    db  8,2,1               ; ISA System Timer
-   dw  0x0003              ; is configurable, cannot be disabled
+   dw  0x0003              ; is not configurable, cannot be disabled
 
    ; allocated resource configuration descriptor
    db  0_0100_010b         ; IRQ format, 2 more bytes
@@ -533,7 +533,7 @@ pnp_node_09:
    db  9                   ; handle
    db  41h, 0D0h, 0Bh, 00h ; 0_10000_01110_10000__0000_1011_0000_0000b = PNP0B00 = AT Real-Time Clock
    db  8,3,1               ; ISA RTC Controller
-   dw  0x0003              ; is configurable, cannot be disabled
+   dw  0x0003              ; is not configurable, cannot be disabled
 
    ; allocated resource configuration descriptor
    db  0_0100_010b         ; IRQ format, 2 more bytes
@@ -561,7 +561,7 @@ pnp_node_10:
    db  10                  ; handle
    db  41h, 0D0h, 03h, 03h ; 0_10000_01110_10000__0000_0011_0000_0011b = PNP0303 = IBM Enhanced (101/102-key, PS/2 mouse support)
    db  9,0,0               ; Keyboard Controller
-   dw  0x000B              ; primary input device, is configurable, cannot be disabled
+   dw  0x000B              ; primary input device, is not configurable, cannot be disabled
 
    ; allocated resource configuration descriptor
    db  0_0100_010b         ; IRQ format, 2 more bytes
@@ -595,7 +595,7 @@ pnp_node_11:
    db  11                  ; handle
    db  41h, 0D0h, 0Ch, 04h ; 0_10000_01110_10000__0000_0011_0000_0011b = PNP0C04 = Math Coprocessor
    db  8,0x80,0            ; Other System Peripheral
-   dw  0x0003              ; is configurable, cannot be disabled
+   dw  0x0003              ; is not configurable, cannot be disabled
 
    ; allocated resource configuration descriptor
    db  0_0100_010b         ; IRQ format, 2 more bytes
@@ -623,7 +623,7 @@ pnp_node_12:
    db  12                  ; handle
    db  41h, 0D0h, 02h, 00h ; 0_10000_01110_10000__0000_0010_0000_0000b = PNP0200 = AT DMA Controller
    db  8,1,1               ; ISA DMA Controller
-   dw  0x0003              ; is configurable, cannot be disabled
+   dw  0x0003              ; is not configurable, cannot be disabled
 
    ; allocated resource configuration descriptor
    db  0_0101_010b         ; DMA format, 2 more bytes
@@ -664,7 +664,7 @@ pnp_node_13:
    db  13                  ; handle
    db  41h, 0D0h, 08h, 00h ; 0_10000_01110_10000__0000_1000_0000_0000b = PNP0800 = AT-style speaker sound
    db  8,0x80,0            ; Other System Peripheral
-   dw  0x0003              ; is configurable, cannot be disabled
+   dw  0x0003              ; is not configurable, cannot be disabled
 
    ; allocated resource configuration descriptor
    db  0_1000_111b         ; I/O Port descriptor, 7 more bytes
@@ -690,7 +690,7 @@ pnp_node_14:
    db  14                  ; handle
    db  41h, 0D0h, 0Ah, 03h ; 0_10000_01110_10000__0000_1010_0000_0011b = PNP0A03 = PCI Bus
    db  6,4,0               ; General PCI Bridge
-   dw  0x0003              ; is configurable, cannot be disabled
+   dw  0x0003              ; is not configurable, cannot be disabled
 
    ; allocated resource configuration descriptor
    db  0_1000_111b         ; I/O Port descriptor, 7 more bytes
@@ -716,7 +716,7 @@ pnp_node_15:
    db  15                  ; handle
    db  41h, 0D0h, 09h, 00h ; 0_10000_01110_10000__0000_1001_0000_0000b = PNP0900 = VGA compatible
    db  3,0,0               ; VGA Compatible Controller
-   dw  0x0003              ; is configurable, cannot be disabled
+   dw  0x0003              ; is not configurable, cannot be disabled
 
    ; allocated resource configuration descriptor
    db  0_1000_111b         ; I/O Port descriptor, 7 more bytes
