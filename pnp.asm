@@ -1297,7 +1297,7 @@ pnpbios_real:
 
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
            ; function 0x40: (required) Get Plug & Play ISA Configuration Structure
-@@:        cmp  al,0x40
+@@:        cmp  ax,0x0040
            jne  short @f
 
            ; this returns a 6-byte block: (these are the items we return)
@@ -1312,9 +1312,16 @@ pnpbios_real:
            mov  word es:[di+4],0x0000
            jmp  pnpbios_success
 
+; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+; the following is from the ESCD Specification
+; it assumes it will be from real mode only, not called from 16-bit protected mode.
+; if called from 16-bit protected mode (ah = 0x80), we simply return PNP_UNKNOWN_FUNCTION
+;  | we adjust a segment register to get to the ESCD. 16-bit protected mode may have a
+;  |  base set only to 0x000E0000 for that segment register.
+           
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
            ; function 0x41: (optional) Get extended system configuration data (ESCD) info
-@@:        cmp  al,0x41
+@@:        cmp  ax,0x0041
            jne  short @f
 
            ; the min buffer size in bytes? (far pointer)
@@ -1333,7 +1340,7 @@ pnpbios_real:
 
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
            ; function 0x42: (optional) Read extended system configuration data (ESCD)
-@@:        cmp  al,0x42
+@@:        cmp  ax,0x0042
            jne  short @f
 
            ; the far pointer to the callers buffer to store the ESCD
