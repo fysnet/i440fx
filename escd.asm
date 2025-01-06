@@ -1,5 +1,5 @@
 comment |*******************************************************************
-*  Copyright (c) 1984-2024    Forever Young Software  Benjamin David Lunt  *
+*  Copyright (c) 1984-2025    Forever Young Software  Benjamin David Lunt  *
 *                                                                          *
 *                         i440FX BIOS ROM v1.0                             *
 * FILE: escd.asm                                                           *
@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.14                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 8 Dec 2024                                                 *
+* Last Updated: 5 Jan 2025                                                 *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -46,10 +46,13 @@ FLASH_ERASE_SUSP    equ  0xB0
 FLASH_PROG_SETUP    equ  0x40
 FLASH_ERASE         equ  0xD0
 
+ESCD_DATA_SIZE      equ  0x1800
+ESCD_DATA_TOT_SIZE  equ  0x2000  ; must not be more than 32k
+
 ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 ; the following is the format of the ESCD that we use.
 ; the first part is specification correct, while the last part is this bios defined.
-;
+; (not more than ESCD_DATA_TOT_SIZE bytes in size)
 ESCD_DATA  struct
   size           word    ; size of the 'ESCD correct' data (right now, just this header = 12)
   signature      dword   ; "ACFG"
@@ -58,9 +61,14 @@ ESCD_DATA  struct
   board_cnt      byte    ; number of board entries
   resv0          dup 3   ; reserved
 
-
+  ; the ESCD now can store up to ESCD_DATA_TOT_SIZE (minus the header and anything we have below).
+  ; To let the Guest store things here for faster booting, we reserved these
+  ;  bytes and set them to zero. The OS will modify them as it see's fit.
+  ; (we allow ESCD_DATA_SIZE - 12 bytes here)
+  brdhdrs        dup (ESCD_DATA_SIZE - 12)
 
   ; data items specific to this bios (non-ESCD specs stuff)
+  ; (ESCD_DATA_TOT_SIZE - ESCD_DATA_SIZE bytes allowed)
   ehci_legacy    byte    ; 0 = enumerate ehci devices, 1 = enumerate all hs devices as fs on companion controllers
   num_lock       byte    ; 0 = leave the num lock off, 1 = turn on num_lock at boot time
   boot_delay     byte    ; number of seconds to wait for a F12 press before boot (0 means no delay, 3 = default)
@@ -68,7 +76,7 @@ ESCD_DATA  struct
 
   ; floppy boot signature check (cmos item as well) ???
 
-
+  ; last 16-bits is the crc
 ESCD_DATA  ends
 
 ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -164,7 +172,7 @@ bios_read_escd proc near uses bx ds
            cmp  bx,0x2000
            jae  short bios_read_escd_done
            
-           add  bx,0xC000
+           add  bx,offset escd
            xor  eax,eax
 @@:        shl  eax,8
            mov  al,[bx]
@@ -208,6 +216,30 @@ bios_write_escd_done:
 bios_write_escd endp
 
 ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+; calculate and update the crc of the ESCD
+; on entry:
+;  nothing
+; on return
+;  nothing
+; destroys none
+bios_escd_crc proc near uses ax cx dx si ds
+           mov  ax,BIOS_BASE2
+           mov  ds,ax
+           mov  si,offset escd
+
+           xor  ah,ah
+           cwd
+           mov  cx,(ESCD_DATA_TOT_SIZE - sizeof(word))
+           cld
+@@:        lodsb
+           add  dx,ax
+           loop @b
+           
+           mov  [si],dx
+           ret
+bios_escd_crc endp
+
+; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 ; write the escd back to flash rom
 ; (* is a far procedure *)
 ; on entry:
@@ -223,6 +255,9 @@ bios_commit_escd proc far uses all es ds
 
            cmp  byte es:[EBDA_DATA->escd_dirty],0
            je   short bios_commit_escd_done
+
+           ; recalculate the file crc
+           call bios_escd_crc
            
            ; did we find the i440x pci to isa bridge?
            mov  bx,es:[EBDA_DATA->i440_pciisa]

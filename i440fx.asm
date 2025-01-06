@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.14                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 3 jan 2025                                                 *
+* Last Updated: 5 Jan 2025                                                 *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -1540,12 +1540,14 @@ bios_table_address:
            ;  as the saved state of the Num Lock, etc.
            ; (we write defaults here incase one uses it without escd support)
            ; (the only downfall is, we have to keep it in sync with the ESCD_DATA structure)
-escd       dw  12       ; size of the 'ESCD correct' data (right now, just this header = 12)
+escd       dw  ESCD_DATA_SIZE ; size of the 'ESCD correct' data
            db  'ACFG'   ; signature
            db  0        ; minor version
            db  2        ; major version
            db  0        ; number of board entries
            db  0,0,0    ; reserved
+
+           dup (ESCD_DATA_SIZE - 12),0
 
            db  0        ; 0 = enumerate ehci devices, 1 = enumerate all hs devices as fs on companion controllers
            db  1        ; 0 = leave the num lock off, 1 = turn on num_lock at boot time

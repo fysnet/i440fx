@@ -30,12 +30,14 @@ comment |*******************************************************************
 *               NBASM ver 00.27.14                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 4 Jan 2025                                                 *
+* Last Updated: 5 Jan 2025                                                 *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
 *                                                                          *
 ***************************************************************************|
+
+PNP_IS_REALMODE        equ  0     ; guaranteed realmode (use for testing purposes only, otherwise must be 0)
 
 PNP_SUCCESS            equ  0x00  ; Function completed successfully
 PNP_UNKNOWN_FUNCTION   equ  0x81  ; Unknown, or invalid, function number passed
@@ -1119,19 +1121,24 @@ pnpbios_real:
            push ds
            push es
 
+.if (PNP_IS_REALMODE)
+           push ds
+           mov  bx,BIOS_BASE
+           mov  ds,bx
+.endif
            ; we check AL only, since the function number will be < 0x0100
            ;  and we have set AH above to either 0x80 or 0x00
            mov  al,pnp_func
-     ;xchg cx,cx
-
+           
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
            ; function 0x00: (required) Get number of system device nodes
            cmp  al,0x00
            jne  short @f
            
            ; arg5 = 16-bit selector / 16-bit segment pointing to BIOS_BASE
+.if (!PNP_IS_REALMODE)
            mov  ds,pnp_arg5
-
+.endif
            les  di,pnp_arg1      ; segment:offset NumNodes
            
            ; the specs say it is an "unsigned char *"...
@@ -1161,8 +1168,9 @@ pnpbios_real:
            ja   pnpbios_fail
 
            ; arg6 = 16-bit selector / 16-bit segment pointing to BIOS_BASE
+.if (!PNP_IS_REALMODE)
            mov  ds,pnp_arg6
-
+.endif
            ; get node number
            les  di,pnp_arg1      ; segment:offset Node handle
            movzx ax,byte es:[di] ; get node handle to return
@@ -1297,7 +1305,6 @@ pnpbios_real:
            ;       count of CSNs:  0x00    (byte)
            ;  isa read data port:  0x0000  (word) (undefined if CSNs = 0)
            ;            reserved:  0x0000  (word)
-     xchg cx,cx
            les  di,pnp_arg1      ; segment:offset buffer
            mov  byte es:[di+0],0x01
            mov  byte es:[di+1],0x00
@@ -1310,34 +1317,62 @@ pnpbios_real:
 @@:        cmp  al,0x41
            jne  short @f
 
-           ; ***** use t.asm and try this function to see what is returned
+           ; the min buffer size in bytes? (far pointer)
+           lds  di,pnp_arg1
+           mov  word [di],ESCD_DATA_TOT_SIZE
+           
+           ; the max size of the escd the guest is allowed to write? (far pointer)
+           lds  di,pnp_arg3
+           mov  word [di],ESCD_DATA_SIZE
+           
+           ; we are not memmapped, so return NVStorageBase = 0
+           lds  di,pnp_arg5
+           mov  dword [di],0
 
-     xchg cx,cx
-           mov  ax,PNP_NOT_SUPPORTED
-           jmp  pnpbios_fail
-           ;jmp  short pnpbios_success
+           jmp  pnpbios_success
 
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
            ; function 0x42: (optional) Read extended system configuration data (ESCD)
 @@:        cmp  al,0x42
            jne  short @f
 
-           ; ***** use t.asm and try this function to see what is returned
-     xchg cx,cx
-           mov  ax,PNP_NOT_SUPPORTED
-           jmp  pnpbios_fail
-           ;jmp  short pnpbios_success
+           ; the far pointer to the callers buffer to store the ESCD
+           les  di,pnp_arg1
+           mov  ax,BIOS_BASE2
+           mov  ds,ax
+           mov  si,offset escd
+           mov  cx,ESCD_DATA_TOT_SIZE
+           cld
+           rep
+             movsb
+           
+           jmp  pnpbios_success
 
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
            ; function 0x43: (optional) Write extended system configuration data (ESCD)
 @@:        cmp  al,0x43
            jne  short @f
 
-           ; ***** use t.asm and try this function to see what is returned
-     xchg cx,cx
-           mov  ax,PNP_NOT_SUPPORTED
-           jmp  pnpbios_fail
-           ;jmp  short pnpbios_success
+           ; the far pointer to the callers buffer to store the ESCD
+           xchg cx,cx
+           lds  si,pnp_arg1
+           mov  ax,BIOS_BASE2
+           mov  es,ax
+           mov  di,offset escd
+           mov  cx,ESCD_DATA_SIZE
+           cld
+           rep
+             movsb
+           
+           ; mark the ESCD as dirty
+           call bios_get_ebda
+           mov  ds,ax
+           mov  byte es:[EBDA_DATA->escd_dirty],1
+
+           ; now commit the new ESCD
+           call far offset bios_commit_escd,BIOS_BASE
+           
+           jmp  pnpbios_success
 
 ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 ; the following is from the BIOS Boot Specification v1.01, Jan 11, 1996
@@ -1485,6 +1520,9 @@ pnpbios_func62_1:
 pnpbios_success:
            mov  ax,PNP_SUCCESS
 pnpbios_fail:
+.if (PNP_IS_REALMODE)
+           pop  ds
+.endif
            pop  es
            pop  ds
            pop  di
