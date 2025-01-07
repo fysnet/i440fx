@@ -1,5 +1,5 @@
 comment |*******************************************************************
-*  Copyright (c) 1984-2024    Forever Young Software  Benjamin David Lunt  *
+*  Copyright (c) 1984-2025    Forever Young Software  Benjamin David Lunt  *
 *                                                                          *
 *                         i440FX BIOS ROM v1.0                             *
 * FILE: usb.asm                                                            *
@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.14                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 19 Dec 2024                                                *
+* Last Updated: 6 Jan 2025                                                 *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -154,6 +154,20 @@ usb_disk_emu_drive proc near
            movzx ax,byte es:[EBDA_DATA->usb_disk_emulated_drive]
            ret
 usb_disk_emu_drive endp
+
+; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+; USB Disk Emulation: return TRUE if usb emulation is a cdrom *and*
+;  that emulated cdrom is emulated as a 512-byte disk
+; on entry:
+;  es = segment of EBDA
+; on return
+;  ax = 0 not a cdrom emulating a floppy or hard drive
+;     = 1 is a cdrom emulating a floppy or hard drive
+; destroys nothing
+usb_disk_emu_cdrom proc near
+           movzx ax,byte es:[EBDA_DATA->usb_disk_emu_cdrom]
+           ret
+usb_disk_emu_cdrom endp
 
 ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 ; Get next device address id
@@ -1301,6 +1315,7 @@ usb_mount_hdd_cdrom proc near
            mov  dword fs:[ebx+USB_DEVICE->sectors+4],0
            mov  dword fs:[ebx+USB_DEVICE->base_lba],0
            mov  word fs:[ebx+USB_DEVICE->log_size],2048
+           mov  byte es:[EBDA_DATA->usb_disk_emu_cdrom],0
            call usb_add_boot_vector
            call usb_mount_display
            
@@ -1322,6 +1337,7 @@ usb_mount_hdd_cdrom proc near
            mov  eax,fs:[edi+0x20+0x08]    ; 2048-byte lba
            mov  fs:[ebx+USB_DEVICE->base_lba],eax
            mov  word fs:[ebx+USB_DEVICE->log_size],512
+           mov  byte es:[EBDA_DATA->usb_disk_emu_cdrom],1
            call usb_add_boot_vector
            call usb_mount_display
            
@@ -1340,19 +1356,12 @@ usb_mount_hdd_cdrom proc near
            mov  eax,fs:[edi+0x20+0x08]    ; 2048-byte lba
            mov  fs:[ebx+USB_DEVICE->base_lba],eax
            mov  word fs:[ebx+USB_DEVICE->log_size],512
+           mov  byte es:[EBDA_DATA->usb_disk_emu_cdrom],1
            call usb_add_boot_vector
            call usb_mount_display
            
            mov  al,1
            ret
-
-;  for the CDROM emulation to work (floppy or hdd), we have to read 512-byte sectors,
-;   not 2048 byte sectors in the INT calls..........
-;           mov  dx,[bx+0x02]     ; save in dx for later
-;           mov  es:[EBDA_DATA->cdemu_load_segment],dx
-;           mov  word es:[EBDA_DATA->cdemu_buffer_offset],0x0000
-;           movzx ecx,word [bx+06] ; count of 512-byte sectors
-;           mov  es:[EBDA_DATA->cdemu_sector_count],cx
 
 usb_mount_iscdrom_error:
            xor  al,al
@@ -1392,8 +1401,6 @@ boot_usb_device  equ  [bp-2]
            call usb_rxtx_sector
            cmp  eax,-1
            jle  short usb_boot_done
-
-           ;xchg cx,cx ; ben
 
            lea  esi,[ebx+USB_DEVICE->rxtx_buffer]
 
@@ -1474,7 +1481,7 @@ usb_sv_direction equ  [bp-24]  ; byte
            mov  byte [0x008E],0
            
            mov  ah,REG_AH
-
+           ; ds = BDA (0x0400)
            ; es = segment of EBDA
            ; ah = service
            ;  fs:ebx -> USB_DEVICE
@@ -1939,6 +1946,571 @@ int13_usb_disk_success_noah:
            pop  bp
            ret
 int13_usb_disk_function endp
+
+; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+; USB CDROM Disk Emulation services
+; on entry:
+;  es = segment of EBDA
+;  stack currently has (after we set bp):
+;   flags    cs      ip      es      ds
+;  [bp+44] [bp+42] [bp+40] [bp+38] [bp+36]
+;    edi     esi     ebp     esp     ebx     edx     ecx     eax
+;  [bp+04] [bp+08] [bp+12] [bp+16] [bp+20] [bp+24] [bp+28] [bp+32]
+; on return
+;  nothing
+; destroys nothing
+int13_usb_cdrom_function proc near ; don't put anything here
+           push bp
+           mov  bp,sp
+           sub  sp,24
+           
+usb_cdsv_device    equ  [bp-2]  ; word
+usb_cdsv_count     equ  [bp-4]  ; word
+usb_cdsv_cylinder  equ  [bp-6]  ; word
+usb_cdsv_sector    equ  [bp-8]  ; word
+usb_cdsv_head      equ  [bp-10]  ; word
+usb_cdsv_lba_low   equ  [bp-14]  ; dword
+usb_cdsv_cur_gdt   equ  [bp-22]  ; qword (fword + 2 filler)
+usb_cdsv_cur_a20   equ  [bp-23]  ; byte
+           
+           ; retrieve the current GDT, and set it to ours
+           push fs                 ; preserve the fs segment register
+           sgdt far usb_cdsv_cur_gdt ; save the current GDT address
+           call unreal_post        ;
+           mov  usb_cdsv_cur_a20,al  ; save current a20 status
+
+           ; get our emulated device value
+           mov  dl,es:[EBDA_DATA->usb_disk_emulated_device]
+           ; get the controller and device data pointers
+           call usb_get_cntrl_device
+           mov  usb_cdsv_device,dx
+
+           ; set ds = bios data area (0x0040)
+           mov  ax,0x0040
+           mov  ds,ax
+           
+           ; clear completion flag
+           mov  byte [0x008E],0
+           
+           mov  ah,REG_AH
+           ; ds = BDA (0x0400)
+           ; es = segment of EBDA
+           ; ah = service
+           ;  fs:ebx -> USB_DEVICE
+           ;  es:esi-> = this USB_CONTROLLER structure
+           
+           ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+           ; controller reset
+           cmp  ah,0x00
+           jne  short @f
+           ; we ignore this one
+           jmp  int13_cd_usb_disk_success
+
+           ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+           ; read disk status
+@@:        cmp  ah,0x01
+           jne  short @f
+
+           ; are we the floppy drive?
+           cmp  byte fs:[ebx+USB_DEVICE->media],USB_MSD_MEDIA_FLOPPY
+           jne  short int13_cd_usb_status0
+           ; floppy
+           mov  ah,[0x0041]
+           mov  REG_AH,ah
+           jmp  short int13_cd_usb_status1
+int13_cd_usb_status0:
+           ; hard drive
+           xor  ah,ah
+           xchg ah,[0x0074]
+           mov  REG_AH,ah
+int13_cd_usb_status1:
+           or   ah,ah
+           jnz  int13_cd_usb_disk_fail_nostatus
+           jmp  int13_cd_usb_disk_success_noah
+           
+           ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+           ; transfer sectors
+@@:        cmp  ah,0x02          ; read disk sectors
+           je   short int13_cd_usb_transfer
+           cmp  ah,0x03          ; write disk sectors
+           je   short int13_cd_usb_transfer
+           cmp  ah,0x04          ; verify disk sectors
+           jne  @f
+int13_cd_usb_transfer:
+           xor  ah,ah
+           mov  al,REG_AL
+           mov  usb_cdsv_count,ax
+           mov  al,REG_CL
+           shl  ax,2
+           and  ah,0x03
+           mov  al,REG_CH
+           mov  usb_cdsv_cylinder,ax
+           xor  ah,ah
+           mov  al,REG_CL
+           and  al,0x3F
+           mov  usb_cdsv_sector,ax
+           mov  al,REG_DH
+           mov  usb_cdsv_head,ax
+
+           ; if count > 128, or count == 0, or sector == 0, error
+           cmp  word usb_cdsv_count,0
+           je   int13_cd_usb_disk_fail
+           cmp  word usb_cdsv_count,128
+           ja   int13_cd_usb_disk_fail
+           cmp  word usb_cdsv_sector,0
+           je   int13_cd_usb_disk_fail
+           
+           ; convert to LBA
+           ; lba = (((cylinder * heads) + head) * spt) + (sector - 1);
+           movzx eax,word usb_cdsv_cylinder
+           movzx ecx,byte fs:[ebx+USB_DEVICE->heads]
+           mul  ecx
+           movzx ecx,word usb_cdsv_head
+           add  eax,ecx
+           movzx ecx,byte fs:[ebx+USB_DEVICE->spt]
+           mul  ecx
+           movzx ecx,word usb_cdsv_sector
+           add  eax,ecx
+           dec  eax
+           mov  usb_cdsv_lba_low,eax
+           
+           ; check to see if within our limits
+           ; (we don't have to check hiword, since CHS could never get that high)
+           movzx ecx,word usb_cdsv_count
+           add  eax,ecx
+           dec  eax
+           cmp  eax,fs:[ebx+USB_DEVICE->sectors]
+           jae  int13_cd_usb_disk_fail
+           
+           ; if we are verifying a sector(s), just return as good
+           cmp  byte REG_AH,0x04
+           je   int13_cd_usb_disk_success
+           
+           ; if we are writing, return error
+           cmp  byte REG_AH,0x03
+          ;mov  byte REG_AH,0x03  ; 3 = write protected
+           je   int13_cd_usb_disk_fail_noah
+           
+           ; calculate physical address of callers buffer
+           movzx edi,word REG_ES
+           movzx ecx,word REG_BX
+           shl  edi,4
+           add  edi,ecx
+           
+           ; read the 2048-byte sector to our internal buffer
+           ; running count of sectors read/written
+           xor  cx,cx
+int13_cd_usb_tx_sectors_loop:
+           push cx
+           push edi
+           lea  edi,[ebx+USB_DEVICE->rxtx_buffer]
+           mov  eax,usb_cdsv_lba_low
+           shr  eax,2
+           add  eax,es:[EBDA_DATA->usb_disk_base_lba]
+           mov  dx,usb_cdsv_device
+           mov  cl,PID_IN
+           call usb_rxtx_sector
+           pop  edi
+           movzx edx,word fs:[ebx+USB_DEVICE->block_size]
+           cmp  eax,edx
+           je   short int13_cd_usb_tx_sectors_0
+           add  sp,2
+           mov  byte REG_AH,0x0C
+           jmp  int13_cd_usb_disk_fail_noah
+
+int13_cd_usb_tx_sectors_0:
+           ; calculate the 512-byte sector offset from our internal 2048-byte sector
+           push esi
+           lea  esi,[ebx+USB_DEVICE->rxtx_buffer]
+           mov  eax,usb_cdsv_lba_low
+           and  eax,3
+           shl  eax,9
+           add  esi,eax
+           
+           ; copy from the internal sector to the caller's sector
+           ; (todo: to make this faster, if (usb_cdsv_count > 1) and
+           ;        ((usb_cdsv_lba_low % 4) != 0 ), we can copy
+           ;        more bytes from the buffer.)
+           mov  cx,(512 / sizeof(dword))
+int13_cd_usb_tx_sectors_1:
+           mov  eax,fs:[esi]
+           add  esi,sizeof(dword)
+           mov  fs:[edi],eax
+           add  edi,sizeof(dword)
+           loop int13_cd_usb_tx_sectors_1
+           pop  esi
+           
+           ; move to next sector
+           inc  dword usb_cdsv_lba_low
+           pop  cx
+           inc  cx
+           dec  word usb_cdsv_count
+           jnz  short int13_cd_usb_tx_sectors_loop
+
+           ; if a hard drive, need to set the completion flag
+           cmp  byte fs:[ebx+USB_DEVICE->media],USB_MSD_MEDIA_HARDDRIVE
+           jne  short int13_cd_usb_tx_sectors_2
+           ; completion code in the BDA
+           mov  byte [0x008E],0xFF
+           clc
+           mov  ax,0x9100
+           int  15h
+int13_cd_usb_tx_sectors_2:
+           
+           ; count of sectors transferred
+           mov  REG_AL,cl
+           jmp  int13_cd_usb_disk_success
+
+           ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+           ; format disk track (error, since we are write protected)
+@@:        cmp  ah,0x05
+           jne  short @f
+           
+           ; completion code in the BDA
+           ;mov  byte [0x008E],0xFF
+
+           mov  byte REG_AH,0x01
+           jmp  int13_cd_usb_disk_fail_noah
+
+           ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+           ; get disk drive parameters
+@@:        cmp  ah,0x08
+           jne  short @f
+           
+           ; cylinder (ch = low 8 bits, cl = high bits in 7:6)
+           mov  cx,fs:[ebx+USB_DEVICE->cyls]
+           dec  cx               ; zero based
+           xchg ch,cl
+           shl  cl,6
+           ; spt (low 5:0 bits of cl)
+           mov  al,fs:[ebx+USB_DEVICE->spt]
+           and  al,0x3F
+           or   cl,al
+           mov  REG_CX,cx
+           ; zero based head in dh
+           mov  al,fs:[ebx+USB_DEVICE->heads]
+           dec  al
+           mov  REG_DH,al
+           ; dl = count of drives
+           mov  dl,es:[EBDA_DATA->ata_hdcount]
+           inc  dl      ; include this emulated one
+           cmp  byte fs:[ebx+USB_DEVICE->media],USB_MSD_MEDIA_FLOPPY
+           jne  short int13_cd_usb_params_0
+           mov  dl,1             ; when emulating the floppy, only support 1 floppy drive
+           ; bl and es:di (floppies only)
+           mov  byte REG_BL,0x04
+           mov  ax,offset diskette_param_table
+           mov  REG_DI,ax
+           mov  word REG_ES,BIOS_BASE
+int13_cd_usb_params_0:
+           mov  REG_DL,dl
+           mov  word REG_AX,0x0000
+           jmp  int13_cd_usb_disk_success_noah
+
+           ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+           ; initialize controller with drive parameters
+@@:        cmp  ah,0x09
+           jne  short @f
+
+           ; we can call init_harddrive_params for this ??? minus the adding to the vector table ???
+
+           jmp  int13_cd_usb_disk_fail
+
+           ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+           ; check drive ready
+@@:        cmp  ah,0x10
+           jne  short @f
+           ; we should always be ready
+           jmp  int13_cd_usb_disk_success
+
+           ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+           ; read disk drive size
+@@:        cmp  ah,0x15
+           jne  short @f
+
+           mov  ah,0x01          ; floppy disk
+           cmp  byte fs:[ebx+USB_DEVICE->media],USB_MSD_MEDIA_FLOPPY
+           je   short int13_cd_usb_size_0
+           mov  eax,fs:[ebx+USB_DEVICE->sectors]
+           mov  REG_DX,ax
+           shr  eax,16
+           mov  REG_CX,ax
+           mov  ah,0x03          ; hard disk
+int13_cd_usb_size_0:           
+           mov  REG_AH,ah
+           jmp  int13_cd_usb_disk_success_noah
+
+           ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+           ; get change line status
+@@:        cmp  ah,0x16
+           jne  short @f
+           mov  byte REG_AH,0x06 ; change line not supported
+           jmp  int13_cd_usb_disk_success_noah
+
+           ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+           ; set media type format
+@@:        cmp  ah,0x18
+           jne  short @f
+           mov  byte REG_AH,0x01 ; function not available
+           jmp  int13_cd_usb_disk_fail_noah
+
+           ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+           ; IBM/MS installation check
+@@:        cmp  ah,0x41
+           jne  short @f
+           cmp  word REG_BX,0x55AA
+           jne  short @f
+           mov  word REG_BX,0xAA55
+           mov  byte REG_AH,0x30 ; EDD 3.0
+           ; 0x0007 = bit 0 = functions 42h,43h,44h,47h,48h
+           ;          bit 1 = functions 45h,46h,48h,49h, INT 15/AH=52h
+           ;          bit 2 = functions 48h,4Eh
+           mov  word REG_CX,0x0007
+           jmp  int13_cd_usb_disk_success_noah
+
+           ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+           ; IBM/MS extended services
+@@:        cmp  ah,0x42          ; extended read
+           je   short int13_cd_usb_ext_transfer
+           cmp  ah,0x43          ; extended write
+           je   short int13_cd_usb_ext_transfer
+           cmp  ah,0x44          ; extended verify
+           je   short int13_cd_usb_ext_transfer
+           cmp  ah,0x47          ; extended seek
+           jne  @f
+int13_cd_usb_ext_transfer:
+           push ds
+           mov  di,REG_SI
+           mov  ds,REG_DS
+           mov  ax,[di+EXT_SERV_PACKET->ex_count]    ; count
+           mov  usb_cdsv_count,ax
+           mov  eax,[di+EXT_SERV_PACKET->ex_lba+0] ; get low 32-bits
+           mov  usb_cdsv_lba_low,eax
+           mov  edx,[di+EXT_SERV_PACKET->ex_lba+4] ; get high 32-bits
+           ;mov  usb_cdsv_lba_high,edx
+           mov  cx,[di+EXT_SERV_PACKET->ex_size]
+           pop  ds
+           ; if size of packet < 16, error
+           cmp  cx,16
+           jb   int13_cd_usb_disk_fail
+           ; if edx:eax >= USB_DEVICE->sectors, error
+           cmp  edx,fs:[ebx+USB_DEVICE->sectors+4]
+           ja   int13_cd_usb_disk_fail
+           jb   short int13_cd_usb_ext_transfer1
+           cmp  eax,fs:[ebx+USB_DEVICE->sectors+0]
+           jae  int13_cd_usb_disk_fail
+int13_cd_usb_ext_transfer1:
+           ; if we are verifying or seeking to sector(s), just return as good
+           cmp  byte REG_AH,0x44
+           je   int13_cd_usb_disk_success
+           cmp  byte REG_AH,0x47
+           je   int13_cd_usb_disk_success
+
+           cmp  word usb_cdsv_count,0
+           je   int13_cd_usb_disk_fail
+
+           ; read the 2048-byte sector to our internal buffer
+           ; else do the transfer (don't allow a write)
+           cmp  byte REG_AH,0x42
+           je   short int13_cd_usb_ext_read
+           mov  byte REG_AH,0x03
+           jmp  int13_cd_usb_disk_fail_noah
+int13_cd_usb_ext_read:
+           ; calculate physical address of callers buffer
+           push ds
+           push si
+           mov  si,REG_SI
+           mov  ds,REG_DS
+           ; if seg:off == 0xFFFF:FFFF and ex_size >= 18, use the flat address
+           movzx ecx,word [si+EXT_SERV_PACKET->ex_offset]  ; offset of buffer
+           movzx edi,word [si+EXT_SERV_PACKET->ex_segment] ; segment of buffer
+           shl  edi,4
+           add  edi,ecx
+           cmp  byte [si+EXT_SERV_PACKET->ex_size],18
+           jb   short int13_cd_usb_flat_0
+           cmp  dword [si+EXT_SERV_PACKET->ex_offset],0xFFFFFFFF
+           jne  short int13_cd_usb_flat_0
+           mov  edi,[si+EXT_SERV_PACKET->ex_flataddr]
+int13_cd_usb_flat_0:
+           pop  si
+           pop  ds
+           
+           ; running count of sectors read/written
+           xor  cx,cx
+int13_cd_usb_tx_sectors_loop_1:
+           push cx
+           push edi
+           lea  edi,[ebx+USB_DEVICE->rxtx_buffer]
+           mov  eax,usb_cdsv_lba_low
+           shr  eax,2
+           add  eax,es:[EBDA_DATA->usb_disk_base_lba]
+           mov  dx,usb_cdsv_device
+           mov  cl,PID_IN
+           call usb_rxtx_sector
+           pop  edi
+           pop  cx
+           movzx edx,word fs:[ebx+USB_DEVICE->block_size]
+           cmp  eax,edx
+           mov  byte REG_AH,0x0C
+           jne  int13_cd_usb_disk_fail_noah
+
+           ; calculate the 512-byte sector offset from our internal 2048-byte sector
+           push esi
+           lea  esi,[ebx+USB_DEVICE->rxtx_buffer]
+           mov  eax,usb_cdsv_lba_low
+           and  eax,3
+           shl  eax,9
+           add  esi,eax
+           
+           ; copy from the internal sector to the caller's sector
+           ; (todo: to make this faster, if (usb_cdsv_count > 1) and
+           ;        ((usb_cdsv_lba_low % 4) != 0 ), we can copy
+           ;        more bytes from the buffer.)
+           mov  cx,(512 / sizeof(dword))
+int13_cd_usb_tx_sectors_3:
+           mov  eax,fs:[esi]
+           add  esi,sizeof(dword)
+           mov  fs:[edi],eax
+           add  edi,sizeof(dword)
+           loop int13_cd_usb_tx_sectors_3
+           pop  esi
+           
+           ; move to next sector
+           inc  dword usb_cdsv_lba_low
+           inc  cx
+           dec  word usb_cdsv_count
+           jnz  short int13_cd_usb_tx_sectors_loop_1
+
+           ; if a hard drive, need to set the completion flag
+           cmp  byte fs:[ebx+USB_DEVICE->media],USB_MSD_MEDIA_HARDDRIVE
+           jne  short int13_cd_usb_tx_sectors_4
+           ; completion code in the BDA
+           mov  byte [0x008E],0xFF
+           clc
+           mov  ax,0x9100
+           int  15h
+int13_cd_usb_tx_sectors_4:
+
+           push ds
+           push si
+           mov  si,REG_SI
+           mov  ds,REG_DS
+           mov  [si+EXT_SERV_PACKET->ex_count],cx
+           pop  si
+           pop  ds
+
+           jmp  int13_cd_usb_disk_success
+
+           ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+           ; IBM/MS media
+@@:        cmp  ah,0x45          ; lock/unlock drive
+           je   short int13_cd_usb_media
+           cmp  ah,0x49          ; extended media change
+           jne  short @f
+int13_cd_usb_media:
+           ; we don't do anything, so just return success
+           jmp  int13_cd_usb_disk_success
+
+           ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+           ; IBM/MS eject media
+@@:        cmp  ah,0x46
+           jne  short @f
+           mov  byte REG_AH,0xB2 ; media not removable
+           jmp  short int13_cd_usb_disk_fail_noah
+
+           ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+           ; IBM/MS get drive parameters
+           ;  we can't call usb_int13_edd as before because we
+           ;   are emulating a floppy or harddrive on a cdrom.
+@@:        cmp  ah,0x48
+           jne  short @f
+           
+           push ds
+           mov  ds,REG_DS
+           mov  di,REG_SI
+           ; size of the buffer we return is 0x1A
+           mov  word [di+0],0x1A
+           mov  word [di+2],(1<<1)
+           movzx eax,word fs:[ebx+USB_DEVICE->cyls]
+           mov  [di+4],eax
+           movzx eax,byte fs:[ebx+USB_DEVICE->heads]
+           mov  [di+8],eax
+           movzx eax,byte fs:[ebx+USB_DEVICE->spt]
+           mov  [di+12],eax
+           mov  eax,fs:[ebx+USB_DEVICE->sectors+0]
+           mov  [di+16],eax
+           mov  eax,fs:[ebx+USB_DEVICE->sectors+4]
+           mov  [di+16+4],eax
+           movzx ax,byte fs:[ebx+USB_DEVICE->log_size]
+           mov  [di+24],ax
+           pop  ds
+           jmp  short int13_cd_usb_disk_success
+
+           ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+           ; IBM/MS set hardware configuration
+@@:        cmp  ah,0x4E
+           jne  short @f
+           mov  al,REG_AL
+           cmp  al,0x01          ; disable prefetch
+           je   short int13_cd_usb_disk_success
+           cmp  al,0x03          ; set pio mode 0
+           je   short int13_cd_usb_disk_success
+           cmp  al,0x04          ; set default pio transfer mode
+           je   short int13_cd_usb_disk_success
+           cmp  al,0x06          ; disable inter 13h dma
+           je   short int13_cd_usb_disk_success
+           jmp  short int13_cd_usb_disk_fail ; else, fail
+
+           ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+           ; 
+@@:        ;cmp  ah,0x  ; next value
+           ;jne  short @f
+           ;
+           ;
+           ;jmp  int13_cd_usb_disk_success
+
+           xchg cx,cx ; ben
+
+           ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+           ; print a message of this unknown call value
+           ;push ds
+           ;push cs
+           ;pop  ds
+           ;shr  ax,8
+           ;push ax
+           ;mov  si,offset int13_cd_usb_unknown_call_str
+           ;call bios_printf
+           ;add  sp,2
+           ;call freeze
+           ;pop  ds
+
+           ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+           ; function failed, or we didn't support function in AH
+int13_cd_usb_disk_fail:
+           mov  byte REG_AH,0x01  ; default to invalid function in AH or invalid parameter
+int13_cd_usb_disk_fail_noah:
+           mov  ah,REG_AH
+           mov  [0x0074],ah
+int13_cd_usb_disk_fail_nostatus:
+           or   word REG_FLAGS,0x0001
+           jmp  short @f
+
+int13_cd_usb_disk_success:
+           mov  byte REG_AH,0x00  ; no error
+int13_cd_usb_disk_success_noah:
+           mov  byte [0x0074],0x00
+           and  word REG_FLAGS,(~0x0001)
+
+           ; restore the caller's gdt and a20 line
+@@:        lgdt far usb_cdsv_cur_gdt
+           mov  al,usb_cdsv_cur_a20
+           call set_enable_a20
+           pop  fs
+
+           mov  sp,bp
+           pop  bp
+           ret
+int13_usb_cdrom_function endp
 
 ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 ; return the drive parameters in es:di

@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.14                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 3 Jan 2025                                                 *
+* Last Updated: 6 Jan 2025                                                 *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -494,12 +494,9 @@ cmos_1Ah_24h1:
            ; unknown function call
 @@:
            
-       xchg cx,cx
-           mov  bx,$
-           ;mov  ax,0x1A
-           call unsupported
-
-
+       ;xchg cx,cx
+           ;mov  bx,$
+           ;call unsupported
 
 cmos_int1A_fail:
            or   word REG_FLAGS,0x0001

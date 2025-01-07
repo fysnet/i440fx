@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.14                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 3 Jan 2025                                                 *
+* Last Updated: 6 Jan 2025                                                 *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -544,6 +544,10 @@ int13_eltorito_4B:
            cmp  byte REG_DL,0xE0
            jne  short int13_eltorito_fail
            
+;.if DO_INIT_BIOS32
+           ; todo: check to see if DL = physical cdrom or USB CDROM and do accordingly.
+;.endif
+           
            push ds
            mov  ax,REG_DS
            mov  ds,ax
@@ -580,6 +584,7 @@ int13_eltorito_4B:
            cmp  byte REG_AL,0x00
            jne  short int13_eltorito_success
            mov  byte es:[EBDA_DATA->cdemu_active],0x00
+           mov  byte es:[EBDA_DATA->usb_disk_emu_cdrom],0x00 ; for now, we terminate both...
            jmp  short int13_eltorito_success
 
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

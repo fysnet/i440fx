@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.14                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 5 Jan 2025                                                 *
+* Last Updated: 6 Jan 2025                                                 *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -830,6 +830,12 @@ int13_handler:
            call usb_disk_emu_drive
            cmp  al,dl
            jne  short @f
+           call usb_disk_emu_cdrom
+           or   al,al
+           jz   short int13_usb_disk_emu
+           call int13_usb_cdrom_function
+           jmp  short int13_out
+int13_usb_disk_emu:           
            call int13_usb_disk_function
            jmp  short int13_out
 

@@ -1,5 +1,5 @@
 comment |*******************************************************************
-*  Copyright (c) 1984-2024    Forever Young Software  Benjamin David Lunt  *
+*  Copyright (c) 1984-2025    Forever Young Software  Benjamin David Lunt  *
 *                                                                          *
 *                         i440FX BIOS ROM v1.0                             *
 * FILE: ebda.asm                                                           *
@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.14                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 8 Dec 2024                                                 *
+* Last Updated: 6 Jan 2025                                                 *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -354,6 +354,7 @@ EBDA_DATA  struct
   usb_disk_media           byte      ; 0, 1, or 2 (0 = 1.44M floppy, 1 = hard drive, 2 = cdrom) (See USB_MSD_MEDIA_*)
   usb_disk_emulated_drive  byte      ; 0x0x, 0x8x, or 0xEx (floppy, hard drive, or cdrom, x = 0 -> count of items found for that type)
   usb_disk_emulated_device byte      ; actual device of the booted drive
+  usb_disk_emu_cdrom       byte      ; if not zero, cdrom is emulating a 512-byte drive
   usb_disk_base_lba        dword     ; base LBA of emulated image within device
 
   usb_uhci_cntrls          dup (sizeof(USB_CONTROLLER) * MAX_USB_CONTROLLERS)
@@ -390,7 +391,7 @@ EBDA_DATA  struct
 
   ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
   ;
-  unused                dup 804     ; unused / available space
+  unused                dup 803     ; unused / available space
 
 EBDA_DATA  ends         ; end of structure declaration.
 
