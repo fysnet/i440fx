@@ -1519,6 +1519,7 @@ pci_bios_init_bridges_04:
 @@:        add  al,cs:[bx]              ;
            inc  bx                      ;
            loop @b                      ;
+           neg  al                      ;
            mov  cs:[bx+0x1F],al         ; store the new crc
 
            jmp  short pci_bios_init_bridges_done
