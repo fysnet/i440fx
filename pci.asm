@@ -27,7 +27,7 @@ comment |*******************************************************************
 *                                                                          *
 * BUILT WITH:   NewBasic Assembler                                         *
 *                 http://www.fysnet/newbasic.htm                           *
-*               NBASM ver 00.27.14                                         *
+*               NBASM ver 00.27.15                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
 * Last Updated: 1 Jan 2025                                                 *
@@ -290,16 +290,16 @@ bios32_structure:
 .para
 pci_routing_table_structure:
   db  0x24, 0x50, 0x49, 0x52     ; "$PIR" signature
-  db  0, 1                       ; version
+  dw  0x0100                     ; version 1.0
   dw  (32 + (6 * 16))            ; table size
   db  0                          ; PCI interrupt router bus
   db  0x08                       ; PCI interrupt router DevFunc
   dw  0x0000                     ; PCI exclusive IRQs
   dw  0x8086                     ; compatible PCI interrupt router vendor ID
   dw  0x122E                     ; compatible PCI interrupt router device ID
-  dw  0,0                        ; Miniport data
-  db  0,0,0,0,0,0,0,0,0,0,0      ; reserved
-  db  0x37                       ; checksum
+  dd  0                          ; Miniport data
+  dup 11,0                       ; reserved
+  db  ?                          ; checksum (calculated at build time & run time if i440bx)
 pci_routing_table_structure_start:
   ; first slot entry PCI-to-ISA (embedded)
   db  0                          ; pci bus number
@@ -380,6 +380,7 @@ pci_routing_table_structure_start:
   db  5                          ; physical slot (0 = embedded)
   db  0                          ; reserved
 pci_routing_table_structure_end:
+.checksum (32 + (6 * 16)), 31  ; do a byte checksum of the last (32 + (6 * 16)) bytes, placing the result at offset 31
 
 ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 ; PCI Services
@@ -1494,7 +1495,6 @@ pci_bios_init_bridges_04:
            
            mov  bx,offset pci_routing_table_structure
            mov  byte cs:[bx+0x09],0x38  ; IRQ router DevFunc
-           mov  byte cs:[bx+0x1F],0x07  ; Checksum
            mov  byte cs:[bx+0x21],0x38  ; 1st entry: PCI2ISA
            mov  byte cs:[bx+0x31],0x40  ; 2nd entry: 1st slot
            mov  byte cs:[bx+0x41],0x48  ; 3rd entry: 2nd slot
@@ -1511,6 +1511,16 @@ pci_bios_init_bridges_04:
            call pci_config_write_byte   ; dx = bus/devfunc
            pop  bx
 @@:        mov  cs:[bx+0x71],cl         ;
+           
+           ; calculate the checksum
+           mov  byte cs:[bx+0x1F],0     ; clear the crc before the check
+           mov  cx,cs:[bx+0x06]         ; retrieve the size
+           xor  al,al                   ;
+@@:        add  al,cs:[bx]              ;
+           inc  bx                      ;
+           loop @b                      ;
+           mov  cs:[bx+0x1F],al         ; store the new crc
+
            jmp  short pci_bios_init_bridges_done
 
 pci_bios_init_bridges_05:
