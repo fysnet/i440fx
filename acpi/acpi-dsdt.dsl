@@ -25,7 +25,7 @@
  *   ASL+ Optimizing Compiler/Disassembler version 20241212 (32-bit version)
  *   Copyright (c) 2000 - 2023 Intel Corporation
  * with a command line of:
- *   iasl -ta -vr -p acpi-dsdt acpi-dsdt.asl
+ *   iasl -ta -vr -p acpi-dsdt acpi-dsdt.dsl
  * which will produce:
  *   acpi_dsdt.hex
  *
