@@ -27,10 +27,10 @@ comment |*******************************************************************
 *                                                                          *
 * BUILT WITH:   NewBasic Assembler                                         *
 *                 http://www.fysnet/newbasic.htm                           *
-*               NBASM ver 00.27.14                                         *
+*               NBASM ver 00.27.15                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 5 Jan 2025                                                 *
+* Last Updated: 12 Jan 2025                                                *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -349,7 +349,7 @@ pnp_node_03:
 pnp_node_04:
    dw  30                  ; length 30
    db  4                   ; handle
-   db  41h, 0D0h, 0Ch, 02h ; 0_10000_01110_10000__0000_1100_0000_0010b = PNP0C02 = General ID for system board device
+   db  41h, 0D0h, 01h, 03h ; 0_10000_01110_10000__0000_0001_0000_0011b = PNP0103 = High precision event timer
    db  8,0x80,0            ; Other System Peripheral
    dw  0x0003              ; is not configurable, cannot be disabled
 
@@ -1142,10 +1142,13 @@ pnpbios_real:
            les  di,pnp_arg1      ; segment:offset NumNodes
            
            ; the specs say it is an "unsigned char *"...
-           ;   ...however, AMI BIOS writes a word value
-           ; (we don't)
-           mov  al,pnp_node_count
-           mov  es:[di],al
+           ; However: "Plug and Play BIOS CLARIFICATION Paper" for Plug and Play BIOS Specification, Version 1.0A, October 18, 1994
+           ;  The 'Number of Nodes' variable was originally implemented as a WORD, then later it was changed to a CHAR.
+           ;  All new BIOSs should be implemented a CHAR according to the specification.  All operating systems and 
+           ;  utilities should expect a WORD then clear the upper byte because it is indeterminable.  This will allow
+           ;  OS and utility vendors to be backwards compatible with earlier versions of plug and play BIOS.
+           movzx ax,byte pnp_node_count
+           mov  es:[di],ax
 
            les  di,pnp_arg3      ; segment:offset NodeSize
            mov  ax,pnp_node_size
@@ -1188,10 +1191,11 @@ pnpbios_real:
            jz   pnpbios_fail
 
            ; update the node handle with 'next' value
-           xchg es:[di],bl
+           mov  es:[di],bl
 
            les  di,pnp_arg3      ; segment:offset NodeBuffer
            push di
+           cld
            rep
              movsb
            pop  di

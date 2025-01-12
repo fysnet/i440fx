@@ -27,10 +27,10 @@ comment |*******************************************************************
 *                                                                          *
 * BUILT WITH:   NewBasic Assembler                                         *
 *                 http://www.fysnet/newbasic.htm                           *
-*               NBASM ver 00.27.14                                         *
+*               NBASM ver 00.27.15                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 1 Jan 2025                                                 *
+* Last Updated: 10 Jan 2025                                                *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -212,6 +212,17 @@ int15_function proc near ; don't put anything here
            cmp  ah,0x04          ; 
            jne  short @f
            
+           jmp  int15_func_fail
+           
+           ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+           ; Locate ROM Basic
+@@:        cmp  ah,0x22          ; 
+           jne  short @f
+           
+           ; If we were going to support the 'Cassette Basic',
+           ;  it would reside at 0xF6000->0xFE000 and this function
+           ;  would return 0xF600:0000 in es:bx, with ah=0
+           ; However, we just don't have the room to do so.
            jmp  int15_func_fail
            
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

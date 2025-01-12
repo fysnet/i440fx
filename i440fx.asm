@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.15                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 10 Jan 2025                                                *
+* Last Updated: 12 Jan 2025                                                *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -1062,7 +1062,7 @@ int1A_handler:
            ; unknown service (Win95 calls this one with ax=0xB002)
 @@:        cmp  ah,0xB0
            jne  short @f
-            xchg cx,cx
+           ;xchg cx,cx
            jmp short int1A_handler_done
 
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
