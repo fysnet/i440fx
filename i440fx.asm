@@ -1049,21 +1049,21 @@ int1A_handler:
            cmp  ah,0xBB
            jne  short @f
            call tcgbios_function
-           jmp short int1A_handler_done
+           jmp  short int1A_handler_done
 
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
            ; PCI Services?
 @@:        cmp  ah,0xB1
            jne  short @f
            call pcibios_function
-           jmp short int1A_handler_done
+           jmp  short int1A_handler_done
 
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
            ; unknown service (Win95 calls this one with ax=0xB002)
 @@:        cmp  ah,0xB0
            jne  short @f
            ;xchg cx,cx
-           jmp short int1A_handler_done
+           jmp  short int1A_handler_done
 
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
            ; Time of Day Services
@@ -1489,6 +1489,118 @@ include 'icon_image.asm'
 include 'dsdt_data.asm'
 .endif
 
+           ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+           ; 
+.if DO_INIT_BIOS32
+.para
+bios32_structure:
+  db  0x5F, 0x33, 0x32, 0x5F          ; '_32_' signature
+  dd  ((BIOS_BASE << 4) + bios32_entry_point)  ; 32 bit physical address
+  db  0                               ; revision level
+  db  1                               ; length of structure in para's
+  db  ?                               ; checksum (calculated below)
+  db  0, 0, 0, 0, 0                   ; reserved
+.checksum 0x10 0x0A  ; do a byte checksum of the last 16 bytes, placing the result at offset 10
+.endif
+           ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+           ; pci irq routing table
+           ; (must be in the 0xF000 segment)
+.if DO_INIT_BIOS32
+.para
+pci_routing_table_structure:
+  db  0x24, 0x50, 0x49, 0x52     ; "$PIR" signature
+  dw  0x0100                     ; version 1.0
+  dw  (32 + (6 * 16))            ; table size
+  db  0                          ; PCI interrupt router bus
+  db  0x08                       ; PCI interrupt router DevFunc
+  dw  0x0000                     ; PCI exclusive IRQs
+  dw  0x8086                     ; compatible PCI interrupt router vendor ID
+  dw  0x122E                     ; compatible PCI interrupt router device ID
+  dd  0                          ; Miniport data
+  dup 11,0                       ; reserved
+  db  ?                          ; checksum (calculated at build time & run time if i440bx)
+pci_routing_table_structure_start:
+  ; first slot entry PCI-to-ISA (embedded)
+  db  0                          ; pci bus number
+  db  (1 << 3)                   ; pci device number (bit 7-3)
+  db  0x60                       ; link value INTA#: pointer into PCI2ISA config space
+  dw  0xDEF8                     ; IRQ bitmap INTA#
+  db  0x61                       ; link value INTB#
+  dw  0xDEF8                     ; IRQ bitmap INTB#
+  db  0x62                       ; link value INTC#
+  dw  0xDEF8                     ; IRQ bitmap INTC#
+  db  0x63                       ; link value INTD#
+  dw  0xDEF8                     ; IRQ bitmap INTD#
+  db  0                          ; physical slot (0 = embedded)
+  db  0                          ; reserved
+  ; second slot entry: 1st PCI slot
+  db  0                          ; pci bus number
+  db  (2 << 3)                   ; pci device number (bit 7-3)
+  db  0x61                       ; link value INTA#
+  dw  0xDEF8                     ; IRQ bitmap INTA#
+  db  0x62                       ; link value INTB#
+  dw  0xDEF8                     ; IRQ bitmap INTB#
+  db  0x63                       ; link value INTC#
+  dw  0xDEF8                     ; IRQ bitmap INTC#
+  db  0x60                       ; link value INTD#
+  dw  0xDEF8                     ; IRQ bitmap INTD#
+  db  1                          ; physical slot (0 = embedded)
+  db  0                          ; reserved
+  ; third slot entry: 2nd PCI slot
+  db  0                          ; pci bus number
+  db  (3 << 3)                   ; pci device number (bit 7-3)
+  db  0x62                       ; link value INTA#
+  dw  0xDEF8                     ; IRQ bitmap INTA#
+  db  0x63                       ; link value INTB#
+  dw  0xDEF8                     ; IRQ bitmap INTB#
+  db  0x60                       ; link value INTC#
+  dw  0xDEF8                     ; IRQ bitmap INTC#
+  db  0x61                       ; link value INTD#
+  dw  0xDEF8                     ; IRQ bitmap INTD#
+  db  2                          ; physical slot (0 = embedded)
+  db  0                          ; reserved
+  ; 4th slot entry: 3rd PCI slot
+  db  0                          ; pci bus number
+  db  (4 << 3)                   ; pci device number (bit 7-3)
+  db  0x63                       ; link value INTA#
+  dw  0xDEF8                     ; IRQ bitmap INTA#
+  db  0x60                       ; link value INTB#
+  dw  0xDEF8                     ; IRQ bitmap INTB#
+  db  0x61                       ; link value INTC#
+  dw  0xDEF8                     ; IRQ bitmap INTC#
+  db  0x62                       ; link value INTD#
+  dw  0xDEF8                     ; IRQ bitmap INTD#
+  db  3                          ; physical slot (0 = embedded)
+  db  0                          ; reserved
+  ; 5th slot entry: 4th PCI slot
+  db  0                          ; pci bus number
+  db  (5 << 3)                   ; pci device number (bit 7-3)
+  db  0x60                       ; link value INTA#
+  dw  0xDEF8                     ; IRQ bitmap INTA#
+  db  0x61                       ; link value INTB#
+  dw  0xDEF8                     ; IRQ bitmap INTB#
+  db  0x62                       ; link value INTC#
+  dw  0xDEF8                     ; IRQ bitmap INTC#
+  db  0x63                       ; link value INTD#
+  dw  0xDEF8                     ; IRQ bitmap INTD#
+  db  4                          ; physical slot (0 = embedded)
+  db  0                          ; reserved
+  ; 6th slot entry: 5th PCI slot
+  db  0                          ; pci bus number
+  db  (6 << 3)                   ; pci device number (bit 7-3)
+  db  0x61                       ; link value INTA#
+  dw  0xDEF8                     ; IRQ bitmap INTA#
+  db  0x62                       ; link value INTB#
+  dw  0xDEF8                     ; IRQ bitmap INTB#
+  db  0x63                       ; link value INTC#
+  dw  0xDEF8                     ; IRQ bitmap INTC#
+  db  0x60                       ; link value INTD#
+  dw  0xDEF8                     ; IRQ bitmap INTD#
+  db  5                          ; physical slot (0 = embedded)
+  db  0                          ; reserved
+pci_routing_table_structure_end:
+.checksum (32 + (6 * 16)), 31  ; do a byte checksum of the last (32 + (6 * 16)) bytes, placing the result at offset 31
+.endif
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
            ; next static item goes here
 

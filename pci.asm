@@ -277,111 +277,6 @@ pci_pro_select_reg:
 ; back to real mode stuff
 .rmode
 
-.para
-bios32_structure:
-  db  0x5F, 0x33, 0x32, 0x5F          ; '_32_' signature
-  dd  ((BIOS_BASE << 4) + bios32_entry_point)  ; 32 bit physical address
-  db  0                               ; revision level
-  db  1                               ; length of structure in para's
-  db  ?                               ; checksum (calculated below)
-  db  0, 0, 0, 0, 0                   ; reserved
-.checksum 0x10 0x0A  ; do a byte checksum of the last 16 bytes, placing the result at offset 10
-
-.para
-pci_routing_table_structure:
-  db  0x24, 0x50, 0x49, 0x52     ; "$PIR" signature
-  dw  0x0100                     ; version 1.0
-  dw  (32 + (6 * 16))            ; table size
-  db  0                          ; PCI interrupt router bus
-  db  0x08                       ; PCI interrupt router DevFunc
-  dw  0x0000                     ; PCI exclusive IRQs
-  dw  0x8086                     ; compatible PCI interrupt router vendor ID
-  dw  0x122E                     ; compatible PCI interrupt router device ID
-  dd  0                          ; Miniport data
-  dup 11,0                       ; reserved
-  db  ?                          ; checksum (calculated at build time & run time if i440bx)
-pci_routing_table_structure_start:
-  ; first slot entry PCI-to-ISA (embedded)
-  db  0                          ; pci bus number
-  db  0x08                       ; pci device number (bit 7-3)
-  db  0x60                       ; link value INTA#: pointer into PCI2ISA config space
-  dw  0xdef8                     ; IRQ bitmap INTA#
-  db  0x61                       ; link value INTB#
-  dw  0xdef8                     ; IRQ bitmap INTB#
-  db  0x62                       ; link value INTC#
-  dw  0xdef8                     ; IRQ bitmap INTC#
-  db  0x63                       ; link value INTD#
-  dw  0xdef8                     ; IRQ bitmap INTD#
-  db  0                          ; physical slot (0 = embedded)
-  db  0                          ; reserved
-  ; second slot entry: 1st PCI slot
-  db  0                          ; pci bus number
-  db  0x10                       ; pci device number (bit 7-3)
-  db  0x61                       ; link value INTA#
-  dw  0xdef8                     ; IRQ bitmap INTA#
-  db  0x62                       ; link value INTB#
-  dw  0xdef8                     ; IRQ bitmap INTB#
-  db  0x63                       ; link value INTC#
-  dw  0xdef8                     ; IRQ bitmap INTC#
-  db  0x60                       ; link value INTD#
-  dw  0xdef8                     ; IRQ bitmap INTD#
-  db  1                          ; physical slot (0 = embedded)
-  db  0                          ; reserved
-  ; third slot entry: 2nd PCI slot
-  db  0                          ; pci bus number
-  db  0x18                       ; pci device number (bit 7-3)
-  db  0x62                       ; link value INTA#
-  dw  0xdef8                     ; IRQ bitmap INTA#
-  db  0x63                       ; link value INTB#
-  dw  0xdef8                     ; IRQ bitmap INTB#
-  db  0x60                       ; link value INTC#
-  dw  0xdef8                     ; IRQ bitmap INTC#
-  db  0x61                       ; link value INTD#
-  dw  0xdef8                     ; IRQ bitmap INTD#
-  db  2                          ; physical slot (0 = embedded)
-  db  0                          ; reserved
-  ; 4th slot entry: 3rd PCI slot
-  db  0                          ; pci bus number
-  db  0x20                       ; pci device number (bit 7-3)
-  db  0x63                       ; link value INTA#
-  dw  0xdef8                     ; IRQ bitmap INTA#
-  db  0x60                       ; link value INTB#
-  dw  0xdef8                     ; IRQ bitmap INTB#
-  db  0x61                       ; link value INTC#
-  dw  0xdef8                     ; IRQ bitmap INTC#
-  db  0x62                       ; link value INTD#
-  dw  0xdef8                     ; IRQ bitmap INTD#
-  db  3                          ; physical slot (0 = embedded)
-  db  0                          ; reserved
-  ; 5th slot entry: 4th PCI slot
-  db  0                          ; pci bus number
-  db  0x28                       ; pci device number (bit 7-3)
-  db  0x60                       ; link value INTA#
-  dw  0xdef8                     ; IRQ bitmap INTA#
-  db  0x61                       ; link value INTB#
-  dw  0xdef8                     ; IRQ bitmap INTB#
-  db  0x62                       ; link value INTC#
-  dw  0xdef8                     ; IRQ bitmap INTC#
-  db  0x63                       ; link value INTD#
-  dw  0xdef8                     ; IRQ bitmap INTD#
-  db  4                          ; physical slot (0 = embedded)
-  db  0                          ; reserved
-  ; 6th slot entry: 5th PCI slot
-  db  0                          ; pci bus number
-  db  0x30                       ; pci device number (bit 7-3)
-  db  0x61                       ; link value INTA#
-  dw  0xdef8                     ; IRQ bitmap INTA#
-  db  0x62                       ; link value INTB#
-  dw  0xdef8                     ; IRQ bitmap INTB#
-  db  0x63                       ; link value INTC#
-  dw  0xdef8                     ; IRQ bitmap INTC#
-  db  0x60                       ; link value INTD#
-  dw  0xdef8                     ; IRQ bitmap INTD#
-  db  5                          ; physical slot (0 = embedded)
-  db  0                          ; reserved
-pci_routing_table_structure_end:
-.checksum (32 + (6 * 16)), 31  ; do a byte checksum of the last (32 + (6 * 16)) bytes, placing the result at offset 31
-
 ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 ; PCI Services
 ; on entry:
@@ -575,6 +470,7 @@ pci_real_nextdev2:
 
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
            ; get irq routing options
+           ; (this call assumes the Guest sets DS to 0xF000)
 @@:        cmp  al,0x0E
            jne  short @f
 
@@ -582,11 +478,10 @@ pci_real_nextdev2:
            cmp  es:[di],ax
            jb   short pci_real_too_small
            stosw                 ; size of our return data
-           cld
            mov  si,offset pci_routing_table_structure_start
            les  di,es:[di+2]
            mov  cx,ax
-           cs:                   ; override the ds segment with cs
+           cld
            rep
              movsb
            mov  word REG_BX,((1 << 9) | (1 << 11)) ; irq 9 and 11 are used
@@ -692,7 +587,7 @@ pcibios_init_sel_reg endp
 ; on return
 ;  nothing
 ; destroys all general
-init_pci_bases proc near
+init_pci_bases proc near uses ds
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
            ; 
            push bp
@@ -784,7 +679,7 @@ init_pci_bases endp
 ; on return
 ;  nothing
 ; destroys all general
-init_pci_irqs proc near
+init_pci_irqs proc near uses ds
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
            ; 
            push bp
@@ -793,6 +688,10 @@ init_pci_irqs proc near
            out  dx,al
            inc  dx
            out  dx,al
+           
+           mov  ax,BIOS_BASE2
+           mov  ds,ax
+           
            mov  si,offset pci_routing_table_structure
            mov  bh,[si+8]
            mov  bl,[si+9]
@@ -832,7 +731,7 @@ pci_init_irq_loop2:
            jz   short next_pir_entry
            jmp  short next_pci_func
 pci_test_int_pin:
-           mov  dl,0x3c
+           mov  dl,0x3C
            call pcibios_init_sel_reg
            mov  dx,0x0CFD
            in   al,dx
@@ -1493,34 +1392,38 @@ pci_bios_init_bridges_04:
            ; dx = bus/devfunc
            call bios_shadow_init
            
+           push ds
+           mov  ax,BIOS_BASE2
+           mov  ds,ax
            mov  bx,offset pci_routing_table_structure
-           mov  byte cs:[bx+0x09],0x38  ; IRQ router DevFunc
-           mov  byte cs:[bx+0x21],0x38  ; 1st entry: PCI2ISA
-           mov  byte cs:[bx+0x31],0x40  ; 2nd entry: 1st slot
-           mov  byte cs:[bx+0x41],0x48  ; 3rd entry: 2nd slot
-           mov  byte cs:[bx+0x51],0x50  ; 4th entry: 3rd slot
-           mov  byte cs:[bx+0x61],0x58  ; 5th entry: 4th slot
+           mov  byte [bx+0x09],0x38     ; IRQ router DevFunc
+           mov  byte [bx+0x21],0x38     ; 1st entry: PCI2ISA
+           mov  byte [bx+0x31],0x40     ; 2nd entry: 1st slot
+           mov  byte [bx+0x41],0x48     ; 3rd entry: 2nd slot
+           mov  byte [bx+0x51],0x50     ; 4th entry: 3rd slot
+           mov  byte [bx+0x61],0x58     ; 5th entry: 4th slot
            mov  cl,0x60                 ; 6th entry: 5th slot
            cmp  ax,PCI_DEVICE_ID_INTEL_82443
            jne  short @f
-           mov  byte cs:[bx+0x70],0x01  ; 6th entry: AGP
+           mov  byte [bx+0x70],0x01     ; 6th entry: AGP
            mov  cl,0x00                 ; 6th entry: AGP slot
            push bx
            mov  bx,0xB4                 ; AGP aperture size 64 MB
            mov  al,0x30                 ;
            call pci_config_write_byte   ; dx = bus/devfunc
            pop  bx
-@@:        mov  cs:[bx+0x71],cl         ;
+@@:        mov  [bx+0x71],cl            ;
            
            ; calculate the checksum
-           mov  byte cs:[bx+0x1F],0     ; clear the crc before the check
-           mov  cx,cs:[bx+0x06]         ; retrieve the size
+           mov  byte [bx+0x1F],0        ; clear the crc before the check
+           mov  cx,[bx+0x06]            ; retrieve the size
            xor  al,al                   ;
-@@:        add  al,cs:[bx]              ;
+@@:        add  al,[bx]                 ;
            inc  bx                      ;
            loop @b                      ;
            neg  al                      ;
-           mov  cs:[bx+0x1F],al         ; store the new crc
+           mov  [bx+0x1F],al            ; store the new crc
+           pop  ds
 
            jmp  short pci_bios_init_bridges_done
 
