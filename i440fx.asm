@@ -331,7 +331,13 @@ normal_post:
            
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
            ; initialize the serial port(s)
-           call init_serial
+           ;call init_serial
+
+
+           ;;;; serial
+           ;;;; adding pnp nodes
+
+
            
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
            ; initialize the RTC

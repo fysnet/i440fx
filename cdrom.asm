@@ -27,7 +27,7 @@ comment |*******************************************************************
 *                                                                          *
 * BUILT WITH:   NewBasic Assembler                                         *
 *                 http://www.fysnet/newbasic.htm                           *
-*               NBASM ver 00.27.14                                         *
+*               NBASM ver 00.27.15                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
 * Last Updated: 6 Jan 2025                                                 *

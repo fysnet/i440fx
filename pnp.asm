@@ -871,6 +871,8 @@ pnp_initialize proc near uses eax bx cx dx ds
            sub  eax,0x00100000
            mov  cs:[pnp_node_06 + ((4*12) - sizeof(dword))],eax  ; third 12-byte block, last dword of that block
 
+           ret ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
            ; check if a pci vga card is found
            ; if not, add a standard VGA entry
            call pnp_add_vga
