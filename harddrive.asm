@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.15                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 3 Jan 2025                                                 *
+* Last Updated: 15 Jan 2025                                                *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -741,6 +741,7 @@ ata_no_drive_found:
            mov  eax,ss:[di+(60 * sizeof(word))]
            mov  hd_sectors_low,eax
            mov  dword hd_sectors_high,0
+           ; word at 83, bit 10 indicates lba48 support
            mov  ax,ss:[di+(83 * sizeof(word))]
            test ax,(1 << 10)
            jz   short @f
@@ -889,9 +890,10 @@ hd_translation_is_large:
            shr  ax,1      ; cyl >>= 1
            shl  cx,1      ; heads <<= 1
            cmp  cx,128    ; stop if heads == 128+
-           jae  short @f
-           jmp  short @b
-@@:        jmp  short hd_translation_done
+           jb   short @b
+@@:        mov  hd_cylinders,ax
+           mov  hd_heads,cx
+           jmp  short hd_translation_done
 
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
            ; translation = r-echs
