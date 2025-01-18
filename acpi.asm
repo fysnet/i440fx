@@ -113,12 +113,12 @@ FADT_TABLE        ends
 ; ACPI 1.0 Firmware ACPI Control Structure (FACS)
 FACS_TABLE        struct
   signature          dup 4   ; ACPI Signature
-	length             dword   ; Length of structure, in bytes
-	hardware_signature dword   ; Hardware configuration signature
-	fw_wake_vector     dword   ; ACPI OS waking vector
-	global_lock        dword   ; Global Lock
-	S4bios_f           dword   ; bit 0 = Indicates if S4BIOS support is present
-	resverved          dup 40  ; Reserved - must be zero
+  length             dword   ; Length of structure, in bytes
+  hardware_signature dword   ; Hardware configuration signature
+  fw_wake_vector     dword   ; ACPI OS waking vector
+  global_lock        dword   ; Global Lock
+  S4bios_f           dword   ; bit 0 = Indicates if S4BIOS support is present
+  resverved          dup 40  ; Reserved - must be zero
 FACS_TABLE        ends
 
 APIC_PROCESSOR          equ  0
@@ -189,8 +189,8 @@ MADT_HPET         ends
 acpi_bios_init proc near uses alld ds
            
            ; if not enabled, don't initialize it
-           mov  al,[EBDA_DATA->acpi_enabled]
-           jz   acpi_bios_init_done
+           cmp  byte [EBDA_DATA->acpi_enabled],0
+           je   acpi_bios_init_done
 
            ; we have to have at least 1Meg of RAM
            mov  edx,[EBDA_DATA->mem_base_ram_size]
@@ -353,13 +353,13 @@ acpi_bios_init proc near uses alld ds
            mov  dword fs:[edi+FADT_TABLE->pm2_cnt_blk],0
            add  eax,4
            mov        fs:[edi+FADT_TABLE->pm_tmr_blk],eax
-           mov  dword fs:[edi+FADT_TABLE->gpe0_blk],0
+           mov  dword fs:[edi+FADT_TABLE->gpe0_blk],0x0000AFE0
            mov  dword fs:[edi+FADT_TABLE->gpe1_blk],0
            mov  byte  fs:[edi+FADT_TABLE->pm1_evt_len],4
            mov  byte  fs:[edi+FADT_TABLE->pm1_cnt_len],2
            mov  byte  fs:[edi+FADT_TABLE->pm2_cnt_len],0
            mov  byte  fs:[edi+FADT_TABLE->pm_tmr_len],4
-           mov  byte  fs:[edi+FADT_TABLE->gpe0_blk_len],0
+           mov  byte  fs:[edi+FADT_TABLE->gpe0_blk_len],4
            mov  byte  fs:[edi+FADT_TABLE->gpe1_blk_len],0
            mov  byte  fs:[edi+FADT_TABLE->gpe1_base],0
            mov  byte  fs:[edi+FADT_TABLE->reserved3],0
@@ -388,10 +388,10 @@ acpi_bios_init proc near uses alld ds
            call memset32
            mov  dword fs:[edi+FACS_TABLE->signature],'SCAF'
            mov  dword fs:[edi+FACS_TABLE->length],sizeof(FACS_TABLE)
-           mov  dword fs:[edi+FACS_TABLE->hardware_signature],0
-           mov  dword fs:[edi+FACS_TABLE->fw_wake_vector],0
-           mov  dword fs:[edi+FACS_TABLE->global_lock],0
-           mov  dword fs:[edi+FACS_TABLE->S4bios_f],0
+          ;mov  dword fs:[edi+FACS_TABLE->hardware_signature],0
+          ;mov  dword fs:[edi+FACS_TABLE->fw_wake_vector],0
+          ;mov  dword fs:[edi+FACS_TABLE->global_lock],0
+          ;mov  dword fs:[edi+FACS_TABLE->S4bios_f],0
            
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
            ; build the DSDT
@@ -460,9 +460,10 @@ acpi_bios_init proc near uses alld ds
            mov  dl,1                ; revision
            call acpi_build_header
 
-  ; writemem "C:\bochs\images\winxp\dd.bin" 0x1FFF0000 34872
-  ;mov eax,[EBDA_DATA->acpi_base_address]
-  ;mov cx,[EBDA_DATA->acpi_tables_size]
+  ; writemem "C:\bochs\images\win98_test\dd.bin" 0x0FFF0000 34872
+  ;mov  edx,[EBDA_DATA->rsdp_table]         ; 0x000F5750
+  ;mov eax,[EBDA_DATA->acpi_base_address]   ; 0x0FFF0000
+  ;mov cx,[EBDA_DATA->acpi_tables_size]     ; 4088
   ;xchg cx,cx
 
 acpi_bios_init_done:
