@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.15                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 12 Jan 2025                                                *
+* Last Updated: 17 Jan 2025                                                *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -871,8 +871,6 @@ pnp_initialize proc near uses eax bx cx dx ds
            sub  eax,0x00100000
            mov  cs:[pnp_node_06 + ((4*12) - sizeof(dword))],eax  ; third 12-byte block, last dword of that block
 
-           ret ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
            ; check if a pci vga card is found
            ; if not, add a standard VGA entry
            call pnp_add_vga
@@ -1106,14 +1104,39 @@ pnp_event_flag  dd 0x00000000
 ;     = !0 = error
 ; destroys nothing
 pnpbios_prot:
-           push ebp
-           mov  ebp,esp
+           ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+           ; we set ah = 0x80 to indicate a protected mode caller
            mov  ah,0x80
+
+           ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+           ; we must determine if the caller is using a 32-bit or 16-bit stack
+           ; if it is a 32-bit stack, we use esp. if it is a 16-bit stack,
+           ;  we use sp
+           push eax              ; save high word of eax
+           mov  eax,ss
+           lar  eax,eax
+           test eax,(1<<22)      ; D/B bit
+           pop  eax              ; restore high word of eax
+           push ebp
+           jz   short pnpbios_prot16
+
+           ; caller is pmode using a 32-bit stack
+           mov  ebp,esp
            jmp  short @f
+
+pnpbios_prot16:
+           ; caller is pmode using a 16-bit stack
+           movzx ebp,sp
+           jmp  short @f
+
 pnpbios_real:
+           ; caller is real mode using a 16-bit stack
            push ebp
            movzx ebp,sp
            mov  ah,0x00
+
+           ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+           ; start of our PnP service code
 @@:        pushf
            push bx
            push cx
@@ -1626,7 +1649,7 @@ pnp_scan_rom_loop:
            
            ; Point ES:DI at "$PnP", which tells the ROM that we are a PnP BIOS
            ; That should stop it grabbing INT 19h; we will use its BEV instead
-           mov  ax,BIOS_BASE2  ; es:id -> PnP structure
+           mov  ax,BIOS_BASE2  ; es:di -> PnP structure
            mov  es,ax          ;
            mov  bx,0xFFFF      ; CSN (Card Select Number) or 0xFFFF if this device is not PnP
            mov  dx,0xFFFF      ; dx = PnP Data Port address (or 0xFFFF if there is no PnP available)

@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.15                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 3 Jan 2025                                                 *
+* Last Updated: 17 Jan 2025                                                *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -306,7 +306,6 @@ apm_send_pm_string proc near uses ax bx
 apm_send_pm_string endp
 
 ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-; real_mode apm int 15 service call handler
 ; 16-bit pmode apm int 15 service call handler
 ; on entry:
 ;  general registers

@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.15                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 12 Jan 2025                                                *
+* Last Updated: 17 Jan 2025                                                *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -332,12 +332,6 @@ normal_post:
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
            ; initialize the serial port(s)
            ;call init_serial
-
-
-           ;;;; serial
-           ;;;; adding pnp nodes
-
-
            
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
            ; initialize the RTC
@@ -809,7 +803,7 @@ int13_handler:
            push  es
            push  ds
            pushad
-
+           
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
            ; all but the floppy want a pointer to EBDA_SEG
            push ax

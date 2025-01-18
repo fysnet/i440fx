@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.15                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 8 Dec 2024                                                 *
+* Last Updated: 17 Jan 2025                                                *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -43,8 +43,6 @@ comment |*******************************************************************
 SYSMAN_VER   equ  0x0204   ; 2.4
 
 .if DO_INIT_BIOS32
-
-; todo: we need to populate the version and date strings below
 
 .ifdef BX_QEMU
 bx_vendor_str       db  'QEMU',0

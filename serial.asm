@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.15                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 8 Dec 2024                                                 *
+* Last Updated: 17 Jan 2025                                                *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -40,7 +40,7 @@ comment |*******************************************************************
 ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 ; initialize the serial port(s)
 ; on entry:
-;  nothing
+;  es = 0x0000
 ; on return
 ;  nothing
 ; destroys all general
@@ -53,7 +53,7 @@ init_serial proc near
            call set_int_vector
 
            xor  bx,bx
-           mov  cl,0x01          ; timeout value (default to 1)
+           mov  cl,10            ; timeout value (default to 10)
            mov  dx,0x03F8        ; Serial I/O address, port 1
            call detect_serial
            mov  dx,0x02F8        ; Serial I/O address, port 2
