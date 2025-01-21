@@ -1,5 +1,5 @@
 comment |*******************************************************************
-*  Copyright (c) 1984-2024    Forever Young Software  Benjamin David Lunt  *
+*  Copyright (c) 1984-2025    Forever Young Software  Benjamin David Lunt  *
 *                                                                          *
 *                         i440FX BIOS ROM v1.0                             *
 * FILE: serial.asm                                                         *
@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.15                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 17 Jan 2025                                                *
+* Last Updated: 20 Jan 2025                                                *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -167,6 +167,9 @@ detect_serial_done:
            pop  bx
            mov  es:[bx+0x47C],cl ; Serial timeout
            inc  bx
+           
+           ; make sure there isn't a pending interrupt
+           call eoi_master_pic
 
 detect_serial_none:
            ret
