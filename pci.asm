@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.15                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 1 Jan 2025                                                 *
+* Last Updated: 21 Jan 2025                                                *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -1716,10 +1716,11 @@ pci_map_interrupt:
            mov  dword [EBDA_DATA->pm_io_base],PM_IO_BASE
            mov  dword [EBDA_DATA->smb_io_base],SMB_IO_BASE
            
-           ; acpi sci is hardwired to 9
-           mov  al,9
-           mov  bx,PCI_INTERRUPT_LINE
-           call pci_config_write_byte
+           ; don't hardwire acpi to 9
+           ;mov  al,9
+           ;mov  bx,PCI_INTERRUPT_LINE
+           ;call pci_config_write_byte
+
            call pci_config_read_byte
            mov  [EBDA_DATA->pm_sci_int],al
 
@@ -2084,13 +2085,7 @@ pci_bios_init_pcirom endp
 ;  al = irq number
 ; destroys nothing
 pci_slot_get_pirq proc near uses cx
-
-           ; ?????????????
-           ; if is_i440BX
-           ;  return (pin + (dev - 7)) & 3
-           ; else
-           ;  return (pin + (dev - 1)) & 3
-
+           
            mov  cl,dl
            shr  cl,3             ; cl = dev
            dec  cl               ; - 1
@@ -2100,7 +2095,7 @@ pci_slot_get_pirq proc near uses cx
 @@:        add  cl,bl            ; add the pin
            and  cl,3             ; only bottom 2 bits
            mov  al,cl            ; return in al
-
+           
            ret
 pci_slot_get_pirq endp
 

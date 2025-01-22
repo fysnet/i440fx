@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.15                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 20 Jan 2025                                                *
+* Last Updated: 21 Jan 2025                                                *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -169,7 +169,7 @@ detect_serial_done:
            inc  bx
            
            ; make sure there isn't a pending interrupt
-           call eoi_master_pic
+           call eoi_both_pic
 
 detect_serial_none:
            ret
