@@ -9,6 +9,8 @@ My intent is twofold. The first and foremost was to add booting from a USB devic
 
 It is built with my own Intel x86 assembler found at [https://www.fysnet.net/newbasic.htm](https://www.fysnet.net/newbasic.htm).
 
+The documentation can be found at [https://github.com/fysnet/i440fx/tree/main/docs/index.html](https://github.com/fysnet/i440fx/tree/main/docs/index.html).
+
 #### 05 Jan 2025
 * The format of the internal ESCD has changed. If you use the ESCD option, please delete the current ESCD.BIN file and allow the BIOS to create a new clean one.
 
