@@ -1,0 +1,486 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+  <head>
+    <title>i440fx - A BIOS for Bochs and QEMU</title>
+    <meta name="AUTHOR" content="Forever Young Software" />
+    <meta http-equiv="Keywords" content="i44fx BIOS Bochs QEMU Source Assembly" />
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+    <link type="text/css" rel="stylesheet" href="doc.css" />
+  </head>
+
+  <body>
+    <div class="center">
+      <font color="#54A3D9" face="Comic Sans MS" size="3">
+        <img src="bochs.png" align="left" alt="Bochs" width="48" height="48" />
+        <img src="bochs.png" align="right" alt="Bochs" width="48" height="48" />
+        <font size="6">
+          <b>i440fx - A BIOS for Bochs and QEMU</b>
+        </font>
+        <br />
+        <font size="4">Assembly source code included</font>
+        <br />
+        <br />
+      </font>
+    </div>
+
+    <h2>Contents</h2>
+    <ul>
+      <li><a href="#overview">Overview:</a> An overview of this BIOS</li>
+      <li><a href="#objective">Objective:</a> The objective of this BIOS</li>
+      <li><a href="#resources">Resources:</a> The required resources for this BIOS</li>
+      <li><a href="#build">Building:</a> Building this BIOS from source</li>
+      <li><a href="#usage">Usage:</a> Using this BIOS with Bochs or QEMU</li>
+      <li><a href="#user">User interaction:</a> Interaction with the BIOS</li>
+      <li><a href="#escd">ESCD:</a> Extended System Configuration Data usage</li>
+      <li><a href="#usb">USB:</a> USB emulation</li>
+      <li><a href="#usb">Post:</a> Last words</li>
+    </ul>
+
+    <a name="overview"></a>
+    <h2>Overview</h2>
+    <ul>
+      <li>
+        This BIOS is designed to emulate the <a href="https://en.wikipedia.org/wiki/Intel_440FX">Intel 440fx</a> (Pentium, Pentium Pro, and Pentium II) and the later
+        <a href="https://en.wikipedia.org/wiki/Intel_440BX">Intel 440bx</a> (Pentium II, Pentium III, and Celeron) chipsets.
+      </li>
+      <li>
+        i440fx is an open source adaptation of the original Bochs <a href="https://github.com/bochs-emu/Bochs">BIOS</a> with many fixes and enhancements.
+        It is written entirely in x86 Assembly assembled with the NBASM assembler.
+      </li>
+      <li>It is designed to boot a guest following the BIOS Boot Specification with enhancements like PnP, USB emulation, ACPI, and other resources.</li>
+      <li>
+        Unlike the previous source, this adaptation requires only one build application (the assembler) with a single command line. No manipulation or preprocessing
+        of source code and no post-processing. A single assembler and a single command line creates the BIOS image all at once.
+      </li>
+      <li>
+        This BIOS is designed for and has been tested to boot guests as old as IBM PCDOS 2.0 (as long as you don't use the internal BASIC interpreter such as with
+        BASICA, etc.) to most modern quests such as Windows 11 and various unix based quests.
+      </li>
+    </ul>
+
+    <a name="objective"></a>
+    <h2>Objective</h2>
+    <ul>
+      <li>
+        The objective for this BIOS was first to see if I can do it. I wanted to see if I could adapt and enhance the given BIOS to boot a wider range of guests, and second, to add booting from USB devices.
+      </li>
+      <li>
+        There are a few errors with the previous BIOS, a few in the CD-ROM emulation, as well as other misc errors. The objective of this BIOS is to eliminate and enhance its function.
+      </li>
+    </ul>
+
+    <a name="resources"></a>
+    <h2>Resources</h2>
+    <ul>
+      <li>
+        This BIOS is designed to be used with the BOCHS emulator.
+        <ul>
+          <li><a href="https://sourceforge.net/projects/bochs/files/bochs/">Bochs Project page</a></li>
+          <li><a href="https://github.com/bochs-emu/Bochs">Bochs github source</a></li>
+          <li><a href="https://bochs.sourceforge.io/cgi-bin/topper.pl?name=New+Bochs+Documentation&url=https://bochs.sourceforge.io/doc/docbook/">Bochs Documentation</a></li>
+        </ul>
+      </li>
+      <li>
+        The source code for this BIOS.
+        <ul>
+          <li>
+            <a href="https://github.com/fysnet/i440fx">i440fx</a>
+          </li>
+          <li>
+            This source is licensed as:
+            <pre>
+      *                                                                          *
+      *  Copyright (c) 1984-2025    Forever Young Software  Benjamin David Lunt  *
+      *                                                                          *
+      *                         i440FX BIOS ROM v1.0                             *
+      *                                                                          *
+      * This code is freeware, not public domain.  Please use respectfully.      *
+      *                                                                          *
+      * You may:                                                                 *
+      *  - use this code for learning purposes only.                             *
+      *  - use this code in your own Operating System development.               *
+      *  - distribute any code that you produce pertaining to this code          *
+      *    as long as it is for learning purposes only, not for profit,          *
+      *    and you give credit where credit is due.                              *
+      *                                                                          *
+      * You may NOT:                                                             *
+      *  - distribute this code for any purpose other than listed above.         *
+      *  - distribute this code for profit.                                      *
+      *                                                                          *
+      * You MUST:                                                                *
+      *  - include this whole comment block at the top of this file.             *
+      *  - include contact information to where the original source is located.  *
+      *            https://github.com/fysnet/i440fx                              *
+      *                                                                          *
+            </pre>
+          </li>
+        </ul>
+      </li>
+    </ul>
+
+    <a name="build"></a>
+    <h2>Building</h2>
+    <ul>
+      <li>
+        This BIOS is assembled with the NewBasic assembler.
+        <ul>
+          <li><a href="https://www.fysnet.net/newbasic.htm">NewBasic Assembler</a></li>
+        </ul>
+      </li>
+      <li>
+        This assembler is intended for DOS and 32-bit and 64-bit Windows. However, using additional resources, you can use this assembler on Linux.
+        <ul>
+          <li>
+            <p>
+              <b>Windows (Command Prompt)</b>:
+            </p>
+            <p>
+              To build this BIOS for BOCHS, from the i440fx directory, use the following commandline:
+            </p>
+            <p>
+              &nbsp; &nbsp; &nbsp; &nbsp;<code>NBASM i440fx /x /z</code>
+            </p>
+            <p>
+              This will produce <code>i44fx.bin</code> ready to be inserted into the emulation. It will also create a <code>.lst</code> file showing all of the references throughout the source code, useful for debugging.
+            </p>
+            <p>
+              To build this BIOS for Qemu, from the i440fx directory, use the following commandline:
+            </p>
+            <p>
+              &nbsp; &nbsp; &nbsp; &nbsp;<code>NBASM i440fx /x /z /DBX_QEMU</code>
+            </p>
+            <p>
+              You can exclude the <code>/x</code> parameter if you wish. If you exclude the <code>/z</code> parameter, NBASM will show a few diagnostic warnings. These can be ignored.
+            </p>
+          </li>
+          <li>
+            <p>
+              <b>Linux</b>:
+            </p>
+            <p>
+              Using additional resources, you can use NBASM on Linux.
+            </p>
+            <p>
+              <b>Need clarification here...</b> I don't use Linux.
+            </p>
+            <p>
+              To build this BIOS for BOCHS, from the i440fx directory, use the following commandline:
+            </p>
+            <p>
+              &nbsp; &nbsp; &nbsp; &nbsp;<code>NBASM i440fx /x /z</code>
+            </p>
+            <p>
+              This will produce <code>i44fx.bin</code> ready to be inserted into the emulation. It will also create a <code>.lst</code> file showing all of the references throughout the source code useful for debugging.
+            </p>
+            <p>
+              To build this BIOS for Qemu, from the i440fx directory, use the following commandline:
+            </p>
+            <p>
+              &nbsp; &nbsp; &nbsp; &nbsp;<code>NBASM i440fx /x /z /DBX_QEMU</code>
+            </p>
+            <p>
+              You can exclude the <code>/x</code> parameter if you wish. If you exclude the <code>/z</code> parameter, NBASM will show a few diagnostic warnings. These can be ignored.
+            </p>
+          </li>
+        </ul>
+      </li>
+    </ul>
+
+    <a name="usage"></a>
+    <h2>Using</h2>
+    <ul>
+      <li>
+        <b>To use this BIOS with Bochs</b>, place one of the following lines in your <code>bochsrc.txt</code> file:
+        <ul>
+          <li>
+            <code>
+              romimage: file=$BXSHARE/bios/i440fx/i440fx.bin
+            </code>
+          </li>
+          <li>
+            <code>
+              romimage: file=$BXSHARE/bios/i440fx/i440fx.bin, flash_data="escd.bin"
+            </code>
+          </li>
+        </ul>
+        <p>
+          If you haven't set the <code>$BXSHARE</code> parameter to point to the Bochs directory, change the above to point directly to the binary file.
+        </p>
+        <p>
+          The second example will use the ESCD (Extended System Configuration Data) data given in the <code>escd.bin</code> file. See the <a href="#escd">ESCD</a> section for more on this.
+          If the file doesn't exist, this BIOS will create one using defaults.
+        </p>
+        <p>
+          It is recommended that you use the following addition:
+        </p>
+        <p>
+          <ul>
+            <li>
+              <code>
+                cpu: model=pentium
+              </code>
+            </li>
+          </ul>
+        </p>
+      </li>
+    </ul>
+    <ul>
+      <li>
+        <b>To use this BIOS with QEMU</b>, use the following parameter:
+        <ul>
+          <li>
+            <code>
+              -bios C:\path\to\this\bios\i440fx_qemu.bin
+            </code>
+          </li>
+        </ul>
+        <p>
+          It is recommended that you use the following addition:
+        </p>
+        <p>
+          <ul>
+            <li>
+              <code>
+                -cpu pentium3-v1
+              </code>
+            </li>
+          </ul>
+        </p>
+        <p>
+          The following has been known to work, but not completely supported:
+        </p>
+        <p>
+          <ul>
+            <li>
+              <code>
+                -machine q35
+              </code>
+            </li>
+          </ul>
+        </p>
+      </li>
+    </ul>
+
+    <a name="user"></a>
+    <h2>User Interaction</h2>
+    <ul>
+      <li>
+        During Boot, you will see a prompt similar to the following:<br />
+        <img src="prompt0.png" align="left" alt="BIOS Prompt" />
+        <br clear="left" />
+        <br />
+      </li>
+      <li>
+        <p>
+          Depending on the settings, you will have just a few seconds to press either F10 or F12.
+        </p>
+        <p>
+          If you press F10, the setup will be shown. See the <a href="#escd">ESCD</a> section for more on this.
+        </p>
+        <p>
+          If you press F12, you will be shown a list of found bootable devices. Press the letter next to the device you wish to boot.
+        </p>
+        <img src="prompt1.png" align="left" alt="BIOS Prompt" />
+        <br clear="left" />
+        <br />
+      </li>
+    </ul>
+
+    <a name="escd"></a>
+    <h2>ESCD (Extended System Configuration Data)</h2>
+    <ul>
+      <li>
+        This BIOS uses the Extended System Configuration Data (ESCD) area in the 0xFC000-0xFFFFF range.
+      </li>
+      <li>
+        <p>
+          If you include an ESCD file to use (see a previous section), this BIOS will use the contents of that file for settings and other data during boot time. If you did not include a file, defaults will be used.
+        </p>
+        <p>
+          This file and the data within it is used for various items throughout the boot.
+          <ul>
+            <li>
+              Num Lock: Shall the Num Lock state be on or off at boot time?
+            </li>
+            <li>
+              Delay: The count of seconds to delay waiting for a key press at the shown prompt.
+            </li>
+            <li>
+              Other items will be added here.
+            </li>
+          </ul>
+        </p>
+      </li>
+      <li>
+        <p>
+          The Setup page:
+        </p>
+        <p>
+          The setup page appears when you press F10 at the boot prompt.
+        </p>
+        <img src="prompt2.png" align="left" alt="BIOS Prompt" />
+        <br clear="left" />
+        <br />
+      </li>
+      <li>
+        You can use the mouse or the arrow keys to move around the items. If you use the arrow keys, the space key will simulate a mouse click on the item selected.
+      </li>
+      </li>
+      <li>
+        <b>Please note that a lot of work is still needed for this setup page and I will update this documentation when that work progresses.</b>
+      </li>
+    </ul>
+
+    <a name="usb"></a>
+    <h2>USB Emulation</h2>
+    <ul>
+      <li>
+        This BIOS will emulate a given USB device.
+      </li>
+      <li>
+        Currently only the following items are supported:
+        <ul>
+          <li>
+            USB Floppy Disk
+          </li>
+          <li>
+            USB Hard Drive
+          </li>
+          <li>
+            CD-ROM Disc
+          </li>
+        </ul>
+      </li>
+      <li>
+        Future plans are to emulate a USB mouse and Keyboard.
+      </li>
+      <li>
+        <p>
+          To boot a USB device, use the following in your <code>bochsrc.txt</code> file:
+        </p>
+        <p>
+          &nbsp; &nbsp; &nbsp; &nbsp;<code>boot: usb</code>
+        </p>
+        <p>
+          Then depending on the USB controller used:
+        </p>
+        <p>
+          &nbsp; &nbsp; &nbsp; &nbsp;<code>usb_uhci: port1=floppy, options1="speed:full, path:some/path/floppy.img, model:teac"</code>
+        </p>
+        <p>
+          To boot a floppy or other drive using another controller, use a very similar line:
+        </p>
+        <p>
+          &nbsp; &nbsp; &nbsp; &nbsp;<code>usb_ohci: port2=cdrom, options2="speed:full, path:../common/bootcd.iso"</code>
+        </p>
+        <p>
+          &nbsp; &nbsp; &nbsp; &nbsp;<code>usb_ehci: port1=disk, options1="speed:high, path:../common/hdd.img, proto:bbb"</code>
+        </p>
+        <p>
+          &nbsp; &nbsp; &nbsp; &nbsp;<code>usb_xhci: port1=disk, options1="speed:super, path:../common/hdd.img, proto:bbb"</code>
+        </p>
+        <p>
+          Remember that each controller other than the <code>UHCI</code> requires the <code>slotx=</code> addition in the pci declaration:
+        </p>
+        <p>
+          &nbsp; &nbsp; &nbsp; &nbsp;<code>pci: enabled=1, chipset=i440fx, slot1=usb_ohci</code>
+        </p>
+      </li>
+      <li>
+        The emulation will be on the first found USB device, or press F12 to choose one from a list.
+      </li>
+      <li>
+        The uasp protocol is currently not supported with this BIOS.
+      </li>
+    </ul>
+    <ul>
+      <li>
+        <b>Type of device detected</b>:
+        <p>
+          This BIOS will do a few calculations on a given USB image file determining how to boot said file.
+        </p>
+        <ul>
+          <li>
+            If a USB HDD device is detected, the following checks will be made on the first sector:
+            <ol>
+              <li>
+                <p>
+                  byte[0] == 0xEB and byte[2] == 0x90 ; jmp short xxxx
+                </p>
+                <p>
+                  or
+                </p>
+                <p>
+                  byte[0] == 0xE9 and word[1] < 0x1FE ; jmp near xxxx
+                </p>
+              </li>
+              <li>
+                word at [11] == 512 ; bytes per sector
+              </li>
+              <li>
+                word at [14] > 0 ; reserved sectors
+              </li>
+              <li>
+                byte at [16] == 1 or 2 ; number of fats
+              </li>
+              <li>
+                bytes at [54:61] == 'FAT12   ' ; system
+              </li>
+              <li>
+                <p>
+                  word at [19] == 2880 ; sectors
+                </p>
+                <p>
+                  or
+                </p>
+                <p>
+                  word at [19] == 0 && dword at [32] == 2880 ; extended sectors
+                </p>
+              </li>
+            </ol>
+            <p>
+              If all of the above is true, no matter the size of the HDD image, this BIOS will mount it as a 1.44M floppy disk.
+            </p>
+          </li>
+          <li>
+            If the Block Size == 2048, a CD-ROM is assumed and will attempt to mount the bootable image within the CD-ROM using:
+            <p>
+              Depending on the media (Eltorito Boot included?)
+            </p>
+            <ul>
+              <li>
+                no emulation using 2048-byte sectors
+              </li>
+              <li>
+                floppy or hdd emulation using 512-byte sectors.
+              </li>
+            </ul>
+          </li>
+          <li>
+            Otherwise, it will attempt to mount as a hdd device with or w/o a MBR.
+          </li>
+        </ul>
+
+      </li>
+    </ul>
+
+    <a name="usb"></a>
+    <h2>Conclusion</h2>
+    <ul>
+      <li>
+        All comments, patches, fixes, or other are always welcome, especially if the intent is to enhance this BIOS. Please create a Pull Request or create an Issue if you wish to contribute.
+      </li>
+    </ul>
+
+    <br clear="left" />
+    <br />
+    <br />
+    <br />
+    <br />
+    <br />
+    <br />
+    <br />
+
+  </body>
+</html>
