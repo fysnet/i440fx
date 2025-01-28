@@ -165,19 +165,19 @@
               I don't use Linux but a fellow user says you can use WINE to run NBASM. Just ignore the warning at the start and the end of the Wine output.
             </p>
             <p>
-              To build this BIOS for BOCHS, from the i440fx directory, use the following commandline:
+              To build this BIOS for BOCHS, from the i440fx directory, use the following:
             </p>
             <p>
-              &nbsp; &nbsp; &nbsp; &nbsp;<code>NBASM i440fx /x /z</code>
+              &nbsp; &nbsp; &nbsp; &nbsp;<code>wine /path/to/program/nbasm64.exe /x /z i440fx</code>
             </p>
             <p>
               This will produce <code>i44fx.bin</code> ready to be inserted into the emulation. It will also create a <code>.lst</code> file showing all of the references throughout the source code useful for debugging.
             </p>
             <p>
-              To build this BIOS for Qemu, from the i440fx directory, use the following commandline:
+              To build this BIOS for Qemu, from the i440fx directory, use the following:
             </p>
             <p>
-              &nbsp; &nbsp; &nbsp; &nbsp;<code>NBASM i440fx /x /z /DBX_QEMU</code>
+              &nbsp; &nbsp; &nbsp; &nbsp;<code>wine /path/to/program/nbasm64.exe /x /z /DBX_QEMU i440fx</code>
             </p>
             <p>
               You can exclude the <code>/x</code> parameter if you wish. If you exclude the <code>/z</code> parameter, NBASM will show a few diagnostic warnings. These can be ignored.
@@ -475,7 +475,7 @@
 
     <br clear="left" />
     <p>
-      Latest Update: 26 Jan 2025, 16.02
+      Latest Update: 27 Jan 2025, 17.08
     </p>
     <br />
     <br />
