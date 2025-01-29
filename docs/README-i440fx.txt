@@ -42,7 +42,7 @@ Assembly source code included
     wider range of guests, and second, to add booting from USB devices.
   * There are a few errors with the previous BIOS, a few in the CD-ROM
     emulation, as well as other misc errors. The objective of this BIOS
-    is to eliminate and enhance its function.
+    is to eliminate errors and enhance its function.
 
 
     Resources
@@ -274,4 +274,4 @@ Assembly source code included
     Pull Request or create an Issue if you wish to contribute.
 
 
-Latest Update: 28 Jan 2025, 17.16
+Latest Update: 29 Jan 2025, 16.37
