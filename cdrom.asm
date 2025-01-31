@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.15                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 6 Jan 2025                                                 *
+* Last Updated: 30 Jan 2025                                                *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -293,7 +293,7 @@ cdrom_segment    equ  [bp-0x810]  ; word
 ; 0000A010  72 70 6F 72 61 74 69 6F-6E 00 00 00 4C 49 55 AA     rporation...LIU.
            ;  offset  size  value       description
            ;   0x00     1   0x01         Header ID (must be 1)
-           ;   0x01     1   0,1,2,0xEF   Platform (0 = 80x86)
+           ;   0x01     1   0,1,2,0xEF   Platform (0 = 80x86, 1 = Power PC, 2 = Mac, 0xEF = UEFI)
            ;   0x02     2   0x0000       reserved
            ;   0x04    24   varies       Manufacturer ID
            ;   0x1C     2   crc          two-byte crc of this entry (zero sum)
@@ -305,6 +305,16 @@ cdrom_segment    equ  [bp-0x810]  ; word
 
 @@:        cmp  byte [bx+0x01],0x00 ; 0 = platform = 80x86
            je   short @f
+
+           ; found a platform other than 0x00 (x86)
+           movzx ax,byte [bx+0x01]
+           push cs
+           pop  ds
+           push ax
+           mov  si,offset cdrom_emu_ukn_platform
+           call bios_printf
+           add  sp,2
+
            mov  ax,9
            jmp  cdrom_boot_done
            
@@ -902,6 +912,7 @@ cdrom_emu_function_done:
            ret
 cdrom_emu_function endp
 
+cdrom_emu_ukn_platform      db 'Found unsupported platform ID: 0x%02X',13,10,0
 cdrom_emu_unknown_call_str  db 'cdrom_emu: Unknown call 0x%02X',13,10,0
 cdrom_rdy_size_str          db '%iMB medium detected',13,10,0
 

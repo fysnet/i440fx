@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.15                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 3 Jan 2025                                                 *
+* Last Updated: 30 Jan 2025                                                *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -202,8 +202,13 @@ boot_invalid_boot_device:
            call display_char
 
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+           ; for older software, disable the A20 line ?
+           ;xor  al,al
+           ;call set_enable_a20
+           
+           ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
            ; now we can try to load the media
-
+           
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
            ; are we a hard disk or floppy?
            mov  dl,es:[bx+IPL_ENTRY->device]

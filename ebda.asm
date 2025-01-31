@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.15                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 6 Jan 2025                                                 *
+* Last Updated: 30 Jan 2025                                                *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -830,7 +830,7 @@ drivetypes        dup  DRIVETYPES_LEN,0
                   db  'Network',0,0,0,0,0,0
 
 ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-; give the user an opertunety to press F10/F12/etc.
+; give the user an opportunity to press F10/F12/etc.
 ; On entry:
 ;  es = 0x0000
 ;  ds = BIOS_BASE
