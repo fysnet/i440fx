@@ -11,6 +11,9 @@ It is built with my own Intel x86 assembler found at [https://www.fysnet.net/new
 
 The documentation can be found at [https://fysnet.github.io/i440fx/](https://fysnet.github.io/i440fx/)
 
+#### 01 Feb 2025
+* Now requires an updated version of NBASM.
+
 #### 05 Jan 2025
 * The format of the internal ESCD has changed. If you use the ESCD option, please delete the current ESCD.BIN file and allow the BIOS to create a new clean one.
 
