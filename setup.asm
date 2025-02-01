@@ -27,10 +27,10 @@ comment |*******************************************************************
 *                                                                          *
 * BUILT WITH:   NewBasic Assembler                                         *
 *                 http://www.fysnet/newbasic.htm                           *
-*               NBASM ver 00.27.15                                         *
+*               NBASM ver 00.27.16                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 8 Dec 2024                                                 *
+* Last Updated: 1 Feb 2025                                                 *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -200,7 +200,7 @@ gui_cmos_date_str:
   dw  offset gui_cmos_month  ; next item goes here
   dw  0                    ; no event
   dw  offset gui_draw_static
-  db  GUI_TYPE_STATIC      ; this is an edit box
+  db  GUI_TYPE_STATIC      ; this is a static text
   db  GUI_OBJECT_VISIBLE   ; 
   dw  15,154               ; top left (x,y)
   dw  144,20               ; width, height
@@ -340,7 +340,7 @@ gui_cmos_time_str:
   dw  offset gui_cmos_hours     ; next item goes here
   dw  0                    ; no event
   dw  offset gui_draw_static
-  db  GUI_TYPE_STATIC      ; this is an edit box
+  db  GUI_TYPE_STATIC      ; this is a static text
   db  GUI_OBJECT_VISIBLE   ; flags
   dw  15,179               ; top left (x,y)
   dw  144,20               ; width, height
@@ -480,7 +480,7 @@ gui_floppy0_type_str:
   dw  offset gui_floppy0_type   ; next item goes here
   dw  0                    ; no event
   dw  offset gui_draw_static
-  db  GUI_TYPE_STATIC      ; this is an edit box
+  db  GUI_TYPE_STATIC      ; this is a static text
   db  GUI_OBJECT_VISIBLE   ; flags
   dw  54,204               ; top left (x,y)
   dw  105,20               ; width, height
@@ -534,7 +534,7 @@ gui_floppy1_type_str:
   dw  offset gui_floppy1_type      ; next item goes here
   dw  0                    ; no event
   dw  offset gui_draw_static
-  db  GUI_TYPE_STATIC      ; this is an edit box
+  db  GUI_TYPE_STATIC      ; this is a static text
   db  GUI_OBJECT_VISIBLE   ; flags
   dw  54,229               ; top left (x,y)
   dw  105,20               ; width, height
@@ -570,9 +570,9 @@ gui_floppy1_type_up:
   dd  0                    ; limit
 
 gui_floppy1_type_down:
-  dw  offset gui_floppy1_type    ; parent = floppy1 type
-  dw  offset gui_floppy1_type_up ; previous
-  dw  offset gui_ipl_list_box    ; next item goes here
+  dw  offset gui_floppy1_type     ; parent = floppy1 type
+  dw  offset gui_floppy1_type_up  ; previous
+  dw  offset gui_prompt_delay_str ; next item goes here
   dw  offset gui_floppy_dn_event
   dw  offset gui_draw_incbox
   db  GUI_TYPE_INCBOX      ; this is an inc box
@@ -582,9 +582,65 @@ gui_floppy1_type_down:
   dd  0                    ; value
   dd  0                    ; limit
 
-gui_ipl_list_box:
+gui_prompt_delay_str:
   dw  offset gui_root_object       ; parent = root
   dw  offset gui_floppy1_type_down ; previous
+  dw  offset gui_prompt_delay      ; next item goes here
+  dw  0                    ; no event
+  dw  offset gui_draw_static
+  db  GUI_TYPE_STATIC      ; this is a static text
+  db  GUI_OBJECT_VISIBLE   ; flags
+  dw  20,254               ; top left (x,y)
+  dw  150,20               ; width, height
+  dd  0                    ; value
+  dd  0                    ; value1
+  db  'Seconds to Delay: ',0
+
+gui_prompt_delay:
+  dw  offset gui_root_object       ; parent = root
+  dw  offset gui_prompt_delay_str  ; previous
+  dw  offset gui_prompt_delay_up      ; next item goes here
+  dw  0                    ; no event
+  dw  offset gui_draw_editbox
+  db  GUI_TYPE_EDITBOX     ; this is an edit box
+  db  (GUI_OBJECT_VISIBLE | GUI_EDITBOX_VALUE) ; use the 'value' field to fill the box
+  dw  170,250              ; top left (x,y)
+  dw  30,20                ; width, height
+  dd  0                    ; value
+  dd  0                    ; value1
+  dup 32,0                 ; save room for the string to print
+
+gui_prompt_delay_up:
+  dw  offset gui_prompt_delay ; parent = boot delay type
+  dw  offset gui_prompt_delay ; previous
+  dw  offset gui_prompt_delay_down ; next item goes here
+  dw  offset gui_button_up_event
+  dw  offset gui_draw_incbox
+  db  GUI_TYPE_INCBOX      ; this is an inc box
+  db  (GUI_OBJECT_TABSTOP | GUI_OBJECT_VISIBLE)   ; flags
+  dw  0,0                  ; top left (x,y) (draw routine gets location from parent)
+  dw  10,10                ; width, height
+  dw  (gui_prompt_delay + GUI_OBJECT->value)
+  dw  sizeof(byte)
+  dd  59                   ; limit
+
+gui_prompt_delay_down:
+  dw  offset gui_prompt_delay     ; parent = boot delay type
+  dw  offset gui_prompt_delay_up  ; previous
+  dw  offset gui_ipl_list_box     ; next item goes here
+  dw  offset gui_button_dn_event
+  dw  offset gui_draw_incbox
+  db  GUI_TYPE_INCBOX      ; this is an inc box
+  db  (GUI_OBJECT_TABSTOP | GUI_OBJECT_VISIBLE | GUI_INCBOX_ISDOWN)  ; flags
+  dw  0,0                  ; top left (x,y) (draw routine gets location from parent)
+  dw  10,10                ; width, height
+  dw  (gui_prompt_delay + GUI_OBJECT->value)
+  dw  sizeof(byte)
+  dd  1                    ; limit
+
+gui_ipl_list_box:
+  dw  offset gui_root_object       ; parent = root
+  dw  offset gui_prompt_delay      ; previous
   dw  offset gui_ipl_entry0        ; next item goes here
   dw  0                    ;
   dw  offset gui_draw_frame
@@ -949,7 +1005,6 @@ cmos_reg_b     db  0
 current_focus  dw  offset gui_num_lock
 mouse_found    db  0
 
-
 ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 ; this is our main 'setup' app entry point
 ; on entry:
@@ -990,6 +1045,9 @@ bios_setup proc far
            mov  [gui_ehci_legacy+GUI_OBJECT->value],al
            mov  al,[bx+ESCD_DATA->ahci_legacy]
            mov  [gui_ahci_legacy+GUI_OBJECT->value],al
+           
+           mov  al,[bx+ESCD_DATA->boot_delay]
+           mov  [gui_prompt_delay+GUI_OBJECT->value],al
            
            ; floppy signature check
            mov  al,0x38
@@ -1218,6 +1276,8 @@ gui_object_apply proc near uses ax bx cx ds
            mov  [bx+ESCD_DATA->ehci_legacy],al
            mov  al,[gui_ahci_legacy+GUI_OBJECT->value]
            mov  [bx+ESCD_DATA->ahci_legacy],al
+           mov  al,[gui_prompt_delay+GUI_OBJECT->value]
+           mov  [bx+ESCD_DATA->boot_delay],al
            
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
            ; mark as dirty and write it to the flash rom

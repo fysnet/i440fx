@@ -27,7 +27,7 @@ comment |*******************************************************************
 *                                                                          *
 * BUILT WITH:   NewBasic Assembler                                         *
 *                 http://www.fysnet/newbasic.htm                           *
-*               NBASM ver 00.27.15                                         *
+*               NBASM ver 00.27.16                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
 * Last Updated: 20 Jan 2025                                                *
@@ -63,8 +63,8 @@ outfile 'i440fx.bin'
 .endif
 
 ; make sure we are using an assembler that supports the new items included here
-.if (_VER < 2715h)
-%error 1, 'This source requires NBASM version 00.27.15 or higher'
+.if (_VER < 2716h)
+%error 1, 'This source requires NBASM version 00.27.16 or higher'
 .end  ; if we get this error, be done. No need to continue on.
 .endif
 
