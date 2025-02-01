@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.15                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 30 Jan 2025                                                *
+* Last Updated: 31 Jan 2025                                                *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -814,11 +814,13 @@ find_boot_vector_done:
            ret
 find_boot_vector endp
 
-press_f12_str     db  'Press F12 for boot menu, F10 for setup.',13,10,10,0
+press_f12_str     db  'Press F12 for boot menu, F10 for setup.',13,10,0
 boot_option_str   db  'Boot options:',13,10,0
 select_boot_opt   db  13,10,'Select boot device (A to %c): ',0
 ipl_str0          db  ' %c: ',0
 device_id_str     db  ' (Dev: %02X) ',0
+boot_count_down_str      db  13,'Continue in %i seconds.  ',0
+boot_count_down_str_crlf db 13,10,10,0
 
 DRIVETYPES_LEN    equ  13  ; bytes each
 drivetypes        dup  DRIVETYPES_LEN,0
@@ -828,6 +830,31 @@ drivetypes        dup  DRIVETYPES_LEN,0
                   db  'ATAPI Device',0
                   db  'USB Device',0,0,0
                   db  'Network',0,0,0,0,0,0
+
+; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+; delay and check for key stroke, displaying countdown
+; on entry:
+;  ax = ticks to delay (between checking for a key press)
+;  cx = loop count (count of times to check for a key press)
+;  ds = BIOS_BASE
+; on return
+;  nothing
+; destroys nothing
+delay_ticks_and_check_for_keystroke_str proc near uses ax cx si
+@@:        push cx
+           mov  si,offset boot_count_down_str
+           call bios_printf
+           add  sp,2
+           call delay_ticks
+           push ax
+           call check_for_keystroke
+           or   al,al
+           pop  ax
+           loopz @b
+           mov  si,offset boot_count_down_str_crlf
+           call bios_printf
+           ret
+delay_ticks_and_check_for_keystroke_str endp
 
 ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 ; give the user an opportunity to press F10/F12/etc.
@@ -878,7 +905,7 @@ interactive_do:
 
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
            ; show the 'press f12' display
-@@:        mov  si,offset press_f12_str
+           mov  si,offset press_f12_str
            call display_string
            
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -894,11 +921,12 @@ interactive_do:
            ; (54.95mS * (18.2 / 2) * ('3' * 2)) = 3,000mS = 3.000 seconds
            movzx cx,al ; al=seconds ; loop count, count of checks for a key press
            shl  cx,1   ; x 2        ;
+           jz   short @f            ; don't wait if count = 0
            mov  ax,9   ; (18.2 / 2) ; ticks between checking for a key press
-           call delay_ticks_and_check_for_keystroke
+           call delay_ticks_and_check_for_keystroke_str
 
            ; did we find a keystroke?
-           call check_for_keystroke
+@@:        call check_for_keystroke
            or   al,al
            jz   interactive_done
 

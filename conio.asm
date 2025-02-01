@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.15                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 8 Dec 2024                                                 *
+* Last Updated: 31 Jan 2025                                                *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -420,6 +420,7 @@ VBE_DISPI_DATA_PORT    equ 0x1CF
 ; our graphics video stuff starts here
 
 CONIO_CHAR_COLOR  equ  ((204 << 16) | (203 << 8) | 200)   ; rgb
+CONIO_CHAR_BACK   equ  ((  0 << 16) | (  0 << 8) |   0)   ; rgb
 
 VID_FONT_WIDTH   equ   8
 VID_FONT_HEIGHT  equ  14
@@ -1235,13 +1236,12 @@ char_main: push cx
            inc  si
            mov  cx,8
 char_line: shl  al,1
-           jnc  short @f
            push eax
+           mov  eax,CONIO_CHAR_BACK
+           jnc  short @f
            mov  eax,CONIO_CHAR_COLOR
-           call far [EBDA_DATA->vid_display_pixel]
+@@:        call far [EBDA_DATA->vid_display_pixel]
            pop  eax
-           sub  edi,ebx          ; bytes per pixel
-@@:        add  edi,ebx          ; bytes per pixel
            loop char_line
            pop  edi
            pop  cx

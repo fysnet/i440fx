@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.15                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 8 Dec 2024                                                 *
+* Last Updated: 31 Jan 2025                                                *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -383,17 +383,15 @@ get_keystroke endp
 ; on return
 ;  nothing
 ; destroys nothing
-delay_ticks_and_check_for_keystroke proc near uses ax cx
-@@:        call delay_ticks
-           push ax
-           call check_for_keystroke
-           or   al,al
-           pop  ax
-           jnz  short @f
-           loop @b
-@@:        ret
-delay_ticks_and_check_for_keystroke endp
-
+;delay_ticks_and_check_for_keystroke proc near uses ax cx
+;@@:        call delay_ticks
+;           push ax
+;           call check_for_keystroke
+;           or   al,al
+;           pop  ax
+;           loopz @b
+;           ret
+;delay_ticks_and_check_for_keystroke endp
 
 ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 ; The interrupt handler called this function

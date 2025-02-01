@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.15                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 8 Dec 2024                                                 *
+* Last Updated: 31 Jan 2025                                                *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -209,8 +209,8 @@ USB_CONTROLLER struct
   irq              byte             ; irq
   numports         byte             ; number of root hub ports on this controller
   base_memory      dword            ; base of our allocated memory (xhci: is extended caps instead)
-  callback_bulk    word             ; BIOS_SEG:offset of callback routine for bulk transfers
-  callback_control word             ; BIOS_SEG:offset of callback routine for control transfers
+  callback_bulk    word             ; BIOS_BASE:offset of callback routine for bulk transfers
+  callback_control word             ; BIOS_BASE:offset of callback routine for control transfers
   op_reg_offset    byte             ; xhci & ehci: op register set offset
   context_size     byte             ; xhci: context size (32 or 64)
   flags            byte             ; xhci: bit 0 = use 64-bit addresses (remaining are reserved)
@@ -281,8 +281,8 @@ SATA_CONTROLLER struct
   numdrives        byte             ; number of drives on this controller
   version          dword            ; controller version
   ;base_memory      dword            ; base of our allocated memory (xhci: is extended caps instead)
-  ;callback_bulk    word             ; BIOS_SEG:offset of callback routine for bulk transfers
-  ;callback_control word             ; BIOS_SEG:offset of callback routine for control transfers
+  ;callback_bulk    word             ; BIOS_BASE:offset of callback routine for bulk transfers
+  ;callback_control word             ; BIOS_BASE:offset of callback routine for control transfers
   ;op_reg_offset    byte             ; xhci & ehci: op register set offset
   ;context_size     byte             ; xhci: context size (32 or 64)
   ;flags            byte             ; xhci: bit 0 = use 64-bit addresses (remaining are reserved)
