@@ -15,7 +15,7 @@ The documentation can be found at [https://fysnet.github.io/i440fx/](https://fys
 * The format of the internal ESCD has changed. If you use the ESCD option, please delete the current ESCD.BIN file and allow the BIOS to create a new clean one.
 
 ## Notes
-* To build, be sure to have <a href="https://www.fysnet.net/newbasic.htm">NBASM</a> version 27.14 or higher.
+* To build, be sure to have <a href="https://www.fysnet.net/newbasic.htm">NBASM</a> version 27.16 or higher.
 
   For use with Bochs: `nbasm64 i440fx /z`\
   For use with QEMU: `nbasm64 i440fx /z /DBX_QEMU`
