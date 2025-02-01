@@ -81,7 +81,7 @@ Assembly source code included
     Building
 
   * This BIOS is assembled with the NewBasic assembler.
-      o NewBasic Assembler: https://www.fysnet.net/newbasic.htm
+      o NewBasic Assembler: https://www.fysnet.net/newbasic.htm -- version 00.27.16 or higher
 
   * This assembler is intended for DOS and 32-bit and 64-bit Windows.
     However, using additional resources, you can use this assembler on
