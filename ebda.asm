@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.16                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 31 Jan 2025                                                *
+* Last Updated: 5 Feb 2025                                                 *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -391,7 +391,7 @@ EBDA_DATA  struct
 
   ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
   ;
-  unused                dup 803     ; unused / available space
+  unused                dup 723     ; unused / available space
 
 EBDA_DATA  ends         ; end of structure declaration.
 

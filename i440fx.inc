@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.16                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 31 Jan 2025                                                *
+* Last Updated: 5 Feb 2025                                                 *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -46,6 +46,13 @@ BIOS_BASE2        equ  0xF000
 ; set to 1 to add debug code
 DO_DEBUG          equ  0
 DO_SERIAL_DEBUG   equ  0
+
+; what version of the ACPI specs we support
+; 0 = 1.0 (though we specify x.1 in the headers)
+; 2 = 2.0
+; 3 = 3.0
+; ** Currently, this must remain 0 ***
+APCI_VERSION      equ  0   ; 0 = 1.x
 
 ; set to 1 to do the pci32/smp/acpi/etc bios setup
 ; (setting to 0 is more like the 'legacy' bios)
@@ -317,7 +324,8 @@ MEM_TABLE  struct
   mem_base              qword
   mem_size              qword
   mem_type              dword
-MEM_TABLE  ends
+  ext_attrbs            dword  ; only used if ACPI_VERSION => 3 (bit 0 = 0 == entry is ignored)
+MEM_TABLE  ends                ;                                (bit 1 = 1 == non-volatile)
 
 PM_IO_BASE            equ  0xB000
 SMB_IO_BASE           equ  0xB100

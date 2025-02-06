@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.16                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 8 Dec 2024                                                 *
+* Last Updated: 5 Feb 2025                                                 *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -82,6 +82,7 @@ build_mem_table proc near uses eax ebx ecx edx si di es
            mov  es:[di+MEM_TABLE->mem_size+0],ebx
            mov  es:[di+MEM_TABLE->mem_size+4],ecx
            mov  dword es:[di+MEM_TABLE->mem_type],E820_RAM
+          ;mov  dword es:[di+MEM_TABLE->ext_attrbs],0x00000000
            add  di,sizeof(MEM_TABLE)
            add  eax,ebx
            ;adc  edx,ecx
@@ -98,6 +99,7 @@ build_mem_table proc near uses eax ebx ecx edx si di es
            mov  es:[di+MEM_TABLE->mem_size+0],ebx
            mov  es:[di+MEM_TABLE->mem_size+4],ecx
            mov  dword es:[di+MEM_TABLE->mem_type],E820_RESERVED
+          ;mov  dword es:[di+MEM_TABLE->ext_attrbs],0x00000000
            add  di,sizeof(MEM_TABLE)
            add  eax,ebx
            ;adc  edx,ecx
@@ -118,6 +120,7 @@ build_mem_table proc near uses eax ebx ecx edx si di es
            mov  es:[di+MEM_TABLE->mem_size+0],ebx
            mov  es:[di+MEM_TABLE->mem_size+4],ecx
            mov  dword es:[di+MEM_TABLE->mem_type],E820_RESERVED
+          ;mov  dword es:[di+MEM_TABLE->ext_attrbs],0x00000000
            add  di,sizeof(MEM_TABLE)
            add  eax,ebx
            ;adc  edx,ecx
@@ -155,6 +158,7 @@ build_mem_table proc near uses eax ebx ecx edx si di es
            mov  es:[di+MEM_TABLE->mem_size+0],ebx
            mov  es:[di+MEM_TABLE->mem_size+4],ecx
            mov  dword es:[di+MEM_TABLE->mem_type],E820_RAM
+          ;mov  dword es:[di+MEM_TABLE->ext_attrbs],0x00000000
            add  di,sizeof(MEM_TABLE)
            add  eax,ebx
            ;adc  edx,ecx
@@ -171,6 +175,7 @@ build_mem_table proc near uses eax ebx ecx edx si di es
            mov  es:[di+MEM_TABLE->mem_size+0],ebx
            mov  es:[di+MEM_TABLE->mem_size+4],ecx
            mov  dword es:[di+MEM_TABLE->mem_type],E820_RESERVED
+          ;mov  dword es:[di+MEM_TABLE->ext_attrbs],0x00000000
            add  di,sizeof(MEM_TABLE)
            add  eax,ebx
            ;adc  edx,ecx
@@ -202,6 +207,7 @@ build_mem_table proc near uses eax ebx ecx edx si di es
            mov  es:[di+MEM_TABLE->mem_size+0],ebx
            mov  es:[di+MEM_TABLE->mem_size+4],ecx
            mov  dword es:[di+MEM_TABLE->mem_type],E820_ACPI
+          ;mov  dword es:[di+MEM_TABLE->ext_attrbs],0x00000000
            add  di,sizeof(MEM_TABLE)
            add  eax,ACPI_DATA_SIZE
            ;adc  edx,ecx
@@ -221,6 +227,7 @@ build_mem_table proc near uses eax ebx ecx edx si di es
            mov  es:[di+MEM_TABLE->mem_size+0],ebx
            mov  es:[di+MEM_TABLE->mem_size+4],ecx
            mov  dword es:[di+MEM_TABLE->mem_type],E820_RESERVED
+          ;mov  dword es:[di+MEM_TABLE->ext_attrbs],0x00000000
            add  di,sizeof(MEM_TABLE)
            add  eax,ebx
            ;adc  edx,ecx
@@ -255,6 +262,7 @@ build_mem_table proc near uses eax ebx ecx edx si di es
            mov  es:[di+MEM_TABLE->mem_size+0],ebx
            mov  es:[di+MEM_TABLE->mem_size+4],ecx
            mov  dword es:[di+MEM_TABLE->mem_type],E820_RAM
+          ;mov  dword es:[di+MEM_TABLE->ext_attrbs],0x00000000
            add  di,sizeof(MEM_TABLE)
            add  eax,ebx
            adc  edx,ecx

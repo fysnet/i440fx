@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.16                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 10 Jan 2025                                                *
+* Last Updated: 5 Feb 2025                                                 *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -757,9 +757,14 @@ int15_func32_E8_20:
            jnb  short int15_func32_E8_20_2
            imul si,bx,sizeof(MEM_TABLE)
            add  si,EBDA_DATA->memory_table
-           cmp  ecx,sizeof(MEM_TABLE)
+.if (APCI_VERSION < 3)
+           mov  eax,20
+.else
+           mov  eax,24  ; sizeof(MEM_TABLE)
+.endif
+           cmp  ecx,eax
            jbe  short int15_func32_E8_20_0
-           mov  ecx,sizeof(MEM_TABLE)
+           mov  ecx,eax
 int15_func32_E8_20_0:
            push cx
            push es

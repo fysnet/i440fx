@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.16                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 8 Dec 2024                                                 *
+* Last Updated: 5 Feb 2025                                                 *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -296,7 +296,7 @@ acpi_bios_init proc near uses alld ds
            mov  dword fs:[edi+RSDP_TABLE->oem_id+0],'HCOB'    ; 'BOCHS '
            mov  word  fs:[edi+RSDP_TABLE->oem_id+4],' S'      ;
 .endif
-           mov  byte  fs:[edi+RSDP_TABLE->revision],0 ; 2         ; 2.0
+           mov  byte  fs:[edi+RSDP_TABLE->revision],APCI_VERSION
            mov  eax,[EBDA_DATA->rsdt_addr]
            mov  fs:[edi+RSDP_TABLE->rsdt_physical_address],eax
            ; version 2.0 starts here
