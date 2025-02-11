@@ -34,7 +34,9 @@
       <li><a href="#user">User interaction:</a> Interaction with the BIOS</li>
       <li><a href="#escd">ESCD:</a> Extended System Configuration Data usage</li>
       <li><a href="#usb">USB:</a> USB emulation</li>
-      <li><a href="#usb">Post:</a> Last words</li>
+      <li><a href="#issues">Known issues:</a> A list of known issues</li>
+      <li><a href="#guests">Guests:</a> A list of Guests I have tested with</li>
+      <li><a href="#post">Post:</a> Last words</li>
     </ul>
 
     <a name="overview"></a>
@@ -45,7 +47,7 @@
         <a href="https://en.wikipedia.org/wiki/Intel_440BX">Intel 440bx</a> (Pentium II, Pentium III, and Celeron) chipsets.
       </li>
       <li>
-        i440fx is an open source adaptation of the original Bochs <a href="https://github.com/bochs-emu/Bochs">BIOS</a> with many fixes and enhancements.
+        i440fx is an open source adaptation of the original Bochs <a href="https://github.com/bochs-emu/Bochs/tree/master/bochs/bios">BIOS</a> with many fixes and enhancements.
         It is written entirely in x86 Assembly assembled with the NBASM assembler.
       </li>
       <li>It is designed to boot a guest following the BIOS Boot Specification with enhancements like PnP, USB emulation, ACPI, and other resources.</li>
@@ -348,7 +350,7 @@
             USB Hard Drive
           </li>
           <li>
-            CD-ROM Disc
+            USB CD-ROM Disc
           </li>
         </ul>
       </li>
@@ -465,7 +467,113 @@
       </li>
     </ul>
 
-    <a name="usb"></a>
+    <a name="issues"></a>
+    <h2>A list of known issues</h2>
+    <ul>
+      <li>
+        This BIOS will print to the console, any panics or warnings indicating that something went wrong, or isn't supported.<br />
+        If currently in a text mode (like DOS), it will display this text at the current cursor location, possibly disturbing the guest's text output.<br />
+        Once more testing is done, these panics and warning will be removed.
+      </li>
+      <li>
+        This BIOS uses the <code>xchg cx,cx</code> instruction to stop the Bochs debugger at certain places, mostly places that have yet to be supported.<br />
+        Most of the time, you can simply continue.
+      </li>
+      <li>
+        As of right now, after a major re-build, you should delete the <code>escd.bin</code> file so that this BIOS will build a new default file.<br />
+        For example, the latest build retrieves the seconds to wait for a F12/F10 key press. If you have an old <code>escd.bin</code> file,<br />
+        &nbsp; it might return zero (or 0x90) and either not wait for you to press a key, or wait a long time.
+      </li>
+      <li>
+        When using Jemm386 (v5.79 and possibly all versions) and/or HimemX (v3.36 and possibly all versions), one or the other<br />
+        &nbsp; will remap the address range 0x000E0000 -> 0x000E3FFF to 0x00149000. Of course this will break this BIOS,<br />
+        &nbsp; or any BIOS that uses the extended BIOS area starting at 0x000E0000.<br />
+        Using standard (MS-)DOS memory extenders work as expected.<br />
+        Build with /DHIMEMHACK to allow the use of Jemm386 and/or HimemX. This will ignore the part that breaks this BIOS.<br />
+        &nbsp; See <a href="https://github.com/fysnet/i440fx/issues/4">here</a> for more information.
+      </li>
+    </ul>
+
+    <a name="guests"></a>
+    <h2>A list of guests I have tested with</h2>
+    <ul>
+      <li>
+        Note that even though I list a guest OS here, this doesn't mean my BIOS passes all tests. It simply means that I<br />
+        &nbsp; have successfully booted this guest with default or normal options and parameters. Thorough testing is still in order.<br />
+        If you have tested this BIOS with your homebrew OS or any other OS and would like it listed here,<br />
+        &nbsp; please let me know by sending me a URL to a bootable image. I can be reached at fys [at] fysnet [dot] net.
+      </li>
+      <li>
+        (Listed in no particular order)
+        <ul>
+          <li>
+    <a href="https://www.freedos.org/">FreeDOS</a>
+          </li>
+          <li>
+    <a href="https://www.gentoo.org/">Gentoo</a> (older version, I haven't tried a latest release yet)
+          </li>
+          <li>
+    <a href="https://www.netbsd.org/">netbsd</a> (older version, I haven't tried a latest release yet)
+          </li>
+          <li>
+    MS-DOS v6.22 (Other versions have been tested sporadically)
+          </li>
+          <li>
+    OS2Warp v4.0
+          </li>
+          <li>
+    <a href="http://pdos.org/">pdos</a>
+          </li>
+          <li>
+    <a href="https://reactos.org/">ReactOS v0.4.14</a>
+          </li>
+          <li>
+    <a href="https://slitaz.org/en/">SliTaz</a> (older version, I haven't tried a latest release yet)
+          </li>
+          <li>
+    <a href="http://tinycorelinux.net/">TinyCore</a> (older version, I haven't tried a latest release yet)
+          </li>
+          <li>
+    Windows 3.11
+          </li>
+          <li>
+    Windows 95
+          </li>
+          <li>
+    Windows 95 OSR2
+          </li>
+          <li>
+    Windows 98
+          </li>
+          <li>
+    Windows 98 SE
+          </li>
+          <li>
+    Windows 2000
+          </li>
+          <li>
+    Windows ME
+          </li>
+          <li>
+    Windows XP
+          </li>
+          <li>
+    Windows 7
+          </li>
+          <li>
+    Windows 8.1
+          </li>
+          <li>
+    Windows 10
+          </li>
+          <li>
+    Windows 11
+          </li>
+        </ul>
+      </li>
+    </ul>
+
+    <a name="post"></a>
     <h2>Conclusion</h2>
     <ul>
       <li>
@@ -475,7 +583,7 @@
 
     <br clear="left" />
     <p>
-      Latest Update: 29 Jan 2025, 16.37
+      Latest Update: 10 Feb 2025, 17.30
     </p>
     <br />
     <br />

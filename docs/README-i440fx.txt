@@ -11,6 +11,8 @@ Assembly source code included
   * User interaction: Interaction with the BIOS
   * ESCD: Extended System Configuration Data usage
   * USB: USB emulation
+  * Known issues: A list of known issues
+  * Guests: A list of Guests I have tested with
   * Post: Last words
 
 
@@ -209,7 +211,7 @@ Assembly source code included
   * Currently only the following items are supported:
       o  USB Floppy Disk
       o  USB Hard Drive
-      o  CD-ROM Disc
+      o  USB CD-ROM Disc
   * Future plans are to emulate a USB mouse and Keyboard.
     To boot a USB device, use the following in your |bochsrc.txt| file:
 
@@ -267,6 +269,55 @@ Assembly source code included
          a MBR.
 
 
+    A list of known issues
+
+  * This BIOS will print to the console, any panics or warnings indicating that something went wrong, or isn't supported.
+    If currently in a text mode (like DOS), it will display this text at the current cursor location, possibly disturbing
+     the guest's text output. Once more testing is done, these panics and warning will be removed.
+  * This BIOS uses the |xchg cx,cx| instruction to stop the Bochs debugger at certain places, mostly places that have yet
+     to be supported. Most of the time, you can simply continue.
+  * As of right now, after a major re-build, you should delete the |escd.bin| file so that this BIOS will build a new
+     default file. For example, the latest build retrieves the seconds to wait for a F12/F10 key press. If you have an
+     old |escd.bin| file, it might return zero (or 0x90) and either not wait for you to press a key, or wait a long time.
+  * When using Jemm386 (v5.79 and possibly all versions) and/or HimemX (v3.36 and possibly all versions), one or the other
+     will remap the address range 0x000E0000 -> 0x000E3FFF to 0x00149000. Of course this will break this BIOS, or any BIOS
+     that uses the extended BIOS area starting at 0x000E0000.
+    Using standard (MS-)DOS memory extenders work as expected.
+    Build with /DHIMEMHACK to allow the use of Jemm386 and/or HimemX. This will ignore the part that breaks this BIOS.
+     See https://github.com/fysnet/i440fx/issues/4 for more information.
+
+
+  A list of guests I have tested with
+
+   * Note that even though I list a guest OS here, this doesn't mean my BIOS passes all tests. It simply means that I
+      have successfully booted this guest with default or normal options and parameters. Thorough testing is still in order.
+     If you have tested this BIOS with your homebrew OS or any other OS and would like it listed here, please let me know
+      by sending me a URL to a bootable image. I can be reached at fys [at] fysnet [dot] net.
+
+     (Listed in no particular order)
+       o  FreeDOS (https://www.freedos.org/)
+       o  Gentoo (older version, I haven't tried a latest release yet) (https://www.gentoo.org/)
+       o  netbsd (older version, I haven't tried a latest release yet) (https://www.netbsd.org/)
+       o  MS-DOS v6.22 (Other versions have been tested sporadically)
+       o  OS2Warp v4.0
+       o  pdos (http://pdos.org/)
+       o  ReactOS v0.4.14 (https://reactos.org/)
+       o  SliTaz (older version, I haven't tried a latest release yet) (https://slitaz.org/en/)
+       o  TinyCore (older version, I haven't tried a latest release yet) (http://tinycorelinux.net/)
+       o  Windows 3.11
+       o  Windows 95
+       o  Windows 95 OSR2
+       o  Windows 98
+       o  Windows 98 SE
+       o  Windows 2000
+       o  Windows ME
+       o  Windows XP
+       o  Windows 7
+       o  Windows 8.1
+       o  Windows 10
+       o  Windows 11
+
+
     Conclusion
 
   * All comments, patches, fixes, or other are always welcome,
@@ -274,4 +325,4 @@ Assembly source code included
     Pull Request or create an Issue if you wish to contribute.
 
 
-Latest Update: 29 Jan 2025, 16.37
+Latest Update: 10 Feb 2025, 17.30
