@@ -1,5 +1,5 @@
 i440fx - A BIOS for Bochs and QEMU
-Assembly source code included
+Assembly source code available at https://github.com/fysnet/i440fx
 
     Contents
 
