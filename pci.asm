@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.16                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 21 Jan 2025                                                *
+* Last Updated: 17 Feb 2025                                                *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -1431,45 +1431,47 @@ pci_bios_init_bridges_05:
            cmp  ax,PCI_DEVICE_ID_INTEL_82443_1
            jne  short pci_bios_init_bridges_done
 
+           ; https://datasheet.octopart.com/FW82443BX-Intel-datasheet-5334749.pdf
+           ;   Device 1, Section 3.4, Page 3-48
            ; is a i440BX PCI/AGP Bridge
            ; dx = bus/devfunc
-           mov  bx,0x04
-           mov  ax,0x0107
+           mov  bx,0x04          ; PCI Command Register
+           mov  ax,0x0107        ; SERRE, Bus Master Enable, Memory Access Enable, I/O Access Enable
            call pci_config_write_word
-           mov  bx,0x0D
-           mov  al,0x40
+           mov  bx,0x0D          ; Master Latency Timer Register
+           mov  al,0x40          ; bits 7:3 = 2 PCI Clocks
            call pci_config_write_byte
-           mov  bx,0x19
-           mov  al,0x01
+           mov  bx,0x19          ; Secondary Bus Number Register
+           mov  al,0x01          ;
            call pci_config_write_byte
-           mov  bx,0x1A
-           mov  al,0x01
+           mov  bx,0x1A          ; Subordinate Bus Number Register
+           mov  al,0x01          ;
            call pci_config_write_byte
-           mov  bx,0x1B
-           mov  al,0x40
+           mov  bx,0x1B          ; Secondar Master Latency Timer Register
+           mov  al,0x40          ; bits 7:3 = 2 PCI Clocks
            call pci_config_write_byte
-           mov  bx,0x1C
-           mov  al,0xE0
+           mov  bx,0x1C          ; I/O Base Address Register
+           mov  al,0xE0          ; bits 7:4 = address = 0xE (0xE000 ?)
            call pci_config_write_byte
-           mov  bx,0x1D
-           mov  al,0xF0
+           mov  bx,0x1D          ; I/O Limit Address Register
+           mov  al,0xF0          ; bits 7:4 = address = 0xF (0xF000 ?)
            call pci_config_write_byte
-           mov  bx,0x20
-           mov  ax,0xD000
+           mov  bx,0x20          ; Memory Base Address Register
+           mov  ax,0xD000        ; bits 15:4 = address = 0xD0000000 ?
            call pci_config_write_word
-           mov  bx,0x22
-           mov  ax,0xD1F0
+           mov  bx,0x22          ; Memory Limit Address Register
+           mov  ax,0xD1F0        ; bits 15:4 = address = 0xD1F00000 ?
            call pci_config_write_word
-           mov  bx,0x24
-           mov  ax,0xD200
+           mov  bx,0x24          ; Prefetchable Memory Base Address Register
+           mov  ax,0xD200        ; bits 15:4 = address = 0xD2000000 ?
            call pci_config_write_word
-           mov  bx,0x26
-           mov  ax,0xD3F0
+           mov  bx,0x26          ; Prefetchable Memory Limit Address Register
+           mov  ax,0xDAF0        ; bits 15:4 = address = 0xDAF00000 ?
            call pci_config_write_word
-           mov  bx,0xEE
-           mov  al,0x88
+           mov  bx,0xEE          ; reserved area ?
+           mov  al,0x88          ; Another BIOS must set this, how would we know otherwise?
            call pci_config_write_byte
-
+           
 pci_bios_init_bridges_done:
            mov  sp,bp            ; restore the stack
            pop  bp
