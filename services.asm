@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.16                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 5 Feb 2025                                                 *
+* Last Updated: 20 Feb 2025                                                *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -663,6 +663,8 @@ int15_function32 proc near ; don't put anything here
            ; wait cx:dx microseconds
            cmp  ah,0x86          ; 
            jne  short @f
+
+           sti
            
            mov  ax,REG_CX
            shl  eax,16
@@ -680,17 +682,17 @@ int15_function32 proc near ; don't put anything here
            mov  ah,al
            
            ; if ecx is initially <= 15, don't wait
-           or   ecx,ecx
-           je   short int1586_tick_end
-int1586_tick:
-           in   al,PORT_PS2_CTRLB
-           and  al,(1<<4)
-           cmp  al,ah
-           je   short int1586_tick
-           mov  ah,al
-           dec  ecx
-           jnz  short int1586_tick
-int1586_tick_end:
+;           or   ecx,ecx
+;           je   short int1586_tick_end
+;int1586_tick:
+;           in   al,PORT_PS2_CTRLB
+;           and  al,(1<<4)
+;           cmp  al,ah
+;           je   short int1586_tick
+;           mov  ah,al
+;           dec  ecx
+;           jnz  short int1586_tick
+;int1586_tick_end:
            jmp  int15_func32_success
 
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
