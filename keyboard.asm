@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.16                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 31 Jan 2025                                                *
+* Last Updated: 24 Feb 2025                                                *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -64,7 +64,7 @@ scan_to_scanascii:
   dw  0x0b30, 0x0b29, 0x0000, 0x8100, 0x00  ;  0)
   dw  0x0c2d, 0x0c5f, 0x0c1f, 0x8200, 0x00  ;  -_
   dw  0x0d3d, 0x0d2b, 0x0000, 0x8300, 0x00  ;  =+
-  dw  0x0e08, 0x0e08, 0x0e7f, 0x0000, 0x00  ;  backspace
+  dw  0x0e08, 0x0e08, 0x0e7f, 0x0EF0, 0x00  ;  backspace
   dw  0x0f09, 0x0f00, 0x0000, 0x0000, 0x00  ;  tab
   dw  0x1071, 0x1051, 0x1011, 0x1000, 0x40  ;  Q
   dw  0x1177, 0x1157, 0x1117, 0x1100, 0x40  ;  W
