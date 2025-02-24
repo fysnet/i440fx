@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.16                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 8 Dec 2024                                                 *
+* Last Updated: 8 Feb 2025                                                 *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -341,17 +341,17 @@ _bswap     endp
 ; delays count milliseconds
 ; on entry:
 ;  eax = count of ms
-;   (if eax > 0x003FFFFF, this will not work correctly)
 ; on return
 ;  nothing
 ; destroys none
-mdelay     proc near uses eax cx dx
-           shl  eax,10           ; convert from mS to uS
-           mov  dx,ax            ; cx:dx = uS
+mdelay     proc near uses eax ecx edx
+           mov  ecx,1000
+           mul  ecx
+           mov  dx,ax
            shr  eax,16
            mov  cx,ax
            mov  ah,0x86
-           int  15h           
+           int  15h
            ret
 mdelay     endp
 
