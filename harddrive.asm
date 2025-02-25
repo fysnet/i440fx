@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.16                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 15 Jan 2025                                                *
+* Last Updated: 24 Feb 2025                                                *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -149,7 +149,7 @@ init_harddrive proc near uses ds
            mov  ch,0x1B          ; starting cmos register for type 47 drive 0
            mov  di,EBDA_DATA->fdpt0
            call init_harddrive_params
-
+           
 @@:        pop  ax
            and  al,0x0F
            cmp  al,0x0F
@@ -192,7 +192,7 @@ init_harddrive_params proc near uses ds
            mov  ax,EBDA_SEG
            mov  ds,ax
 
-           ; Filling EBDA table for hard disk 0.
+           ; Filling EBDA table for hard disk 0/1.
            mov  ah,ch
            add  ah,4             ; 0x1F / 0x28  ; write pre-comp high byte
            call cmos_get_byte
@@ -235,21 +235,21 @@ init_harddrive_params proc near uses ds
            mov  ah,ch
            add  ah,8             ; 0x23 / 0x2C  ; spt
            call cmos_get_byte
-           mov  dl,al            ; dl = sectors
+           mov  dl,al            ; dl = sectors per track
            
            cmp  bx,1024
            ja   short @f         ; if cylinders > 1024, use translated style CHS
 
            ; no logical CHS mapping used, just physical CHS
            ; use Standard Fixed Disk Parameter Table (FDPT)
-           mov  [di+HDD_FDPT->phy_spt],dl       ; number of physical sectors
+           mov  [di+HDD_FDPT->phy_spt],dl       ; number of physical sectors per track
            jmp  short hd0_post_store_logical
            
            ; complies with Phoenix style Translated Fixed Disk Parameter Table (FDPT)
-@@:        mov  [di+HDD_FDPT->log_max_cyls],bx  ; number of physical cylinders
-           mov  [di+HDD_FDPT->log_max_heads],cl ; number of physical heads
-           mov  [di+HDD_FDPT->log_spt],dl       ; number of physical sectors
-           mov  [di+HDD_FDPT->phy_spt],dl       ; number of logical sectors (same)
+@@:        mov  [di+HDD_FDPT->log_max_cyls],bx  ; number of logical cylinders
+           mov  [di+HDD_FDPT->log_max_heads],cl ; number of logical heads
+           mov  [di+HDD_FDPT->log_spt],dl       ; number of logical sectors per track
+           mov  [di+HDD_FDPT->phy_spt],dl       ; number of physical sectors per track (same)
            mov  al,0xA0
            mov  [di+HDD_FDPT->signature],al     ; A0h signature, indicates translated table
            
@@ -279,7 +279,7 @@ init_harddrive_params proc near uses ds
            shl  cl,4
            
 hd0_post_store_logical:
-           mov  [di+HDD_FDPT->phy_max_cyls],bx  ; number of physical cylinders
+           mov  [di+HDD_FDPT->phy_max_cyls],bx   ; number of physical cylinders
            mov  [di+HDD_FDPT->phy_max_heads],cl  ; number of physical heads
 
            ; checksum
@@ -840,8 +840,13 @@ hd_not_translation_none:
            push eax        ; save sectors_low
            shr  eax,10     ; div by 1024
 
+           ; if hd_heads > 128, hd_heads = 255
+           cmp  ax,128
+           jna  short @f
+           mov  ax,255
+           jmp  short hd_lba_cylinders
            ; if hd_heads > 64, hd_heads = 128
-           cmp  ax,64
+@@:        cmp  ax,64
            jna  short @f
            mov  ax,128
            jmp  short hd_lba_cylinders
@@ -934,7 +939,7 @@ hd_translation_done:
            jbe  short @f
            mov  word hd_cylinders,1024
 @@:        
-.if DO_DEBUG           
+.if DO_DEBUG
            push ds
            push cs
            pop  ds
@@ -1811,7 +1816,7 @@ hd_sv_lba_high  equ  [bp-0x12]
            ; set ds = es
            push es
            pop  ds
-
+           
            ; set es = bios data area (0x0040)
            push es
            mov  ax,0x0040
