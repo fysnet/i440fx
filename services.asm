@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.16                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 20 Feb 2025                                                *
+* Last Updated: 27 Feb 2025                                                *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -187,6 +187,107 @@ real_post_01:
 real_post  endp
 
 ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+; keypad numerical number scan bytes we allow
+int15_numpad_keys db 0x52  ; '0'
+                  db 0x4F  ; '1'
+                  db 0x50  ; '2'
+                  db 0x51  ; '3'
+                  db 0x4B  ; '4'
+                  db 0x4C  ; '5'
+                  db 0x4D  ; '6'
+                  db 0x47  ; '7'
+                  db 0x48  ; '8'
+                  db 0x49  ; '9'
+                  db 0x00  ; end marker (no more)
+
+; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+; Keyboard Intercept routine
+; We check the see if the user is doing a ALT+xxx combination.
+;   (https://en.wikipedia.org/wiki/Alt_code)
+; on entry:
+;  ds = 0x0040
+;  al = keyboard scan byte (from INT 09)
+; on return
+;  carry clear
+;    tell caller to ignore keypress
+;  carry set
+;    tell caller to process key as normal
+; destroys all general (they are preserved by interrupt call)
+int15_keyb_intercept proc near uses ds
+           push ax
+           call bios_get_ebda
+           mov  ds,ax
+           pop  ax
+           
+           ; alt pressed code = 0x38
+           cmp  al,(0x00 | 0x38)
+           je   short int15_keyb_int_start
+           
+           ; alt release code = 0xB8
+           cmp  al,(0x80 | 0x38)
+           je   short int15_keyb_int_end
+           
+           ; else, any keypad numeral (0x47 -> 0x52, excluding 0x4A an 0x4E)
+           ; (we watch for the release of the key)
+           mov  si,offset int15_numpad_keys
+           mov  ah,al
+           and  ah,0x7F
+           xor  bx,bx
+@@:        cmp  byte cs:[bx+si],0
+           je   short int15_keyb_int_end
+           cmp  cs:[bx+si],ah
+           je   short @f
+           inc  bx
+           jmp  short @b
+           
+           ; found a numpad numerical key press/release
+           ; bx = 0 -> 9
+@@:        test al,0x80
+           jz   short int15_keyb_int_ignore
+           
+           ; found a numpad numerical key release
+           mov  al,[EBDA_DATA->keyb_int_value]
+           mov  cl,10
+           mul  cl
+           add  al,bl
+           mov  [EBDA_DATA->keyb_int_value],al
+           or   byte [EBDA_DATA->keyb_int_flags],0000_0010b
+           jmp  short int15_keyb_int_ignore
+           
+           ; the alt key was pressed
+int15_keyb_int_start:
+           mov  byte [EBDA_DATA->keyb_int_value],0
+           mov  byte [EBDA_DATA->keyb_int_flags],0000_0001b
+           jmp  short int15_keyb_int_done
+           
+           ; the alt key was released
+int15_keyb_int_end:
+           mov  al,[EBDA_DATA->keyb_int_flags]
+           mov  byte [EBDA_DATA->keyb_int_flags],0000_0000b
+           
+           and  al,0000_0011b
+           cmp  al,0000_0011b
+           jne  short int15_keyb_int_done
+           
+           ; 'insert' this char into the keyboard
+           mov  ah,5
+           movzx cx,byte [EBDA_DATA->keyb_int_value]
+           int  16h
+           
+           ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+           ; tell the caller to process the key as normal
+int15_keyb_int_done:
+           stc
+           ret
+           
+           ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+           ; tell the caller to ignore the key press/release
+int15_keyb_int_ignore:
+           clc
+           ret
+int15_keyb_intercept endp
+
+; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 ; BIOS Services
 ; on entry:
 ;  ds = 0x0040
@@ -269,9 +370,10 @@ int15_24_04:
 
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
            ; Keyboard intercept
-           ; (this is usually hooked, so we just return fail)
+           ; (this is usually hooked)
 @@:        cmp  ah,0x4F          ; 
            jne  short @f
+           call int15_keyb_intercept
            jmp  int15_func_fail
 
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

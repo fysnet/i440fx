@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.16                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 5 Feb 2025                                                 *
+* Last Updated: 27 Feb 2025                                                *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -390,8 +390,13 @@ EBDA_DATA  struct
   ioapic_entries        byte        ; count of redirection entries
 
   ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+  ; keyboard intercept area (alt + number)
+  keyb_int_value        byte        ; current ascii value (0 -> 255)
+  keyb_int_flags        byte        ; bit 0 = are we currently in the process, bit 1 = at least one numeric char has been used
+
+  ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
   ;
-  unused                dup 723     ; unused / available space
+  unused                dup 721     ; unused / available space
 
 EBDA_DATA  ends         ; end of structure declaration.
 
