@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.16                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 5 Feb 2025                                                 *
+* Last Updated: 2 Mar 2025                                                 *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -169,11 +169,12 @@ HPET_PHYS_ADDRESS    equ  0xFED00000
 MADT_HPET         struct
   header             dup  sizeof(ACPI_TABLE_HEADER)
   timer_block_id     dword   ; 
-   address_space_id      byte
-   register_bit_width    byte
-   register_bit_offset   byte
-   reserved              byte
-   phys_address          qword
+   ; Generic Address Struct (GAS): ACPI v5.0, Section 5.2.3.1
+   address_space_id      byte  ; 0 = System Memory, 1 = System I/O, 2 = PCI Config Space, 3 = Embedded Controller, 4 = SMBus, etc.
+   register_bit_width    byte  ; Register bit width
+   register_bit_offset   byte  ; Register bit offset
+   register_access_size  byte  ; Access Size: 0 = undefined/legacy, 1 = Byte, 2 = Word, 3 = DWord, 4 = QWord
+   phys_address          qword ; 64-bit physical address
   hpet_number        byte    ; 
   min_tick           word    ; 
   page_protect       byte    ; 
@@ -452,6 +453,10 @@ acpi_bios_init proc near uses alld ds
            call memset32
            mov  eax,fs:[HPET_PHYS_ADDRESS] ; get cap register
            mov        fs:[edi+MADT_HPET->timer_block_id],eax
+          ;mov   byte fs:[edi+MADT_HPET->address_space_id],0
+           mov   byte fs:[edi+MADT_HPET->register_bit_width],32
+          ;mov   byte fs:[edi+MADT_HPET->register_bit_offset],0
+           mov   byte fs:[edi+MADT_HPET->register_access_size],3
            mov  dword fs:[edi+MADT_HPET->phys_address+0],HPET_PHYS_ADDRESS
            mov  dword fs:[edi+MADT_HPET->phys_address+4],0
 
