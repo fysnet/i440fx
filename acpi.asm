@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.16                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 2 Mar 2025                                                 *
+* Last Updated: 5 Mar 2025                                                 *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -169,7 +169,7 @@ HPET_PHYS_ADDRESS    equ  0xFED00000
 MADT_HPET         struct
   header             dup  sizeof(ACPI_TABLE_HEADER)
   timer_block_id     dword   ; 
-   ; Generic Address Struct (GAS): ACPI v5.0, Section 5.2.3.1
+   ; Generic Address Struct (GAS): ACPI v3.0+, Section 5.2.3.1
    address_space_id      byte  ; 0 = System Memory, 1 = System I/O, 2 = PCI Config Space, 3 = Embedded Controller, 4 = SMBus, etc.
    register_bit_width    byte  ; Register bit width
    register_bit_offset   byte  ; Register bit offset
@@ -456,7 +456,11 @@ acpi_bios_init proc near uses alld ds
           ;mov   byte fs:[edi+MADT_HPET->address_space_id],0
            mov   byte fs:[edi+MADT_HPET->register_bit_width],32
           ;mov   byte fs:[edi+MADT_HPET->register_bit_offset],0
-           mov   byte fs:[edi+MADT_HPET->register_access_size],3
+.if (APCI_VERSION < 3)
+          ;mov   byte fs:[edi+MADT_HPET->register_access_size],0  ; 0 = legacy/reserved
+.else
+           mov   byte fs:[edi+MADT_HPET->register_access_size],3  ; 3 = dword
+.endif
            mov  dword fs:[edi+MADT_HPET->phys_address+0],HPET_PHYS_ADDRESS
            mov  dword fs:[edi+MADT_HPET->phys_address+4],0
 
