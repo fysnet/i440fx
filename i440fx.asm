@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.16                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 27 Feb 2025                                                *
+* Last Updated: 11 Mar 2025                                                *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -635,19 +635,16 @@ int09_handler:
            ; check for extended key
            push 0x0040
            pop  ds
+
            cmp  al,0xE0
            jne  short @f
-           mov  al,[0x0096]      ; mf2_state |= 0x02
-           or   al,0x02
-           mov  [0x0096],al
+           or   byte [0x0096],2      ; mf2_state |= 0x02
            jmp  short int09_done
            
 @@:        ; check for pause key
            cmp  al,0xE1
            jne  short @f
-           mov  al,[0x0096]      ; mf2_state |= 0x01
-           or   al,0x01
-           mov  [0x0096],al
+           or   byte [0x0096],1      ; mf2_state |= 0x01
            jmp  short int09_done
 
 @@:        call int09_function

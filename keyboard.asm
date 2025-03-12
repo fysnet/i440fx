@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.16                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 27 Feb 2025                                                *
+* Last Updated: 11 Mar 2025                                                *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -49,96 +49,127 @@ SCANCODES STRUCT
   sc_lock_flags  word   ;
 SCANCODES ENDS
 
+; flags at 0040:0017
+SHIFT_FLAGS_INSERT       equ (1<<7)
+SHIFT_FLAGS_CAPSLOCK     equ (1<<6)
+SHIFT_FLAGS_NUMLOCK      equ (1<<5)
+SHIFT_FLAGS_SCROLLLOCK   equ (1<<4)
+SHIFT_FLAGS_ANY_ALT      equ (1<<3)
+SHIFT_FLAGS_ANY_CTRL     equ (1<<2)
+SHIFT_FLAGS_LEFT_SHIFT   equ (1<<1)
+SHIFT_FLAGS_RIGHT_SHIFT  equ (1<<0)
+SHIFT_FLAGS_NONE         equ  0
+
+; flags at 0040:0018
+MF2_FLAGS_INSERT       equ (1<<7)
+MF2_FLAGS_CAPSLOCK     equ (1<<6)
+MF2_FLAGS_NUMLOCK      equ (1<<5)
+MF2_FLAGS_SCROLLLOCK   equ (1<<4)
+MF2_FLAGS_HOLD_ACT     equ (1<<3)
+MF2_FLAGS_SYS_REQ      equ (1<<2)
+MF2_FLAGS_LEFT_ALT     equ (1<<1)
+MF2_FLAGS_LEFT_CTRL    equ (1<<0)
+
+; flags at 0040:0096
+MF2_STATE_READ_ID      equ (1<<7)
+MF2_STATE_TWO_ID       equ (1<<6)
+MF2_STATE_FORCE_NL     equ (1<<5)
+MF2_STATE_ENHANCED     equ (1<<4)
+MF2_STATE_RIGHT_ALT    equ (1<<3)
+MF2_STATE_RIGHT_CTRL   equ (1<<2)
+MF2_STATE_LAST_E0      equ (1<<1)
+MF2_STATE_LAST_E1      equ (1<<0)
+
 scan_to_scanascii:
-  dw  0x0000, 0x0000, 0x0000, 0x0000, 0x00  ; nothing
-  dw  0x011b, 0x011b, 0x011b, 0x0100, 0x00  ;  escape
-  dw  0x0231, 0x0221, 0x0000, 0x7800, 0x00  ;  1!
-  dw  0x0332, 0x0340, 0x0300, 0x7900, 0x00  ;  2@
-  dw  0x0433, 0x0423, 0x0000, 0x7a00, 0x00  ;  3#
-  dw  0x0534, 0x0524, 0x0000, 0x7b00, 0x00  ;  4$
-  dw  0x0635, 0x0625, 0x0000, 0x7c00, 0x00  ;  5%
-  dw  0x0736, 0x075e, 0x071e, 0x7d00, 0x00  ;  6^
-  dw  0x0837, 0x0826, 0x0000, 0x7e00, 0x00  ;  7&
-  dw  0x0938, 0x092a, 0x0000, 0x7f00, 0x00  ;  8*
-  dw  0x0a39, 0x0a28, 0x0000, 0x8000, 0x00  ;  9(
-  dw  0x0b30, 0x0b29, 0x0000, 0x8100, 0x00  ;  0)
-  dw  0x0c2d, 0x0c5f, 0x0c1f, 0x8200, 0x00  ;  -_
-  dw  0x0d3d, 0x0d2b, 0x0000, 0x8300, 0x00  ;  =+
-  dw  0x0e08, 0x0e08, 0x0e7f, 0x0ef0, 0x00  ;  backspace
-  dw  0x0f09, 0x0f00, 0x9400, 0x0000, 0x00  ;  tab
-  dw  0x1071, 0x1051, 0x1011, 0x1000, 0x40  ;  Q
-  dw  0x1177, 0x1157, 0x1117, 0x1100, 0x40  ;  W
-  dw  0x1265, 0x1245, 0x1205, 0x1200, 0x40  ;  E
-  dw  0x1372, 0x1352, 0x1312, 0x1300, 0x40  ;  R
-  dw  0x1474, 0x1454, 0x1414, 0x1400, 0x40  ;  T
-  dw  0x1579, 0x1559, 0x1519, 0x1500, 0x40  ;  Y
-  dw  0x1675, 0x1655, 0x1615, 0x1600, 0x40  ;  U
-  dw  0x1769, 0x1749, 0x1709, 0x1700, 0x40  ;  I
-  dw  0x186f, 0x184f, 0x180f, 0x1800, 0x40  ;  O
-  dw  0x1970, 0x1950, 0x1910, 0x1900, 0x40  ;  P
-  dw  0x1a5b, 0x1a7b, 0x1a1b, 0x0000, 0x00  ;  [{
-  dw  0x1b5d, 0x1b7d, 0x1b1d, 0x0000, 0x00  ;  ]}
-  dw  0x1c0d, 0x1c0d, 0x1c0a, 0x0000, 0x00  ;  Enter
-  dw  0x0000, 0x0000, 0x0000, 0x0000, 0x00  ;  L Ctrl
-  dw  0x1e61, 0x1e41, 0x1e01, 0x1e00, 0x40  ;  A
-  dw  0x1f73, 0x1f53, 0x1f13, 0x1f00, 0x40  ;  S
-  dw  0x2064, 0x2044, 0x2004, 0x2000, 0x40  ;  D
-  dw  0x2166, 0x2146, 0x2106, 0x2100, 0x40  ;  F
-  dw  0x2267, 0x2247, 0x2207, 0x2200, 0x40  ;  G
-  dw  0x2368, 0x2348, 0x2308, 0x2300, 0x40  ;  H
-  dw  0x246a, 0x244a, 0x240a, 0x2400, 0x40  ;  J
-  dw  0x256b, 0x254b, 0x250b, 0x2500, 0x40  ;  K
-  dw  0x266c, 0x264c, 0x260c, 0x2600, 0x40  ;  L
-  dw  0x273b, 0x273a, 0x0000, 0x0000, 0x00  ;  ;:
-  dw  0x2827, 0x2822, 0x0000, 0x0000, 0x00  ;  '"
-  dw  0x2960, 0x297e, 0x0000, 0x0000, 0x00  ;  `~
-  dw  0x0000, 0x0000, 0x0000, 0x0000, 0x00  ;  L shift
-  dw  0x2b5c, 0x2b7c, 0x2b1c, 0x0000, 0x00  ;  |\
-  dw  0x2c7a, 0x2c5a, 0x2c1a, 0x2c00, 0x40  ;  Z
-  dw  0x2d78, 0x2d58, 0x2d18, 0x2d00, 0x40  ;  X
-  dw  0x2e63, 0x2e43, 0x2e03, 0x2e00, 0x40  ;  C
-  dw  0x2f76, 0x2f56, 0x2f16, 0x2f00, 0x40  ;  V
-  dw  0x3062, 0x3042, 0x3002, 0x3000, 0x40  ;  B
-  dw  0x316e, 0x314e, 0x310e, 0x3100, 0x40  ;  N
-  dw  0x326d, 0x324d, 0x320d, 0x3200, 0x40  ;  M
-  dw  0x332c, 0x333c, 0x0000, 0x0000, 0x00  ;  ,<
-  dw  0x342e, 0x343e, 0x0000, 0x0000, 0x00  ;  .>
-  dw  0x352f, 0x353f, 0x0000, 0x0000, 0x00  ;  /?
-  dw  0x0000, 0x0000, 0x0000, 0x0000, 0x00  ;  R Shift
-  dw  0x372a, 0x372a, 0x0000, 0x0000, 0x00  ;  *
-  dw  0x0000, 0x0000, 0x0000, 0x0000, 0x00  ;  L Alt
-  dw  0x3920, 0x3920, 0x3920, 0x3920, 0x00  ;  space
-  dw  0x0000, 0x0000, 0x0000, 0x0000, 0x00  ;  caps lock
-  dw  0x3b00, 0x5400, 0x5e00, 0x6800, 0x00  ;  F1
-  dw  0x3c00, 0x5500, 0x5f00, 0x6900, 0x00  ;  F2
-  dw  0x3d00, 0x5600, 0x6000, 0x6a00, 0x00  ;  F3
-  dw  0x3e00, 0x5700, 0x6100, 0x6b00, 0x00  ;  F4
-  dw  0x3f00, 0x5800, 0x6200, 0x6c00, 0x00  ;  F5
-  dw  0x4000, 0x5900, 0x6300, 0x6d00, 0x00  ;  F6
-  dw  0x4100, 0x5a00, 0x6400, 0x6e00, 0x00  ;  F7
-  dw  0x4200, 0x5b00, 0x6500, 0x6f00, 0x00  ;  F8
-  dw  0x4300, 0x5c00, 0x6600, 0x7000, 0x00  ;  F9
-  dw  0x4400, 0x5d00, 0x6700, 0x7100, 0x00  ;  F10
-  dw  0x0000, 0x0000, 0x0000, 0x0000, 0x00  ;  Num Lock
-  dw  0x0000, 0x0000, 0x0000, 0x0000, 0x00  ;  Scroll Lock
-  dw  0x4700, 0x4737, 0x7700, 0x9700, 0x20  ;  7 Home
-  dw  0x4800, 0x4838, 0x8d00, 0x9800, 0x20  ;  8 UP
-  dw  0x4900, 0x4939, 0x8400, 0x9900, 0x20  ;  9 PgUp
-  dw  0x4a2d, 0x4a2d, 0x8e00, 0x4a00, 0x00  ;  -
-  dw  0x4b00, 0x4b34, 0x7300, 0x9b00, 0x20  ;  4 Left
-  dw  0x4c00, 0x4c35, 0x8f00, 0x0000, 0x20  ;  5
-  dw  0x4d00, 0x4d36, 0x7400, 0x9d00, 0x20  ;  6 Right
-  dw  0x4e2b, 0x4e2b, 0x0000, 0x4e00, 0x00  ;  +
-  dw  0x4f00, 0x4f31, 0x7500, 0x9f00, 0x20  ;  1 End
-  dw  0x5000, 0x5032, 0x9100, 0xa000, 0x20  ;  2 Down
-  dw  0x5100, 0x5133, 0x7600, 0xa100, 0x20  ;  3 PgDn
-  dw  0x5200, 0x5230, 0x9200, 0xa200, 0x20  ;  0 Ins
-  dw  0x5300, 0x532e, 0x9300, 0xa300, 0x20  ;  Del
-  dw  0x0000, 0x0000, 0x0000, 0x0000, 0x00  ;
-  dw  0x0000, 0x0000, 0x0000, 0x0000, 0x00  ;
-  dw  0x2b5c, 0x2b7c, 0x2b1c, 0x2600, 0x00  ;  \|
-  dw  0x8500, 0x8700, 0x8900, 0x8b00, 0x00  ;  F11
-  dw  0x8600, 0x8800, 0x8a00, 0x8c00, 0x00  ;  F12
+  dw  0x0000, 0x0000, 0x0000, 0x0000, SHIFT_FLAGS_NONE      ; nothing
+  dw  0x011b, 0x011b, 0x011b, 0x0100, SHIFT_FLAGS_NONE      ;  escape
+  dw  0x0231, 0x0221, 0x0000, 0x7800, SHIFT_FLAGS_NONE      ;  1!
+  dw  0x0332, 0x0340, 0x0300, 0x7900, SHIFT_FLAGS_NONE      ;  2@
+  dw  0x0433, 0x0423, 0x0000, 0x7a00, SHIFT_FLAGS_NONE      ;  3#
+  dw  0x0534, 0x0524, 0x0000, 0x7b00, SHIFT_FLAGS_NONE      ;  4$
+  dw  0x0635, 0x0625, 0x0000, 0x7c00, SHIFT_FLAGS_NONE      ;  5%
+  dw  0x0736, 0x075e, 0x071e, 0x7d00, SHIFT_FLAGS_NONE      ;  6^
+  dw  0x0837, 0x0826, 0x0000, 0x7e00, SHIFT_FLAGS_NONE      ;  7&
+  dw  0x0938, 0x092a, 0x0000, 0x7f00, SHIFT_FLAGS_NONE      ;  8*
+  dw  0x0a39, 0x0a28, 0x0000, 0x8000, SHIFT_FLAGS_NONE      ;  9(
+  dw  0x0b30, 0x0b29, 0x0000, 0x8100, SHIFT_FLAGS_NONE      ;  0)
+  dw  0x0c2d, 0x0c5f, 0x0c1f, 0x8200, SHIFT_FLAGS_NONE      ;  -_
+  dw  0x0d3d, 0x0d2b, 0x0000, 0x8300, SHIFT_FLAGS_NONE      ;  =+
+  dw  0x0e08, 0x0e08, 0x0e7f, 0x0ef0, SHIFT_FLAGS_NONE      ;  backspace
+  dw  0x0f09, 0x0f00, 0x9400, 0x0000, SHIFT_FLAGS_NONE      ;  tab
+  dw  0x1071, 0x1051, 0x1011, 0x1000, SHIFT_FLAGS_CAPSLOCK  ;  Q
+  dw  0x1177, 0x1157, 0x1117, 0x1100, SHIFT_FLAGS_CAPSLOCK  ;  W
+  dw  0x1265, 0x1245, 0x1205, 0x1200, SHIFT_FLAGS_CAPSLOCK  ;  E
+  dw  0x1372, 0x1352, 0x1312, 0x1300, SHIFT_FLAGS_CAPSLOCK  ;  R
+  dw  0x1474, 0x1454, 0x1414, 0x1400, SHIFT_FLAGS_CAPSLOCK  ;  T
+  dw  0x1579, 0x1559, 0x1519, 0x1500, SHIFT_FLAGS_CAPSLOCK  ;  Y
+  dw  0x1675, 0x1655, 0x1615, 0x1600, SHIFT_FLAGS_CAPSLOCK  ;  U
+  dw  0x1769, 0x1749, 0x1709, 0x1700, SHIFT_FLAGS_CAPSLOCK  ;  I
+  dw  0x186f, 0x184f, 0x180f, 0x1800, SHIFT_FLAGS_CAPSLOCK  ;  O
+  dw  0x1970, 0x1950, 0x1910, 0x1900, SHIFT_FLAGS_CAPSLOCK  ;  P
+  dw  0x1a5b, 0x1a7b, 0x1a1b, 0x0000, SHIFT_FLAGS_NONE      ;  [{
+  dw  0x1b5d, 0x1b7d, 0x1b1d, 0x0000, SHIFT_FLAGS_NONE      ;  ]}
+  dw  0x1c0d, 0x1c0d, 0x1c0a, 0x0000, SHIFT_FLAGS_NONE      ;  Enter
+  dw  0x0000, 0x0000, 0x0000, 0x0000, SHIFT_FLAGS_NONE      ;  L Ctrl
+  dw  0x1e61, 0x1e41, 0x1e01, 0x1e00, SHIFT_FLAGS_CAPSLOCK  ;  A
+  dw  0x1f73, 0x1f53, 0x1f13, 0x1f00, SHIFT_FLAGS_CAPSLOCK  ;  S
+  dw  0x2064, 0x2044, 0x2004, 0x2000, SHIFT_FLAGS_CAPSLOCK  ;  D
+  dw  0x2166, 0x2146, 0x2106, 0x2100, SHIFT_FLAGS_CAPSLOCK  ;  F
+  dw  0x2267, 0x2247, 0x2207, 0x2200, SHIFT_FLAGS_CAPSLOCK  ;  G
+  dw  0x2368, 0x2348, 0x2308, 0x2300, SHIFT_FLAGS_CAPSLOCK  ;  H
+  dw  0x246a, 0x244a, 0x240a, 0x2400, SHIFT_FLAGS_CAPSLOCK  ;  J
+  dw  0x256b, 0x254b, 0x250b, 0x2500, SHIFT_FLAGS_CAPSLOCK  ;  K
+  dw  0x266c, 0x264c, 0x260c, 0x2600, SHIFT_FLAGS_CAPSLOCK  ;  L
+  dw  0x273b, 0x273a, 0x0000, 0x0000, SHIFT_FLAGS_NONE      ;  ;:
+  dw  0x2827, 0x2822, 0x0000, 0x0000, SHIFT_FLAGS_NONE      ;  '"
+  dw  0x2960, 0x297e, 0x0000, 0x0000, SHIFT_FLAGS_NONE      ;  `~
+  dw  0x0000, 0x0000, 0x0000, 0x0000, SHIFT_FLAGS_NONE      ;  L shift
+  dw  0x2b5c, 0x2b7c, 0x2b1c, 0x0000, SHIFT_FLAGS_NONE      ;  |\
+  dw  0x2c7a, 0x2c5a, 0x2c1a, 0x2c00, SHIFT_FLAGS_CAPSLOCK  ;  Z
+  dw  0x2d78, 0x2d58, 0x2d18, 0x2d00, SHIFT_FLAGS_CAPSLOCK  ;  X
+  dw  0x2e63, 0x2e43, 0x2e03, 0x2e00, SHIFT_FLAGS_CAPSLOCK  ;  C
+  dw  0x2f76, 0x2f56, 0x2f16, 0x2f00, SHIFT_FLAGS_CAPSLOCK  ;  V
+  dw  0x3062, 0x3042, 0x3002, 0x3000, SHIFT_FLAGS_CAPSLOCK  ;  B
+  dw  0x316e, 0x314e, 0x310e, 0x3100, SHIFT_FLAGS_CAPSLOCK  ;  N
+  dw  0x326d, 0x324d, 0x320d, 0x3200, SHIFT_FLAGS_CAPSLOCK  ;  M
+  dw  0x332c, 0x333c, 0x0000, 0x0000, SHIFT_FLAGS_NONE      ;  ,<
+  dw  0x342e, 0x343e, 0x0000, 0x0000, SHIFT_FLAGS_NONE      ;  .>
+  dw  0x352f, 0x353f, 0x0000, 0x0000, SHIFT_FLAGS_NONE      ;  /?
+  dw  0x0000, 0x0000, 0x0000, 0x0000, SHIFT_FLAGS_NONE      ;  R Shift
+  dw  0x372a, 0x372a, 0x0000, 0x0000, SHIFT_FLAGS_NONE      ;  *
+  dw  0x0000, 0x0000, 0x0000, 0x0000, SHIFT_FLAGS_NONE      ;  L Alt
+  dw  0x3920, 0x3920, 0x3920, 0x3920, SHIFT_FLAGS_NONE      ;  space
+  dw  0x0000, 0x0000, 0x0000, 0x0000, SHIFT_FLAGS_NONE      ;  caps lock
+  dw  0x3b00, 0x5400, 0x5e00, 0x6800, SHIFT_FLAGS_NONE      ;  F1
+  dw  0x3c00, 0x5500, 0x5f00, 0x6900, SHIFT_FLAGS_NONE      ;  F2
+  dw  0x3d00, 0x5600, 0x6000, 0x6a00, SHIFT_FLAGS_NONE      ;  F3
+  dw  0x3e00, 0x5700, 0x6100, 0x6b00, SHIFT_FLAGS_NONE      ;  F4
+  dw  0x3f00, 0x5800, 0x6200, 0x6c00, SHIFT_FLAGS_NONE      ;  F5
+  dw  0x4000, 0x5900, 0x6300, 0x6d00, SHIFT_FLAGS_NONE      ;  F6
+  dw  0x4100, 0x5a00, 0x6400, 0x6e00, SHIFT_FLAGS_NONE      ;  F7
+  dw  0x4200, 0x5b00, 0x6500, 0x6f00, SHIFT_FLAGS_NONE      ;  F8
+  dw  0x4300, 0x5c00, 0x6600, 0x7000, SHIFT_FLAGS_NONE      ;  F9
+  dw  0x4400, 0x5d00, 0x6700, 0x7100, SHIFT_FLAGS_NONE      ;  F10
+  dw  0x0000, 0x0000, 0x0000, 0x0000, SHIFT_FLAGS_NONE      ;  Num Lock
+  dw  0x0000, 0x0000, 0x0000, 0x0000, SHIFT_FLAGS_NONE      ;  Scroll Lock
+  dw  0x4700, 0x4737, 0x7700, 0x9700, SHIFT_FLAGS_NUMLOCK   ;  7 Home
+  dw  0x4800, 0x4838, 0x8d00, 0x9800, SHIFT_FLAGS_NUMLOCK   ;  8 UP
+  dw  0x4900, 0x4939, 0x8400, 0x9900, SHIFT_FLAGS_NUMLOCK   ;  9 PgUp
+  dw  0x4a2d, 0x4a2d, 0x8e00, 0x4a00, SHIFT_FLAGS_NONE      ;  -
+  dw  0x4b00, 0x4b34, 0x7300, 0x9b00, SHIFT_FLAGS_NUMLOCK   ;  4 Left
+  dw  0x4c00, 0x4c35, 0x8f00, 0x0000, SHIFT_FLAGS_NUMLOCK   ;  5
+  dw  0x4d00, 0x4d36, 0x7400, 0x9d00, SHIFT_FLAGS_NUMLOCK   ;  6 Right
+  dw  0x4e2b, 0x4e2b, 0x0000, 0x4e00, SHIFT_FLAGS_NONE      ;  +
+  dw  0x4f00, 0x4f31, 0x7500, 0x9f00, SHIFT_FLAGS_NUMLOCK   ;  1 End
+  dw  0x5000, 0x5032, 0x9100, 0xa000, SHIFT_FLAGS_NUMLOCK   ;  2 Down
+  dw  0x5100, 0x5133, 0x7600, 0xa100, SHIFT_FLAGS_NUMLOCK   ;  3 PgDn
+  dw  0x5200, 0x5230, 0x9200, 0xa200, SHIFT_FLAGS_NUMLOCK   ;  0 Ins
+  dw  0x5300, 0x532e, 0x9300, 0xa300, SHIFT_FLAGS_NUMLOCK   ;  Del
+  dw  0x0000, 0x0000, 0x0000, 0x0000, SHIFT_FLAGS_NONE      ;
+  dw  0x0000, 0x0000, 0x0000, 0x0000, SHIFT_FLAGS_NONE      ;
+  dw  0x2b5c, 0x2b7c, 0x2b1c, 0x2600, SHIFT_FLAGS_NONE      ;  \|
+  dw  0x8500, 0x8700, 0x8900, 0x8b00, SHIFT_FLAGS_NONE      ;  F11
+  dw  0x8600, 0x8800, 0x8a00, 0x8c00, SHIFT_FLAGS_NONE      ;  F12
 
 ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 ; display a panic string and freeze
@@ -408,13 +439,12 @@ get_keystroke endp
 int09_function proc near ; don't put anything here
            push bp
            mov  bp,sp
-           sub  sp,6
+           sub  sp,4
 
 int09_scan_code    equ [bp-1]   ; byte
 int09_shift_flags  equ [bp-2]   ; byte
 int09_mf2_flags    equ [bp-3]   ; byte
 int09_mf2_state    equ [bp-4]   ; byte
-int09_altkp_val    equ [bp-5]   ; byte
            
            mov  ax,REG_AX
            mov  int09_scan_code,al
@@ -430,8 +460,6 @@ int09_altkp_val    equ [bp-5]   ; byte
            mov  int09_mf2_flags,al
            mov  al,[0x0096]
            mov  int09_mf2_state,al
-           mov  al,[0x0019]
-           mov  int09_altkp_val,al
 
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
            ; scancode action
@@ -439,128 +467,121 @@ int09_altkp_val    equ [bp-5]   ; byte
            ; Caps Lock press
            cmp  byte int09_scan_code,0x3A
            jne  short @f
-           xor  byte int09_shift_flags,0x40
-           or   byte int09_mf2_flags,0x40
+           xor  byte int09_shift_flags,SHIFT_FLAGS_CAPSLOCK
+           or   byte int09_mf2_flags,MF2_FLAGS_CAPSLOCK
            jmp  int09_function_break
 
 @@:        ; Caps Lock release
            cmp  byte int09_scan_code,0xBA
            jne  short @f
-           and  byte int09_mf2_flags,(~0x40)
+           and  byte int09_mf2_flags,(~MF2_FLAGS_CAPSLOCK)
            jmp  int09_function_break
 
 @@:        ; L Shift press
            cmp  byte int09_scan_code,0x2A
            jne  short @f
-           or   byte int09_shift_flags,0x02
+           or   byte int09_shift_flags,SHIFT_FLAGS_LEFT_SHIFT
            jmp  int09_function_break
 
 @@:        ; L Shift release
            cmp  byte int09_scan_code,0xAA
            jne  short @f
-           and  byte int09_shift_flags,(~0x02)
+           and  byte int09_shift_flags,(~SHIFT_FLAGS_LEFT_SHIFT)
            jmp  int09_function_break
 
 @@:        ; R Shift press
            cmp  byte int09_scan_code,0x36
            jne  short @f
-           or   byte int09_shift_flags,0x01
+           or   byte int09_shift_flags,SHIFT_FLAGS_RIGHT_SHIFT
            jmp  int09_function_break
 
 @@:        ; R Shift release
            cmp  byte int09_scan_code,0xB6
            jne  short @f
-           and  byte int09_shift_flags,(~0x01)
+           and  byte int09_shift_flags,(~SHIFT_FLAGS_RIGHT_SHIFT)
            jmp  int09_function_break
 
 @@:        ; Ctrl press
            cmp  byte int09_scan_code,0x1D
            jne  short @f
-           test byte int09_mf2_state,0x01
+           test byte int09_mf2_state,MF2_STATE_LAST_E1
            jnz  int09_function_break
-           or   byte int09_shift_flags,0x04
-           test byte int09_mf2_state,0x02
+           or   byte int09_shift_flags,SHIFT_FLAGS_ANY_CTRL
+           test byte int09_mf2_state,MF2_STATE_LAST_E0
            jz   short ctrl_press_01
-           or   byte int09_mf2_state,0x04
+           or   byte int09_mf2_state,MF2_STATE_RIGHT_CTRL
            jmp  int09_function_break
 ctrl_press_01:
-           or   byte int09_mf2_flags,0x01
+           or   byte int09_mf2_flags,MF2_FLAGS_LEFT_CTRL
            jmp  int09_function_break
 
 @@:        ; Ctrl release
            cmp  byte int09_scan_code,0x9D
            jne  short @f
-           test byte int09_mf2_state,0x01
+           test byte int09_mf2_state,MF2_STATE_LAST_E1
            jnz  int09_function_break
-           and  byte int09_shift_flags,(~0x04)
-           test byte int09_mf2_state,0x02
+           and  byte int09_shift_flags,(~SHIFT_FLAGS_ANY_CTRL)
+           test byte int09_mf2_state,MF2_STATE_LAST_E0
            jz   short ctrl_press_02
-           and  byte int09_mf2_state,(~0x04)
+           and  byte int09_mf2_state,(~MF2_STATE_RIGHT_CTRL)
            jmp  int09_function_break
 ctrl_press_02:
-           and  byte int09_mf2_flags,(~0x01)
+           and  byte int09_mf2_flags,(~MF2_FLAGS_LEFT_CTRL)
            jmp  int09_function_break
 
 @@:        ; Alt press
            cmp  byte int09_scan_code,0x38
            jne  short @f
-           or   byte int09_shift_flags,0x08
-           test byte int09_mf2_state,0x02
+           or   byte int09_shift_flags,SHIFT_FLAGS_ANY_ALT
+           test byte int09_mf2_state,MF2_STATE_LAST_E0
            jz   short alt_press_01
-           or   byte int09_mf2_state,0x08
+           or   byte int09_mf2_state,MF2_STATE_RIGHT_ALT
            jmp  int09_function_break
 alt_press_01:
-           or   byte int09_mf2_flags,0x02
+           or   byte int09_mf2_flags,MF2_FLAGS_LEFT_ALT
            jmp  int09_function_break
 
 @@:        ; Alt release
            cmp  byte int09_scan_code,0xB8
            jne  short @f
-           and  byte int09_shift_flags,(~0x08)
-           test byte int09_mf2_state,0x02
-           jz   short alt_press_02
-           and  byte int09_mf2_state,(~0x08)
-           jmp  short alt_press_03
-alt_press_02:
-           and  byte int09_mf2_flags,(~0x02)
-alt_press_03:
-           cmp  byte int09_altkp_val,0
-           je   int09_function_break
-           mov  al,int09_altkp_val
-           xor  ah,ah
-           call enqueue_key
-           mov  byte int09_altkp_val,0
+           and  byte int09_shift_flags,(~SHIFT_FLAGS_ANY_ALT)
+           test byte int09_mf2_state,MF2_STATE_LAST_E0
+           jz   short alt_release_01
+           and  byte int09_mf2_state,(~MF2_STATE_RIGHT_ALT)
+           jmp  int09_function_break
+alt_release_01:
+           and  byte int09_mf2_flags,(~MF2_FLAGS_LEFT_ALT)
            jmp  int09_function_break
 
 @@:        ; Num Lock press
            cmp  byte int09_scan_code,0x45
            jne  short @f
-           test byte int09_mf2_state,0x03
+           test byte int09_mf2_state,(MF2_STATE_LAST_E0 | MF2_STATE_LAST_E1)
            jnz  int09_function_break
-           or   byte int09_mf2_flags,0x20
-           xor  byte int09_shift_flags,0x20
+           or   byte int09_mf2_flags,MF2_FLAGS_NUMLOCK
+           xor  byte int09_shift_flags,SHIFT_FLAGS_NUMLOCK
            jmp  int09_function_break
 
 @@:        ; Num Lock release
            cmp  byte int09_scan_code,0xC5
            jne  short @f
-           test byte int09_mf2_state,0x03
+           test byte int09_mf2_state,(MF2_STATE_LAST_E0 | MF2_STATE_LAST_E1)
            jnz  int09_function_break
-           and  byte int09_mf2_flags,(~0x20)
+           and  byte int09_mf2_flags,(~MF2_FLAGS_NUMLOCK)
            jmp  int09_function_break
 
 @@:        ; Scroll Lock or Ctrl-Break press
            cmp  byte int09_scan_code,0x46
            jne  short @f
-           test byte int09_mf2_state,0x02
+           test byte int09_mf2_state,MF2_STATE_LAST_E0
            jnz  short scroll_lock0
-           test byte int09_mf2_state,0x10
+           test byte int09_mf2_state,MF2_STATE_ENHANCED
            jnz  short scroll_lock1
-           test byte int09_shift_flags,0x04
+           test byte int09_shift_flags,SHIFT_FLAGS_ANY_CTRL
            jz   short scroll_lock1
 scroll_lock0:
            ; ctrl break press
-           and  byte int09_mf2_state,(~0x02)
+           and  byte int09_mf2_state,(~MF2_STATE_LAST_E0)
            mov  byte [0x0071],0x80
            mov  al,[0x001A]
            mov  [0x001C],al
@@ -569,39 +590,37 @@ scroll_lock0:
            call enqueue_key
            jmp  int09_function_break
 scroll_lock1:
-           or   byte int09_mf2_flags,0x10
-           xor  byte int09_shift_flags,0x10
+           or   byte int09_mf2_flags,MF2_FLAGS_SCROLLLOCK
+           xor  byte int09_shift_flags,SHIFT_FLAGS_SCROLLLOCK
            jmp  int09_function_break
 
 @@:        ; Scroll Lock or Ctrl-Break release
            cmp  byte int09_scan_code,0xC6
            jne  short @f
-           test byte int09_mf2_state,0x02
+           test byte int09_mf2_state,MF2_STATE_LAST_E0
            jnz  short scroll_lock2
-           test byte int09_mf2_state,0x10
+           test byte int09_mf2_state,MF2_STATE_ENHANCED
            jnz  short scroll_lock3
-           test byte int09_shift_flags,0x04
+           test byte int09_shift_flags,SHIFT_FLAGS_ANY_CTRL
            jz   short scroll_lock3
 scroll_lock2:
            ; ctrl break release
            ; do nothing
            jmp  int09_function_break
 scroll_lock3:
-           and  byte int09_mf2_flags,(~0x10)
+           and  byte int09_mf2_flags,(~MF2_FLAGS_SCROLLLOCK)
            jmp  int09_function_break
 
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
            ; any other scancode
 @@:        test byte int09_scan_code,0x80
-           jz   short @f         ; we ignore any releases
-           jmp  int09_function_done
+           jnz  int09_function_done ; we ignore any releases
 
-@@:        cmp  byte int09_scan_code,MAX_SCAN_CODE
-           jbe  short @f         ; we ignore anything greater than MAX_SCAN_CODE
-           jmp  int09_function_done
+           cmp  byte int09_scan_code,MAX_SCAN_CODE
+           ja   int09_function_done ; we ignore anything greater than MAX_SCAN_CODE
            
-           ; alt-ctrl-del
-@@:        cmp  byte int09_scan_code,0x53
+           ; ctrl-alt-del
+           cmp  byte int09_scan_code,0x53
            jne  short @f
            mov  al,int09_shift_flags
            and  al,0x0F
@@ -618,25 +637,28 @@ scroll_lock3:
            imul bx,ax,sizeof(SCANCODES)
            add  bx,offset scan_to_scanascii
 
-           test byte int09_shift_flags,0x08 ; alt
+           test byte int09_shift_flags,SHIFT_FLAGS_ANY_ALT
            jz   short @f
            mov  ax,[bx+SCANCODES->sc_alt]
-           cmp  ah,0
-           jne  short int09_function_enqueue
-           mov  al,int09_altkp_val
-           imul ax,ax,10
-           add  al,[bx+SCANCODES->sc_alt]
-           mov  int09_altkp_val,al
-           push 0x0040
-           pop  ds
-           jmp  short int09_function_done
-
-@@:        test byte int09_shift_flags,0x04 ; ctrl
-           jz   short @f
-           mov  ax,[bx+SCANCODES->sc_control]
            jmp  short int09_function_enqueue
 
-@@:        test byte int09_mf2_state,0x02 ; extended keys
+@@:        test byte int09_shift_flags,SHIFT_FLAGS_ANY_CTRL
+           jz   short @f
+           mov  ax,[bx+SCANCODES->sc_control]
+           
+           ; extended keys
+           test byte int09_mf2_state,MF2_STATE_LAST_E0
+           jz   short int09_function_enqueue
+           cmp  byte int09_scan_code,0x47
+           jb   short int09_function_enqueue
+           cmp  byte int09_scan_code,0x53
+           ja   short int09_function_enqueue
+           mov  ax,[bx+SCANCODES->sc_normal]
+           mov  al,0xE0
+           jmp  short int09_function_enqueue
+           
+           ; extended keys
+@@:        test byte int09_mf2_state,MF2_STATE_LAST_E0
            jz   short @f
            cmp  byte int09_scan_code,0x47
            jb   short @f
@@ -646,7 +668,7 @@ scroll_lock3:
            mov  al,0xE0
            jmp  short int09_function_enqueue
 
-@@:        test byte int09_shift_flags,0x03 ; lshift + rshift
+@@:        test byte int09_shift_flags,(SHIFT_FLAGS_LEFT_SHIFT | SHIFT_FLAGS_RIGHT_SHIFT)
            jz   short @f
            mov  ax,[bx+SCANCODES->sc_lock_flags]
            test int09_shift_flags,al
@@ -677,8 +699,8 @@ int09_function_break:
            and  ah,0x7F
            cmp  ah,0x1D
            je   short @f
-           and  byte int09_mf2_state,(~0x01)
-@@:        and  byte int09_mf2_state,(~0x02)
+           and  byte int09_mf2_state,(~MF2_STATE_LAST_E1)
+@@:        and  byte int09_mf2_state,(~MF2_STATE_LAST_E0)
 
 int09_function_done:
            ; write back the flags
@@ -688,8 +710,6 @@ int09_function_done:
            mov  [0x0018],al
            mov  al,int09_mf2_state
            mov  [0x0096],al
-           mov  al,int09_altkp_val
-           mov  [0x0019],al
 
            mov  sp,bp
            pop  bp
@@ -882,7 +902,7 @@ key_int16_no_leds:
            mov  ah,REG_AH
            ; ds = 0x0040
            ; ah = service
-           
+
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
            ; read keyboard input (waiting for input)
            cmp  ah,0x00
@@ -1073,7 +1093,7 @@ key_int16_next11:
            
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
            ; check for enhanced keystroke
-@@:        cmp  ah,0x011
+@@:        cmp  ah,0x11
            jne  short @f
            xor  al,al            ; don't increment
            call dequeue_key
@@ -1099,10 +1119,50 @@ key_int16_next13:
            jne  short @f
            mov  ah,[0x0018]
            and  ah,0x73
+           ; ah = bit 7: 0
+           ;          6: CapsLock active
+           ;          5: NumLock active
+           ;          4: ScrollLock active
+           ;          3: 
+           ;          2: 
+           ;          1: left alt key pressed
+           ;          0: left ctrl key pressed
            mov  al,[0x0096]
            and  al,0x0C
+           ; al = bit 7: 0
+           ;          6: 0
+           ;          5: 0
+           ;          4: 0
+           ;          3: Right Alt key pressed
+           ;          2: right Ctrl key pressed
+           ;          1: 0
+           ;          0: 0
            or   ah,al
+           ; ah = bit 7: 0
+           ;          6: CapsLock active
+           ;          5: NumLock active
+           ;          4: ScrollLock active
+           ;          3: Right Alt key pressed
+           ;          2: right Ctrl key pressed
+           ;          1: left alt key pressed
+           ;          0: left ctrl key pressed
            mov  al,[0x0017]
+           ; ah = bit 7: SysReq key pressed
+           ;          6: CapsLock pressed
+           ;          5: NumLock pressed
+           ;          4: ScrollLock pressed
+           ;          3: right Alt key pressed
+           ;          2: right Ctrl key pressed
+           ;          1: left Alt key pressed
+           ;          0: left Ctrl key pressed
+           ; al = bit 7: Insert active
+           ;          6: CapsLock active
+           ;          5: NumLock active
+           ;          4: ScrollLock active
+           ;          3: either Alt key pressed
+           ;          2: either Ctrl key pressed
+           ;          1: left shift key pressed
+           ;          0: right shift key pressed
            mov  REG_AX,ax
            jmp  short key_int16_done
            
