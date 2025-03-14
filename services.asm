@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.16                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 27 Feb 2025                                                *
+* Last Updated: 14 Mar 2025                                                *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -252,12 +252,14 @@ int15_keyb_intercept proc near uses ds
            add  al,bl
            mov  [EBDA_DATA->keyb_int_value],al
            or   byte [EBDA_DATA->keyb_int_flags],0000_0010b
+           call int15_keyb_intercept_bda
            jmp  short int15_keyb_int_ignore
            
            ; the alt key was pressed
 int15_keyb_int_start:
            mov  byte [EBDA_DATA->keyb_int_value],0
            mov  byte [EBDA_DATA->keyb_int_flags],0000_0001b
+           call int15_keyb_intercept_bda
            jmp  short int15_keyb_int_done
            
            ; the alt key was released
@@ -286,6 +288,22 @@ int15_keyb_int_ignore:
            clc
            ret
 int15_keyb_intercept endp
+
+; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+; store the alt+XXX value in the BDA at 0x00419
+; on entry:
+;  ds = EBDA
+;  ds:[EBDA_DATA->keyb_int_value] = value to store
+; on return
+;  nothing
+; destroys nothing
+int15_keyb_intercept_bda proc near uses ax es
+           xor  ax,ax
+           mov  es,ax
+           mov  al,[EBDA_DATA->keyb_int_value]
+           mov  es:[0x00419],al
+           ret
+int15_keyb_intercept_bda endp
 
 ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 ; BIOS Services
