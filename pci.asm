@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.16                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 17 Feb 2025                                                *
+* Last Updated: 14 Mar 2025                                                *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -1869,6 +1869,65 @@ bios_shadow_init_ret:
 bios_shadow_init endp
 
 ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+; mark r/o for addresses. ex: 0xC0000 - > 0xDFFFF
+; this only works with segments in the 0xC000 -> 0xE000 range
+; on entry:
+;  cx = starting segment address (ex: 0xC800 = 0xC8000)
+;  ax = ending segment address (ex: 0xE000 = 0xE0000)
+; on return
+;  nothing
+; destroys nothing
+bios_rom_init_ro proc near uses all
+           
+           ; 0x5A = PAM1.0 = 0xC0000->0xC3FFF
+           ;        PAM1.1 = 0xC4000->0xC7FFF
+           ; 0x5B = PAM2.0 = 0xC8000->0xCBFFF
+           ;        PAM2.1 = 0xCC000->0xCFFFF
+           ; 0x5C = PAM3.0 = 0xD0000->0xD3FFF
+           ;        PAM3.1 = 0xD4000->0xD7FFF
+           ; 0x5D = PAM4.0 = 0xD8000->0xDBFFF
+           ;        PAM4.1 = 0xDC000->0xDFFFF
+           
+           ; start with PAM1.0
+           and  cx,0xFC00      ; must be on a 0x400 boundary
+           mov  dx,ax          ; dx = ending segment
+           add  dx,0x03FF      ; must be on a 0x400 boundary
+           and  dx,0xFC00      ;
+           mov  si,0xC000      ; si = starting segment to check
+           mov  bx,0x5A
+           mov  ah,1111_1101b  ; clear WE bit
+           xor  di,di          ; add only every other nibble
+
+bios_rom_init_ro_loop:
+           ; if (si >= cx) and ((si + 0x400) <= dx)
+           cmp  si,cx
+           jb   short @f
+           push si
+           add  si,0x3FF
+           cmp  si,dx
+           pop  si
+           jnb  short @f
+           
+           ; address is in range of cx -> (dx - 1)
+           push dx
+           xor  dx,dx            ; bus/devfunc = 0/00
+           call pci_config_read_byte
+           and  al,ah
+           call pci_config_write_byte
+           pop  dx
+
+           ; move to next PAM nibble
+@@:        add  si,0x400
+           ror  ah,4
+           add  bx,di
+           xor  di,0x0001
+           cmp  bx,0x5E
+           jb   short bios_rom_init_ro_loop
+           
+           ret
+bios_rom_init_ro endp
+
+; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 ; write a value to a BAR
 ; on entry:
 ;  ds = EBDA
@@ -2031,11 +2090,7 @@ pci_bios_init_pcirom_0:
            add  sp,12
 
            mov  al,pcirom_value
-           ; al = (al & (~(0x03 << cl))) | (0x01 << cl);
-           mov  ah,0x03
-           shl  ah,cl
-           not  ah
-           and  al,ah
+           ; al = al | (0x01 << cl);
            mov  ah,0x01
            shl  ah,cl
            or   al,ah
