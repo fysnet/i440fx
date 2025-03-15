@@ -389,9 +389,6 @@ normal_post:
            ; scan for the video rom
            mov  cx,0xC000
            mov  ax,0xC780
-.if DO_INIT_BIOS32
-           call bios_rom_init_ro
-.endif
            call pnp_scan_rom
            
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -440,9 +437,6 @@ normal_post:
            ; scan for the optional rom(s)
            mov  cx,0xC800
            mov  ax,0xE000
-.if DO_INIT_BIOS32
-           call bios_rom_init_ro
-.endif
            call pnp_scan_rom
 
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

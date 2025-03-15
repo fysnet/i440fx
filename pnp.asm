@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.16                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 17 Jan 2025                                                *
+* Last Updated: 14 Mar 2025                                                *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -1644,6 +1644,14 @@ pnp_scan_rom_loop:
            mov  ds,bx            ;
            push ax               ; save the 'pointer' to the next one
            
+.if DO_INIT_BIOS32
+           ; mark the range as r/o
+           push ax
+           shl  ax,(9-4)         ; convert 512-byte blocks to 16-byte blocks
+           add  ax,cx
+           call bios_rom_init_ro
+           pop  ax
+.endif
            push cx               ; entry point is at cx:[0x0003]
            push 0x0003           ;
            
