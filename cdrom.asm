@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.16                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 30 Jan 2025                                                *
+* Last Updated: 15 Feb 2025                                                *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -1360,11 +1360,11 @@ atapi_is_cdrom endp
 atapi_cmd_get_sense proc near uses di
            push bp
            mov  bp,sp
-           sub  sp,0x16
+           sub  sp,32
 
-cdrom_sns_device     equ  [bp-0x02]
-cdrom_sns_atapi_cmd  equ  [bp-0x04]  ; cdrom_rdy_atapi_cmd[12]
-cdrom_sns_atapi_buf  equ  [bp-0x16]  ; cdrom_rdy_atapi_buf[18]
+cdrom_sns_device     equ  [bp-2]
+cdrom_sns_atapi_cmd  equ  [bp-14]  ; cdrom_rdy_atapi_cmd[12]
+cdrom_sns_atapi_buf  equ  [bp-32]  ; cdrom_rdy_atapi_buf[18]
 
            mov  cdrom_sns_device,ax
            
@@ -1395,10 +1395,10 @@ cdrom_sns_atapi_buf  equ  [bp-0x16]  ; cdrom_rdy_atapi_buf[18]
            jnz  short atapi_cmd_get_sense_error
 
            mov  bx,ss:[bx+12]    ; bl = asc, bh = ascq
-atapi_cmd_get_sense_success:
            xor  ax,ax
            mov  sp,bp
            pop  bp
+           ret
 
 atapi_cmd_get_sense_error:
            mov  ax,2
