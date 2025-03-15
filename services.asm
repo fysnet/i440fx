@@ -259,7 +259,6 @@ int15_keyb_intercept proc near uses ds
 int15_keyb_int_start:
            mov  byte [EBDA_DATA->keyb_int_value],0
            mov  byte [EBDA_DATA->keyb_int_flags],0000_0001b
-           call int15_keyb_intercept_bda
            jmp  short int15_keyb_int_done
            
            ; the alt key was released
@@ -275,6 +274,8 @@ int15_keyb_int_end:
            mov  ah,5
            movzx cx,byte [EBDA_DATA->keyb_int_value]
            int  16h
+           mov  byte [EBDA_DATA->keyb_int_value],0
+           call int15_keyb_intercept_bda
            
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
            ; tell the caller to process the key as normal
@@ -392,6 +393,7 @@ int15_24_04:
 @@:        cmp  ah,0x4F          ; 
            jne  short @f
            call int15_keyb_intercept
+           jnc  int15_func_success
            jmp  int15_func_fail
 
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
