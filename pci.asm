@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.16                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 14 Mar 2025                                                *
+* Last Updated: 19 Mar 2025                                                *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -801,9 +801,9 @@ pcibios_init_set_elcr endp
 
 .else   ; DO_INIT_BIOS32
 
-;PCI_ADDRESS_SPACE_MEM   0x00
-PCI_ADDRESS_SPACE_IO    equ  0x01
-;PCI_ADDRESS_SPACE_MEM_PREFETCH  0x08
+;PCI_ADDRESS_SPACE_MEM           equ  0x00
+PCI_ADDRESS_SPACE_IO            equ  0x01
+PCI_ADDRESS_SPACE_MEM_PREFETCH  equ  0x08
 
 PCI_ROM_SLOT            equ  6
 PCI_NUM_REGIONS         equ  7
@@ -1141,18 +1141,22 @@ pci_find_440fx endp
 ; on return
 ;  nothing
 ; destroys nothing
-pci_for_each_device proc near uses cx dx si
+pci_for_each_device proc near uses cx dx si di
            ; save function to call
            mov  si,bx
            
-           xor  cx,cx            ; cx = bus
+           ; we 'scroll' through bus 0 and bus 1 in reverse
+           ; bus 1 only checks device 0, while bus 0 checks all devices
+           mov  di,1             ; bus = 1, maxdev = 1
+
+           mov  cx,1             ; cx = bus (start with 1)
 pci_for_each_device_01:
-           cmp  cx,2
-           jnb  short pci_for_each_device_done
+           cmp  cx,0
+           jl   short pci_for_each_device_done
 
            xor  dx,dx            ; dx = devfunc
 pci_for_each_device_02:
-           cmp  dx,256
+           cmp  dx,di
            jnb  short pci_for_each_device_03
 
            push dx
@@ -1172,7 +1176,8 @@ pci_for_each_device_02a:
            jmp  short pci_for_each_device_02
 
 pci_for_each_device_03:
-           inc  cx
+           mov  di,256           ; bus = 0, maxdev = 256
+           dec  cx
            jmp  short pci_for_each_device_01
 
 pci_for_each_device_done:
@@ -1276,9 +1281,7 @@ bios_unlock_shadow_ram endp
 pci_bios_init proc near uses bx
            
            mov  dword [EBDA_DATA->pci_bios_io_addr],0x0000C000
-           mov  dword [EBDA_DATA->pci_bios_agp_io_addr],0x0000E000
            mov  dword [EBDA_DATA->pci_bios_mem_addr],0xC0000000
-           mov  dword [EBDA_DATA->pci_bios_agp_mem_addr],0xD0000000
            mov  dword [EBDA_DATA->pci_bios_rom_start],0x000C0000
 
            mov  bx,offset pci_bios_init_bridges
@@ -1291,6 +1294,134 @@ pci_bios_init proc near uses bx
            ; we can now write to 0x000E0000->0x000FFFFF
            ret
 pci_bios_init endp
+
+; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+; Get AGP Memory
+; on entry:
+;  al = type (0 or PCI_ADDRESS_SPACE_MEM_PREFETCH)
+;  dh = bus
+;  dl = devfunc
+; on return
+;  eax = address
+; destroys nothing
+pci_get_agp_memory proc near uses ebx ecx edx esi edi
+           push bp
+           mov  bp,sp
+           sub  sp,6
+
+pci_agp_saddr     equ  [bp-2]
+pci_agp_eaddr     equ  [bp-4]
+pci_agp_type      equ  [bp-5]
+pci_agp_mask      equ  [bp-6]
+           
+           mov  word pci_agp_saddr,0xFFFF
+           mov  word pci_agp_eaddr,0x0000
+           mov  pci_agp_type,al
+           
+           ; disable i/o and memory access
+           mov  bx,PCI_COMMAND
+           call pci_config_read_word
+           and  ax,0xFFFC
+           call pci_config_write_word
+           
+           ; default memory mappings
+           mov  esi,0xC0000000    ; addr
+
+           xor  cx,cx
+           mov  pci_agp_mask,cl
+pci_agp_memory_mappings0:
+           push cx
+           xor  cx,cx
+pci_agp_memory_mappings1:
+           ; get the size of the addressable space
+           ; (calculate the BAR. cx = 0 = 0x10, cx = 1 = 0x14, etc)
+           mov  bx,cx
+           shl  bx,2
+           add  bx,PCI_BASE_ADDRESS_0
+           mov  eax,0xFFFFFFFF
+           call pci_config_write_dword
+           call pci_config_read_dword
+           
+           ; must not be zero
+           or   eax,eax          ; if size = 0, nothing here
+           jz   short pci_get_agp_memory_next
+
+           ; must not be PORT I/O
+           test al,PCI_ADDRESS_SPACE_IO
+           jnz  short pci_get_agp_memory_next
+           
+           ; must match mask (first time will be 0,
+           ;  second time will be PCI_ADDRESS_SPACE_MEM_PREFETCH)
+           push ax
+           and  al,PCI_ADDRESS_SPACE_MEM_PREFETCH
+           cmp  al,pci_agp_mask
+           pop  ax
+           jne  short pci_get_agp_memory_next
+
+           ; size = ~(eax & ~0xF) + 1
+           mov  edi,eax
+           and  edi,0xFFFFFFF0
+           not  edi
+           inc  edi              ; edi = size
+
+           ; addr = (addr + size - 1) & ~(size - 1);
+           add  esi,edi         ; add the size
+           dec  esi             ; - 1
+           push edi             ; save the size
+           dec  edi             ; and by ~(size-1)
+           not  edi             ;
+           and  esi,edi         ;
+           pop  edi             ; restore the size
+
+           ; does address has prefetch
+           mov  bl,al
+           and  bl,PCI_ADDRESS_SPACE_MEM_PREFETCH
+           cmp  bl,pci_agp_type
+           jne  short pci_get_agp_no_pre
+           
+           cmp  word pci_agp_saddr,0xFFFF
+           jne  short @f
+           ; saddr = addr >> 16
+           mov  ebx,esi
+           shr  ebx,16
+           mov  pci_agp_saddr,bx
+
+           ; eaddr = ((addr + size - 1) >> 16)
+@@:        mov  ebx,esi
+           add  ebx,edi
+           dec  ebx
+           shr  ebx,16
+           mov  pci_agp_eaddr,bx
+
+pci_get_agp_no_pre:
+           ; if size < 0x00010000 (align)
+           cmp  edi,0x00010000
+           jnb  short @f
+           add  esi,0x00010000  ; addr += align
+           jmp  short pci_get_agp_memory_next
+@@:        add  esi,edi         ; addr += size
+
+pci_get_agp_memory_next:
+           inc  cx
+           cmp  cx,PCI_ROM_SLOT
+           jb   pci_agp_memory_mappings1
+
+           pop  cx
+           mov  byte pci_agp_mask,PCI_ADDRESS_SPACE_MEM_PREFETCH
+           inc  cx
+           cmp  cx,2
+           jb   pci_agp_memory_mappings0
+
+           ; return (saddr | (eaddr << 16))
+           movzx eax,word pci_agp_eaddr
+           shl  eax,16
+           mov  ax,pci_agp_saddr
+
+           mov  sp,bp
+           pop  bp
+           ret
+pci_get_agp_memory endp
+
 
 pci_irqs   db  11, 9, 11, 9
 
@@ -1456,23 +1587,53 @@ pci_bios_init_bridges_05:
            mov  bx,0x1D          ; I/O Limit Address Register
            mov  al,0xF0          ; bits 7:4 = address = 0xF (0xF000 ?)
            call pci_config_write_byte
+           
+           ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+           ; is an AGP Device present?
+           push dx                ; save the caller's bus/devfunc
+
+           mov  dx,0x0100         ; bus = 1, devfunc = 0 (AGP Device)
+           mov  bx,PCI_VENDOR_ID
+           call pci_config_read_word
+           cmp  ax,0xFFFF
+           je   short pci_bios_init_bridges_no_agp
+           
+           ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+           ; is an AGP Device
+           ; first with Prefetch
+           mov  al,PCI_ADDRESS_SPACE_MEM_PREFETCH
+           call pci_get_agp_memory
+           mov  ecx,eax          ; save the value
+           ; then without Prefetch
+           xor  al,al
+           call pci_get_agp_memory
+           pop  dx               ; restore the caller's bus/devfunc
+
            mov  bx,0x20          ; Memory Base Address Register
-           mov  ax,0xD000        ; bits 15:4 = address = 0xD0000000 ?
-           call pci_config_write_word
-           mov  bx,0x22          ; Memory Limit Address Register
-           mov  ax,0xD1F0        ; bits 15:4 = address = 0xD1F00000 ?
-           call pci_config_write_word
+           call pci_config_write_dword
            mov  bx,0x24          ; Prefetchable Memory Base Address Register
-           mov  ax,0xD200        ; bits 15:4 = address = 0xD2000000 ?
-           call pci_config_write_word
-           mov  bx,0x26          ; Prefetchable Memory Limit Address Register
-           mov  ax,0xDAF0        ; bits 15:4 = address = 0xDAF00000 ?
-           call pci_config_write_word
+           mov  eax,ecx          ; restore the prefetch value
+           call pci_config_write_dword
+
+           jmp  short pci_bios_init_bridges_done
+
+           ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+           ; is not an AGP Device
+pci_bios_init_bridges_no_agp:
+           pop  dx               ; restore the caller's bus/devfunc
+           
+           mov  bx,0x20          ; Memory Base Address Register
+           mov  eax,0x0000FFFF   ; bits 15:4 = address
+           call pci_config_write_dword
+           mov  bx,0x24          ; Prefetchable Memory Base Address Register
+          ;mov  eax,0x0000FFFF   ; bits 15:4 = address
+           call pci_config_write_dword
+           
+pci_bios_init_bridges_done:
            mov  bx,0xEE          ; reserved area ?
            mov  al,0x88          ; Another BIOS must set this, how would we know otherwise?
            call pci_config_write_byte
-           
-pci_bios_init_bridges_done:
+
            mov  sp,bp            ; restore the stack
            pop  bp
            ret
@@ -1490,14 +1651,16 @@ pci_bios_init_bridges endp
 pci_bios_init_device proc near uses alld
            push bp
            mov  bp,sp
-           sub  sp,8
+           sub  sp,10
 
 pci_is_i440bx    equ [bp-1]
 pci_headt        equ [bp-2]
 pci_b_vendor_id  equ [bp-4]
 pci_b_device_id  equ [bp-6]
 pci_b_class      equ [bp-8]
-
+pci_b_mask       equ [bp-9]
+pci_b_init_bar   equ [bp-10]  ; byte (works as long as PCI_NUM_REGIONS <= 8)
+           
            mov  byte pci_is_i440bx,0
 
            ; get the chipset
@@ -1612,8 +1775,23 @@ pci_default_map:
            call pci_config_write_word
            
            ; default memory mappings
+           ; we loop twice, first time mask = 0, second time = *_PREFETCH
+           mov  byte pci_b_mask,0
+           ; pci_b_init_bar is a bitmap of the REGIONS 
+           ;   (bit 0 = REGION 0, bit 1 = REGION 1, etc)
+           mov  byte pci_b_init_bar,0
            xor  cx,cx
-pci_memory_mappings:
+pci_memory_mappings_0:
+           push cx
+
+           xor  cx,cx
+pci_memory_mappings_1:
+           ; do this only if init_bar[cx] == 0
+           mov  al,1
+           shl  al,cl
+           test pci_b_init_bar,al
+           jnz  pci_memory_mappings_next
+
            ; get the size of the addressable space
            ; (calculate the BAR. cx = 0 = 0x10, cx = 1 = 0x14, etc)
            mov  bx,cx
@@ -1627,31 +1805,36 @@ pci_memory_mappings:
            mov  al,0xFE          ; don't write bit 0
 @@:        call pci_config_write_dword
            call pci_config_read_dword
+           ; if nothing there don't do it
            or   eax,eax          ; if size = 0, nothing here
            jz   short pci_memory_mappings_next
+           ; if we are on bus 0, go ahead and do it
+           cmp  dh,0
+           je   short @f
+           ; else we must match the mask
+           push ax
+           and  al,PCI_ADDRESS_SPACE_MEM_PREFETCH
+           cmp  pci_b_mask,al
+           pop  ax
+           jne  short pci_memory_mappings_next
 
            ; size = ~(return & ~0xF) + 1
-           mov  edi,eax
+@@:        mov  edi,eax
            and  edi,0xFFFFFFF0
            not  edi
            inc  edi              ; edi = size
            
            test al,PCI_ADDRESS_SPACE_IO
            jz   short pci_memory_mappings1
-           lea  bx,[EBDA_DATA->pci_bios_agp_io_addr]
-           cmp  dh,1
-           je   short @f
            lea  bx,[EBDA_DATA->pci_bios_io_addr]
-@@:        mov  esi,16          ; minimum alignment
+           mov  esi,16          ; minimum alignment
            jmp  short pci_memory_mappings2
-pci_memory_mappings1:
-           lea  bx,[EBDA_DATA->pci_bios_agp_mem_addr]
-           cmp  dh,1
-           je   short @f
-           lea  bx,[EBDA_DATA->pci_bios_mem_addr]
-@@:        mov  esi,0x00010000  ; minimum alignment
-pci_memory_mappings2:           ; edi = size
            
+pci_memory_mappings1:
+           lea  bx,[EBDA_DATA->pci_bios_mem_addr]
+           mov  esi,0x00010000  ; minimum alignment
+           
+pci_memory_mappings2:           ; edi = size
            ; *paddr = (*paddr + size - 1) & ~(size - 1);
            mov  eax,[bx]        ; read the current value
            add  eax,edi         ; add the size
@@ -1680,13 +1863,32 @@ pci_memory_mappings2:           ; edi = size
            jb   short @f
            mov  eax,edi         ; is size
 @@:        add  [bx],eax
+
+           ; mark that we did this bar/region
+           mov  al,1
+           shl  al,cl
+           or   pci_b_init_bar,al
            
 pci_memory_mappings_next:
            inc  cx
            cmp  cx,PCI_NUM_REGIONS
-           jb   pci_memory_mappings
-            
+           jb   pci_memory_mappings_1
+
+           ; second loop mask = *_PREFETCH
+           mov  byte pci_b_mask,PCI_ADDRESS_SPACE_MEM_PREFETCH
+           pop  cx
+
+           ; only continue if we are on bus 1
+           cmp  dh,1
+           jne  short pci_memory_mappings_done
+           
+           ; only do it twice
+           inc  cx
+           cmp  cx,2
+           jb   pci_memory_mappings_0
+
            ; enable i/o and memory access
+pci_memory_mappings_done:
            mov  bx,PCI_COMMAND
            call pci_config_read_word
            or   ax,(PCI_COMMAND_MEMORY | PCI_COMMAND_IO)

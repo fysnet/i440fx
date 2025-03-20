@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.16                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 8 Dec 2024                                                 *
+* Last Updated: 18 Mar 2025                                                *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -69,6 +69,103 @@ cmos_put_byte proc near
            out  PORT_CMOS_DATA,al
            ret
 cmos_put_byte endp
+
+; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+; check the cmos crc
+; (if bad crc, we can't display anything yet)
+; on entry:
+;  nothing
+; on return
+;  nothing
+; destroys nothing
+cmos_check proc near
+           
+           ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+           ; check the crc at 0x2E/0x2F (registers 0x10 -> 0x2D)
+           xor  dx,dx
+           mov  ah,0x10
+           mov  cx,(0x2D - 0x10 + 1)
+@@:        call cmos_get_byte
+           add  dl,al
+           adc  dh,0
+           inc  ah
+           loop @b
+           
+           ; compare dx with 0x2E/0x2F
+           mov  ah,0x2E
+           call cmos_get_byte
+           mov  bh,al
+           mov  ah,0x2F
+           call cmos_get_byte
+           mov  bl,al
+
+           ; if dx != bx, we are in error
+           cmp  dx,bx
+           je   short cmos_base_okay
+
+           ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+           ; the first 64 bytes of the cmos didn't have a good crc
+           ; we need to set some defaults 
+           ; (we simply write to some registers)
+
+           ; boot sequence registers 0x38 and 0x3D
+           ; floppy, cdrom, hard disk
+           mov  ax,0x3821
+           call cmos_put_byte
+           mov  ax,0x3D31
+           call cmos_put_byte
+           
+           ; the 'reset' code needs to be 0x00
+           mov  ax,0x0F00
+           call cmos_put_byte
+           
+           
+           ; else do something here
+           
+           
+           ; last, set the 'cmos was bad' bit
+           ; (we haven't initialized the ebda yet, so must use cmos)
+           mov  ax,0x0E40
+           call cmos_put_byte
+
+           jmp  short cmos_extend_okay
+           
+           ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+           ; check the crc at 0x7A/0x7B (registers 0x40 -> 0x79)
+cmos_base_okay:
+           xor  dx,dx
+           mov  ah,0x40
+           mov  cx,(0x79 - 0x40 + 1)
+@@:        call cmos_get_byte
+           add  dl,al
+           adc  dh,0
+           inc  ah
+           loop @b
+           
+           ; compare dx with 0x7A/0x7B
+           mov  ah,0x7A
+           call cmos_get_byte
+           mov  bh,al
+           mov  ah,0x7B
+           call cmos_get_byte
+           mov  bl,al
+
+           ; if dx != bx, we are in error
+           cmp  dx,bx
+           je   short cmos_extend_okay
+           
+           
+           ; else do something here
+           
+           
+           ; last, set the 'cmos was bad' bit
+           ; (we haven't initialized the ebda yet, so must use cmos)
+           mov  ax,0x0E40
+           call cmos_put_byte
+
+cmos_extend_okay:
+           ret
+cmos_check endp
 
 .end
 

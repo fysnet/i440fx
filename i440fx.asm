@@ -2,7 +2,7 @@ comment |*******************************************************************
 *  Copyright (c) 1984-2025    Forever Young Software  Benjamin David Lunt  *
 *                                                                          *
 *                         i440FX BIOS ROM v1.0                             *
-* FILE: cmos.asm                                                           *
+* FILE: i440fx.asm                                                         *
 *                                                                          *
 * This code is freeware, not public domain.  Please use respectfully.      *
 *                                                                          *
@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.16                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 14 Mar 2025                                                *
+* Last Updated: 18 Mar 2025                                                *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -117,6 +117,10 @@ outfile 'i440fx.bin'
            out  PORT_DMA2_MODE_REG,al
            xor  al,al
            out  PORT_DMA2_MASK_REG,al
+           
+           ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+           ; check the CMOS
+           call cmos_check
            
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
            ; Depending on the Shutdown status, we need to
@@ -406,7 +410,24 @@ normal_post:
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
            ; we can finally print our banner
            call put_banner
-           
+
+           ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+           ; if we marked (or already marked) that the cmos crc
+           ;  was bad, give message
+           mov  ah,0x0E
+           call cmos_get_byte
+           test al,0x40
+           jz   short @f
+
+           ; print bad crc message
+           push ds
+           mov  ax,BIOS_BASE2
+           mov  ds,ax
+           mov  si,offset cmos_bad_crc_found
+           call bios_printf
+          ;add  sp,0
+           pop  ds
+@@:           
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
            ; initialize the boot vectors
            call init_boot_vectors
@@ -1679,6 +1700,7 @@ banner_str          db  'Bochs all assembly 16-bit legacy bios.',13,10
 banner_no_vesa_str  db  'Did not find a suitible VBE2 screen mode...',13,10,0
 unknown_shutdown    db  'Error: unknown shutdown status found: %i',0
 s3_resume_error     db  'Error: returned from s3 resume',0
+cmos_bad_crc_found  db  'Found bad CRC in CMOS. Using defaults!',13,10,0
 
 uhci_found_str0         db 'Found UHCI controller at 0x%04X (%i ports), irq = %i, ram = 0x%08lX',13,10,0
 ohci_found_str0         db 'Found OHCI controller at 0x%08lX (%i ports), irq = %i, ram = 0x%08lX',13,10,0
