@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.16                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 19 Mar 2025                                                *
+* Last Updated: 22 Mar 2025                                                *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -806,7 +806,7 @@ PCI_ADDRESS_SPACE_IO            equ  0x01
 PCI_ADDRESS_SPACE_MEM_PREFETCH  equ  0x08
 
 PCI_ROM_SLOT            equ  6
-PCI_NUM_REGIONS         equ  7
+PCI_NUM_REGIONS         equ  7   ; must remain <= 8
 
 ;PCI_DEVICES_MAX 64
 
@@ -1422,6 +1422,33 @@ pci_get_agp_memory_next:
            ret
 pci_get_agp_memory endp
 
+; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+; find pci to isa entry in the dsdt_data(.asm)
+; on entry:
+;  ds = BIOS_BASE2
+; on return
+;  BIOS_BASE2:ax = address found
+; destroys nothing
+find_acpi_pci2isa_entry proc near uses si
+           
+           mov  si,offset acpi_dsdt_start
+find_pci2isa_loop:
+           cmp  dword [si],"ISA_"
+           jne  short @f
+           cmp  dword [si+5],"_ADR"
+           je   short find_pci2isa_done
+@@:        inc  si
+           cmp  si,offset acpi_dsdt_end
+           jb   short find_pci2isa_loop
+           
+           ; we should not get here...
+           xor  si,si
+
+find_pci2isa_done:
+           mov  ax,si
+           ret
+find_acpi_pci2isa_entry endp
+
 
 pci_irqs   db  11, 9, 11, 9
 
@@ -1545,6 +1572,13 @@ pci_bios_init_bridges_04:
            pop  bx
 @@:        mov  [bx+0x71],cl            ;
            
+           ; find the pci-2-isa entry
+           call find_acpi_pci2isa_entry
+           push bx
+           mov  bx,ax
+           mov  byte [bx+0x0C],7        ; update the pci-to-isa device number to 7
+           pop  bx
+
            ; calculate the checksum
            mov  byte [bx+0x1F],0        ; clear the crc before the check
            mov  cx,[bx+0x06]            ; retrieve the size
