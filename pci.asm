@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.16                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 22 Mar 2025                                                *
+* Last Updated: 24 Mar 2025                                                *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -1422,6 +1422,7 @@ pci_get_agp_memory_next:
            ret
 pci_get_agp_memory endp
 
+comment |
 ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 ; find pci to isa entry in the dsdt_data(.asm)
 ; on entry:
@@ -1448,7 +1449,7 @@ find_pci2isa_done:
            mov  ax,si
            ret
 find_acpi_pci2isa_entry endp
-
+|
 
 pci_irqs   db  11, 9, 11, 9
 
@@ -1543,7 +1544,7 @@ pci_bios_init_bridges_03:
            cmp  ax,PCI_DEVICE_ID_INTEL_82443
            je   short pci_bios_init_bridges_04
            cmp  ax,PCI_DEVICE_ID_INTEL_82443_NOAGP
-           jne  short pci_bios_init_bridges_05
+           jne  pci_bios_init_bridges_05
 
            ; is a i440BX PCI Bridge
 pci_bios_init_bridges_04:
@@ -1557,9 +1558,25 @@ pci_bios_init_bridges_04:
            mov  byte [bx+0x09],0x38     ; IRQ router DevFunc
            mov  byte [bx+0x21],0x38     ; 1st entry: PCI2ISA
            mov  byte [bx+0x31],0x40     ; 2nd entry: 1st slot
+           mov  byte [bx+0x32],0x60     ; INTA -> PIRQA
+           mov  byte [bx+0x35],0x61     ; INTB -> PIRQB
+           mov  byte [bx+0x38],0x62     ; INTC -> PIRQC
+           mov  byte [bx+0x3B],0x63     ; INTD -> PIRQD
            mov  byte [bx+0x41],0x48     ; 3rd entry: 2nd slot
+           mov  byte [bx+0x42],0x61     ; INTA -> PIRQB
+           mov  byte [bx+0x45],0x62     ; INTB -> PIRQC
+           mov  byte [bx+0x48],0x63     ; INTC -> PIRQD
+           mov  byte [bx+0x4B],0x60     ; INTD -> PIRQA
            mov  byte [bx+0x51],0x50     ; 4th entry: 3rd slot
+           mov  byte [bx+0x52],0x62     ; INTA -> PIRQC
+           mov  byte [bx+0x55],0x63     ; INTB -> PIRQD
+           mov  byte [bx+0x58],0x60     ; INTC -> PIRQA
+           mov  byte [bx+0x5B],0x61     ; INTD -> PIRQB
            mov  byte [bx+0x61],0x58     ; 5th entry: 4th slot
+           mov  byte [bx+0x62],0x63     ; INTA -> PIRQD
+           mov  byte [bx+0x65],0x60     ; INTB -> PIRQA
+           mov  byte [bx+0x68],0x61     ; INTC -> PIRQB
+           mov  byte [bx+0x6B],0x62     ; INTD -> PIRQC
            mov  cl,0x60                 ; 6th entry: 5th slot
            cmp  ax,PCI_DEVICE_ID_INTEL_82443
            jne  short @f
@@ -1571,13 +1588,17 @@ pci_bios_init_bridges_04:
            call pci_config_write_byte   ; dx = bus/devfunc
            pop  bx
 @@:        mov  [bx+0x71],cl            ;
+           mov  byte [bx+0x72],0x60     ; INTA -> PIRQA
+           mov  byte [bx+0x75],0x61     ; INTB -> PIRQB
+           mov  byte [bx+0x78],0x62     ; INTC -> PIRQC
+           mov  byte [bx+0x7B],0x63     ; INTD -> PIRQD
            
            ; find the pci-2-isa entry
-           call find_acpi_pci2isa_entry
-           push bx
-           mov  bx,ax
-           mov  byte [bx+0x0C],7        ; update the pci-to-isa device number to 7
-           pop  bx
+           ;call find_acpi_pci2isa_entry
+           ;push bx
+           ;mov  bx,ax
+           ;mov  byte [bx+0x0C],7        ; update the pci-to-isa device number to 7
+           ;pop  bx
 
            ; calculate the checksum
            mov  byte [bx+0x1F],0        ; clear the crc before the check
@@ -2381,10 +2402,20 @@ pci_slot_get_pirq proc near uses cx
            
            mov  cl,dl
            shr  cl,3             ; cl = dev
+           mov  ch,cl            ; save in ch
            dec  cl               ; - 1
-           or   al,al            ;
+
+           ; is it an i440BX?
+           or   al,al            ; 
            jz   short @f         ;
-           sub  cl,6             ; - 6 more
+
+           ; we are an i440BX
+           ; first, assume device = 7
+           sub  cl,6             ; (-1 above + -6 here = -7)
+           cmp  ch,7             ; ch = dev number
+           je   short @f         ;
+           dec  cl               ; (-1 above + -6 above + -1 here = -8)
+
 @@:        add  cl,bl            ; add the pin
            and  cl,3             ; only bottom 2 bits
            mov  al,cl            ; return in al
