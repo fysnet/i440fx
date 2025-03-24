@@ -1977,7 +1977,7 @@ pci_map_interrupt:
            
            ; don't hardwire acpi to 9
            ;mov  al,9
-           ;mov  bx,PCI_INTERRUPT_LINE
+           mov  bx,PCI_INTERRUPT_LINE
            ;call pci_config_write_byte
 
            call pci_config_read_byte
