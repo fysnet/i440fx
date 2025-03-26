@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.16                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 14 Mar 2025                                                *
+* Last Updated: 26 Mar 2025                                                *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -226,6 +226,10 @@ int15_keyb_intercept proc near uses ds
            ; alt release code = 0xB8
            cmp  al,(0x80 | 0x38)
            je   short int15_keyb_int_end
+
+           ; if the alt key is being pressed, don't do anything here
+           test byte [EBDA_DATA->keyb_int_flags],0000_0001b
+           jz   short int15_keyb_int_end
            
            ; else, any keypad numeral (0x47 -> 0x52, excluding 0x4A an 0x4E)
            ; (we watch for the release of the key)

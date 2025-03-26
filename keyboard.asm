@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.16                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 11 Mar 2025                                                *
+* Last Updated: 26 Mar 2025                                                *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -644,9 +644,9 @@ scroll_lock3:
 
 @@:        test byte int09_shift_flags,SHIFT_FLAGS_ANY_CTRL
            jz   short @f
-           mov  ax,[bx+SCANCODES->sc_control]
            
            ; extended keys
+           mov  ax,[bx+SCANCODES->sc_control]
            test byte int09_mf2_state,MF2_STATE_LAST_E0
            jz   short int09_function_enqueue
            cmp  byte int09_scan_code,0x47
@@ -693,14 +693,13 @@ int09_function_enqueue:
            push 0x0040
            pop  ds
            call enqueue_key
-
+           
 int09_function_break:
            mov  ah,int09_scan_code
            and  ah,0x7F
-           cmp  ah,0x1D
-           je   short @f
+           cmp  ah,0x1D   ; control press/release
+           je   short int09_function_done
            and  byte int09_mf2_state,(~MF2_STATE_LAST_E1)
-@@:        and  byte int09_mf2_state,(~MF2_STATE_LAST_E0)
 
 int09_function_done:
            ; write back the flags
@@ -709,8 +708,9 @@ int09_function_done:
            mov  al,int09_mf2_flags
            mov  [0x0018],al
            mov  al,int09_mf2_state
+           and  al,(~MF2_STATE_LAST_E0)
            mov  [0x0096],al
-
+           
            mov  sp,bp
            pop  bp
            ret
