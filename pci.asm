@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.16                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 24 Mar 2025                                                *
+* Last Updated: 25 Mar 2025                                                *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -484,7 +484,7 @@ pci_real_nextdev2:
            cld
            rep
              movsb
-           mov  word REG_BX,((1 << 9) | (1 << 11)) ; irq 9 and 11 are used
+           mov  word REG_BX,((1 << 3) | (1 << 5) | (1 << 9) | (1 << 11)) ; irqs 3,5,9, and 11 are used
            jmp  short pci_int1A_success
 pci_real_too_small:
            stosw                 ; size of our return data
@@ -560,7 +560,7 @@ pci_real_select_reg endp
 .if (DO_INIT_BIOS32 == 0)
 
 pci_irq_list:
-  db 11, 10, 9, 5
+  db 11, 9, 5, 3
 
 ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 ; set the bus/dev/func/address
@@ -1451,7 +1451,7 @@ find_pci2isa_done:
 find_acpi_pci2isa_entry endp
 |
 
-pci_irqs   db  11, 9, 11, 9
+pci_irqs   db  11, 9, 5, 3
 
 ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 ; Initialize a PCI bridge
@@ -1580,8 +1580,8 @@ pci_bios_init_bridges_04:
            mov  cl,0x60                 ; 6th entry: 5th slot
            cmp  ax,PCI_DEVICE_ID_INTEL_82443
            jne  short @f
-           mov  byte [bx+0x70],0x01     ; 6th entry: AGP
-           mov  cl,0x00                 ; 6th entry: AGP slot
+           mov  cl,0x08                 ; 6th entry: AGP-to-PCI bridge
+           mov  byte [bx+0x7E],0x00     ; embedded
            push bx
            mov  bx,0xB4                 ; AGP aperture size 64 MB
            mov  al,0x30                 ;
@@ -1975,11 +1975,7 @@ pci_map_interrupt:
            mov  dword [EBDA_DATA->pm_io_base],PM_IO_BASE
            mov  dword [EBDA_DATA->smb_io_base],SMB_IO_BASE
            
-           ; don't hardwire acpi to 9
-           ;mov  al,9
            mov  bx,PCI_INTERRUPT_LINE
-           ;call pci_config_write_byte
-
            call pci_config_read_byte
            mov  [EBDA_DATA->pm_sci_int],al
 
