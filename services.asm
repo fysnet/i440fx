@@ -227,7 +227,7 @@ int15_keyb_intercept proc near uses ds
            cmp  al,(0x80 | 0x38)
            je   short int15_keyb_int_end
 
-           ; if the alt key is being pressed, don't do anything here
+           ; if the alt key isn't being pressed, don't do anything here
            test byte [EBDA_DATA->keyb_int_flags],0000_0001b
            jz   short int15_keyb_int_end
            
