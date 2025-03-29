@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.16                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 18 Mar 2025                                                *
+* Last Updated: 29 Mar 2025                                                *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -88,6 +88,7 @@ EBDA_DATA  struct
   pci_bios_io_addr      dword
   pci_bios_mem_addr     dword
   pci_bios_rom_start    dword
+  pci_bios_agp_io_addr  dword
 
   pm_io_base            dword
   smb_io_base           dword
@@ -394,7 +395,7 @@ EBDA_DATA  struct
 
   ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
   ;
-  unused                dup 729     ; unused / available space
+  unused                dup 725     ; unused / available space
 
 EBDA_DATA  ends         ; end of structure declaration.
 

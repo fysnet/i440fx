@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.16                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 18 Mar 2025                                                *
+* Last Updated: 29 Mar 2025                                                *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -1543,78 +1543,78 @@ pci_routing_table_structure_start:
   db  0                          ; pci bus number
   db  (1 << 3)                   ; pci device number (bit 7-3)
   db  0x60                       ; link value INTA#: pointer into PCI2ISA config space
-  dw  0xDEF8                     ; IRQ bitmap INTA#
+  dw  1101_1110_1111_1000b       ; IRQ bitmap INTA# (irqs 15,14,12,11,10,9,7,6,5,4,3)
   db  0x61                       ; link value INTB#
-  dw  0xDEF8                     ; IRQ bitmap INTB#
+  dw  1101_1110_1111_1000b       ; IRQ bitmap INTB# (irqs 15,14,12,11,10,9,7,6,5,4,3)
   db  0x62                       ; link value INTC#
-  dw  0xDEF8                     ; IRQ bitmap INTC#
+  dw  1101_1110_1111_1000b       ; IRQ bitmap INTC# (irqs 15,14,12,11,10,9,7,6,5,4,3)
   db  0x63                       ; link value INTD#
-  dw  0xDEF8                     ; IRQ bitmap INTD#
+  dw  1101_1110_1111_1000b       ; IRQ bitmap INTD# (irqs 15,14,12,11,10,9,7,6,5,4,3)
   db  0                          ; physical slot (0 = embedded)
   db  0                          ; reserved
   ; second slot entry: 1st PCI slot
   db  0                          ; pci bus number
   db  (2 << 3)                   ; pci device number (bit 7-3)
   db  0x61                       ; link value INTA#
-  dw  0xDEF8                     ; IRQ bitmap INTA#
+  dw  1101_1110_1111_1000b       ; IRQ bitmap INTA# (irqs 15,14,12,11,10,9,7,6,5,4,3)
   db  0x62                       ; link value INTB#
-  dw  0xDEF8                     ; IRQ bitmap INTB#
+  dw  1101_1110_1111_1000b       ; IRQ bitmap INTB# (irqs 15,14,12,11,10,9,7,6,5,4,3)
   db  0x63                       ; link value INTC#
-  dw  0xDEF8                     ; IRQ bitmap INTC#
+  dw  1101_1110_1111_1000b       ; IRQ bitmap INTC# (irqs 15,14,12,11,10,9,7,6,5,4,3)
   db  0x60                       ; link value INTD#
-  dw  0xDEF8                     ; IRQ bitmap INTD#
+  dw  1101_1110_1111_1000b       ; IRQ bitmap INTD# (irqs 15,14,12,11,10,9,7,6,5,4,3)
   db  1                          ; physical slot (0 = embedded)
   db  0                          ; reserved
   ; third slot entry: 2nd PCI slot
   db  0                          ; pci bus number
   db  (3 << 3)                   ; pci device number (bit 7-3)
   db  0x62                       ; link value INTA#
-  dw  0xDEF8                     ; IRQ bitmap INTA#
+  dw  1101_1110_1111_1000b       ; IRQ bitmap INTA# (irqs 15,14,12,11,10,9,7,6,5,4,3)
   db  0x63                       ; link value INTB#
-  dw  0xDEF8                     ; IRQ bitmap INTB#
+  dw  1101_1110_1111_1000b       ; IRQ bitmap INTB# (irqs 15,14,12,11,10,9,7,6,5,4,3)
   db  0x60                       ; link value INTC#
-  dw  0xDEF8                     ; IRQ bitmap INTC#
+  dw  1101_1110_1111_1000b       ; IRQ bitmap INTC# (irqs 15,14,12,11,10,9,7,6,5,4,3)
   db  0x61                       ; link value INTD#
-  dw  0xDEF8                     ; IRQ bitmap INTD#
+  dw  1101_1110_1111_1000b       ; IRQ bitmap INTD# (irqs 15,14,12,11,10,9,7,6,5,4,3)
   db  2                          ; physical slot (0 = embedded)
   db  0                          ; reserved
   ; 4th slot entry: 3rd PCI slot
   db  0                          ; pci bus number
   db  (4 << 3)                   ; pci device number (bit 7-3)
   db  0x63                       ; link value INTA#
-  dw  0xDEF8                     ; IRQ bitmap INTA#
+  dw  1101_1110_1111_1000b       ; IRQ bitmap INTA# (irqs 15,14,12,11,10,9,7,6,5,4,3)
   db  0x60                       ; link value INTB#
-  dw  0xDEF8                     ; IRQ bitmap INTB#
+  dw  1101_1110_1111_1000b       ; IRQ bitmap INTB# (irqs 15,14,12,11,10,9,7,6,5,4,3)
   db  0x61                       ; link value INTC#
-  dw  0xDEF8                     ; IRQ bitmap INTC#
+  dw  1101_1110_1111_1000b       ; IRQ bitmap INTC# (irqs 15,14,12,11,10,9,7,6,5,4,3)
   db  0x62                       ; link value INTD#
-  dw  0xDEF8                     ; IRQ bitmap INTD#
+  dw  1101_1110_1111_1000b       ; IRQ bitmap INTD# (irqs 15,14,12,11,10,9,7,6,5,4,3)
   db  3                          ; physical slot (0 = embedded)
   db  0                          ; reserved
   ; 5th slot entry: 4th PCI slot
   db  0                          ; pci bus number
   db  (5 << 3)                   ; pci device number (bit 7-3)
   db  0x60                       ; link value INTA#
-  dw  0xDEF8                     ; IRQ bitmap INTA#
+  dw  1101_1110_1111_1000b       ; IRQ bitmap INTA# (irqs 15,14,12,11,10,9,7,6,5,4,3)
   db  0x61                       ; link value INTB#
-  dw  0xDEF8                     ; IRQ bitmap INTB#
+  dw  1101_1110_1111_1000b       ; IRQ bitmap INTB# (irqs 15,14,12,11,10,9,7,6,5,4,3)
   db  0x62                       ; link value INTC#
-  dw  0xDEF8                     ; IRQ bitmap INTC#
+  dw  1101_1110_1111_1000b       ; IRQ bitmap INTC# (irqs 15,14,12,11,10,9,7,6,5,4,3)
   db  0x63                       ; link value INTD#
-  dw  0xDEF8                     ; IRQ bitmap INTD#
+  dw  1101_1110_1111_1000b       ; IRQ bitmap INTD# (irqs 15,14,12,11,10,9,7,6,5,4,3)
   db  4                          ; physical slot (0 = embedded)
   db  0                          ; reserved
   ; 6th slot entry: 5th PCI slot
   db  0                          ; pci bus number
   db  (6 << 3)                   ; pci device number (bit 7-3)
   db  0x61                       ; link value INTA#
-  dw  0xDEF8                     ; IRQ bitmap INTA#
+  dw  1101_1110_1111_1000b       ; IRQ bitmap INTA# (irqs 15,14,12,11,10,9,7,6,5,4,3)
   db  0x62                       ; link value INTB#
-  dw  0xDEF8                     ; IRQ bitmap INTB#
+  dw  1101_1110_1111_1000b       ; IRQ bitmap INTB# (irqs 15,14,12,11,10,9,7,6,5,4,3)
   db  0x63                       ; link value INTC#
-  dw  0xDEF8                     ; IRQ bitmap INTC#
+  dw  1101_1110_1111_1000b       ; IRQ bitmap INTC# (irqs 15,14,12,11,10,9,7,6,5,4,3)
   db  0x60                       ; link value INTD#
-  dw  0xDEF8                     ; IRQ bitmap INTD#
+  dw  1101_1110_1111_1000b       ; IRQ bitmap INTD# (irqs 15,14,12,11,10,9,7,6,5,4,3)
   db  5                          ; physical slot (0 = embedded)
   db  0                          ; reserved
 pci_routing_table_structure_end:

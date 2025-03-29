@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.16                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 25 Mar 2025                                                *
+* Last Updated: 29 Mar 2025                                                *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -484,7 +484,7 @@ pci_real_nextdev2:
            cld
            rep
              movsb
-           mov  word REG_BX,((1 << 3) | (1 << 5) | (1 << 9) | (1 << 11)) ; irqs 3,5,9, and 11 are used
+           mov  word REG_BX,((1 << 11) | (1 << 9)) ; irqs 9 and 11 are used
            jmp  short pci_int1A_success
 pci_real_too_small:
            stosw                 ; size of our return data
@@ -560,7 +560,7 @@ pci_real_select_reg endp
 .if (DO_INIT_BIOS32 == 0)
 
 pci_irq_list:
-  db 11, 9, 5, 3
+  db 11, 9, 11, 9
 
 ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 ; set the bus/dev/func/address
@@ -1281,6 +1281,7 @@ bios_unlock_shadow_ram endp
 pci_bios_init proc near uses bx
            
            mov  dword [EBDA_DATA->pci_bios_io_addr],0x0000C000
+           mov  dword [EBDA_DATA->pci_bios_agp_io_addr],0x0000E000
            mov  dword [EBDA_DATA->pci_bios_mem_addr],0xC0000000
            mov  dword [EBDA_DATA->pci_bios_rom_start],0x000C0000
 
@@ -1334,12 +1335,16 @@ pci_agp_memory_mappings0:
            xor  cx,cx
 pci_agp_memory_mappings1:
            ; get the size of the addressable space
-           ; (calculate the BAR. cx = 0 = 0x10, cx = 1 = 0x14, etc)
+           ; assume we are the PCI_ROM_SLOT
+           mov  eax,0xFFFFFFFE
+           mov  bx,PCI_ROM_ADDRESS
+           cmp  cx,PCI_ROM_SLOT
+           je   short @f
            mov  bx,cx
            shl  bx,2
            add  bx,PCI_BASE_ADDRESS_0
            mov  eax,0xFFFFFFFF
-           call pci_config_write_dword
+@@:        call pci_config_write_dword
            call pci_config_read_dword
            
            ; must not be zero
@@ -1373,18 +1378,17 @@ pci_agp_memory_mappings1:
            and  esi,edi         ;
            pop  edi             ; restore the size
 
-           ; does address has prefetch
-           mov  bl,al
-           and  bl,PCI_ADDRESS_SPACE_MEM_PREFETCH
-           cmp  bl,pci_agp_type
+           ; does address have prefetch
+           and  al,PCI_ADDRESS_SPACE_MEM_PREFETCH
+           cmp  al,pci_agp_type
            jne  short pci_get_agp_no_pre
            
            cmp  word pci_agp_saddr,0xFFFF
            jne  short @f
            ; saddr = addr >> 16
-           mov  ebx,esi
-           shr  ebx,16
-           mov  pci_agp_saddr,bx
+           mov  eax,esi
+           shr  eax,16
+           mov  pci_agp_saddr,ax
 
            ; eaddr = ((addr + size - 1) >> 16)
 @@:        mov  ebx,esi
@@ -1400,18 +1404,18 @@ pci_get_agp_no_pre:
            add  esi,0x00010000  ; addr += align
            jmp  short pci_get_agp_memory_next
 @@:        add  esi,edi         ; addr += size
-
+           
 pci_get_agp_memory_next:
            inc  cx
-           cmp  cx,PCI_ROM_SLOT
+           cmp  cx,PCI_NUM_REGIONS
            jb   pci_agp_memory_mappings1
-
+           
            pop  cx
            mov  byte pci_agp_mask,PCI_ADDRESS_SPACE_MEM_PREFETCH
            inc  cx
            cmp  cx,2
            jb   pci_agp_memory_mappings0
-
+           
            ; return (saddr | (eaddr << 16))
            movzx eax,word pci_agp_eaddr
            shl  eax,16
@@ -1422,36 +1426,102 @@ pci_get_agp_memory_next:
            ret
 pci_get_agp_memory endp
 
-comment |
 ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-; find pci to isa entry in the dsdt_data(.asm)
+; Get AGP IO Base
 ; on entry:
-;  ds = BIOS_BASE2
+;  dh = bus
+;  dl = devfunc
 ; on return
-;  BIOS_BASE2:ax = address found
+;  eax = base
 ; destroys nothing
-find_acpi_pci2isa_entry proc near uses si
+pci_get_agp_io_base proc near uses bx cx dx si di
+           push bp
+           mov  bp,sp
+           sub  sp,2
+
+pci_agp_io_saddr   equ  [bp-1]   ; byte
+pci_agp_io_eaddr   equ  [bp-2]   ; byte
            
-           mov  si,offset acpi_dsdt_start
-find_pci2isa_loop:
-           cmp  dword [si],"ISA_"
+           mov  byte pci_agp_io_saddr,0xF0
+           mov  byte pci_agp_io_eaddr,0x00
+           
+           ; disable i/o and memory access
+           mov  bx,PCI_COMMAND
+           call pci_config_read_word
+           and  ax,0xFFFC
+           call pci_config_write_word
+           
+           ; default memory mappings
+           mov  si,0xE000    ; addr
+
+           xor  cx,cx
+pci_agp_base_mappings:
+           ; get the size of the addressable space
+           mov  bx,cx
+           shl  bx,2
+           add  bx,PCI_BASE_ADDRESS_0
+           mov  eax,0xFFFFFFFF
+           call pci_config_write_dword
+           call pci_config_read_dword
+           
+           ; must not be zero
+           or   eax,eax          ; if size = 0, nothing here
+           jz   short pci_get_agp_base_next
+
+           ; must be PORT I/O
+           test al,PCI_ADDRESS_SPACE_IO
+           jz   short pci_get_agp_base_next
+           
+           ; size = ~(eax & ~0xF) + 1
+           and  ax,0xFFF0
+           not  ax
+           inc  ax              
+           mov  di,ax           ; di = size
+
+           ; addr = (addr + size - 1) & ~(size - 1);
+           add  si,di           ; add the size
+           dec  si              ; - 1
+           push di              ; save the size
+           dec  di              ; and by ~(size-1)
+           not  di              ;
+           and  si,di           ;
+           pop  di              ; restore the size
+
+           cmp  byte pci_agp_io_saddr,0xF0
            jne  short @f
-           cmp  dword [si+5],"_ADR"
-           je   short find_pci2isa_done
-@@:        inc  si
-           cmp  si,offset acpi_dsdt_end
-           jb   short find_pci2isa_loop
-           
-           ; we should not get here...
-           xor  si,si
-
-find_pci2isa_done:
+           ; saddr = addr >> 8
            mov  ax,si
-           ret
-find_acpi_pci2isa_entry endp
-|
+           mov  pci_agp_io_saddr,ah
 
-pci_irqs   db  11, 9, 5, 3
+           ; eaddr = ((addr + size - 1) >> 8)
+@@:        mov  ax,si
+           add  ax,di
+           dec  ax
+           mov  pci_agp_io_eaddr,ah
+
+           ; if size < 0x1000 (align)
+           cmp  di,0x1000
+           jnb  short @f
+           add  si,0x1000       ; addr += align
+           jmp  short pci_get_agp_base_next
+@@:        add  si,di           ; addr += size
+
+pci_get_agp_base_next:
+           inc  cx
+           cmp  cx,PCI_ROM_SLOT
+           jb   short pci_agp_base_mappings
+
+           ; return (saddr | (eaddr << 8))
+           movzx eax,byte pci_agp_io_eaddr
+           shl  ax,8
+           mov  al,pci_agp_io_saddr
+
+           mov  sp,bp
+           pop  bp
+           ret
+pci_get_agp_io_base endp
+
+pci_irqs   db  11, 9, 11, 9
 
 ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 ; Initialize a PCI bridge
@@ -1593,13 +1663,6 @@ pci_bios_init_bridges_04:
            mov  byte [bx+0x78],0x62     ; INTC -> PIRQC
            mov  byte [bx+0x7B],0x63     ; INTD -> PIRQD
            
-           ; find the pci-2-isa entry
-           ;call find_acpi_pci2isa_entry
-           ;push bx
-           ;mov  bx,ax
-           ;mov  byte [bx+0x0C],7        ; update the pci-to-isa device number to 7
-           ;pop  bx
-
            ; calculate the checksum
            mov  byte [bx+0x1F],0        ; clear the crc before the check
            mov  cx,[bx+0x06]            ; retrieve the size
@@ -1611,11 +1674,11 @@ pci_bios_init_bridges_04:
            mov  [bx+0x1F],al            ; store the new crc
            pop  ds
 
-           jmp  short pci_bios_init_bridges_done
+           jmp  pci_bios_init_bridges_done
 
 pci_bios_init_bridges_05:
            cmp  ax,PCI_DEVICE_ID_INTEL_82443_1
-           jne  short pci_bios_init_bridges_done
+           jne  pci_bios_init_bridges_done
 
            ; https://datasheet.octopart.com/FW82443BX-Intel-datasheet-5334749.pdf
            ;   Device 1, Section 3.4, Page 3-48
@@ -1637,16 +1700,21 @@ pci_bios_init_bridges_05:
            mov  al,0x40          ; bits 7:3 = 2 PCI Clocks
            call pci_config_write_byte
            mov  bx,0x1C          ; I/O Base Address Register
-           mov  al,0xE0          ; bits 7:4 = address = 0xE (0xE000 ?)
+           mov  al,0xF0          ; bits 7:4 = address = 0xF0
            call pci_config_write_byte
            mov  bx,0x1D          ; I/O Limit Address Register
-           mov  al,0xF0          ; bits 7:4 = address = 0xF (0xF000 ?)
+           mov  al,0x00          ; bits 7:4 = address = 0x00
            call pci_config_write_byte
+           mov  bx,0x20          ; Memory Base Address Register
+           mov  eax,0x0000FFFF   ; bits 15:4 = address
+           call pci_config_write_dword
+           mov  bx,0x24          ; Prefetchable Memory Base Address Register
+          ;mov  eax,0x0000FFFF   ; bits 15:4 = address
+           call pci_config_write_dword
            
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
            ; is an AGP Device present?
            push dx                ; save the caller's bus/devfunc
-
            mov  dx,0x0100         ; bus = 1, devfunc = 0 (AGP Device)
            mov  bx,PCI_VENDOR_ID
            call pci_config_read_word
@@ -1654,8 +1722,20 @@ pci_bios_init_bridges_05:
            je   short pci_bios_init_bridges_no_agp
            
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-           ; is an AGP Device
+           ; this is an AGP Device
+           ; get the agp io base
+           call pci_get_agp_io_base
+           pop  dx               ; restore the caller's bus/devfunc
+
+           mov  bx,0x1C          ; I/O Base Address Register
+           call pci_config_write_byte
+           mov  bx,0x1D          ; I/O Limit Address Register
+           add  al,0x10          ; 
+           call pci_config_write_byte
+
            ; first with Prefetch
+           push dx                ; save the caller's bus/devfunc
+           mov  dx,0x0100         ; bus = 1, devfunc = 0 (AGP Device)
            mov  al,PCI_ADDRESS_SPACE_MEM_PREFETCH
            call pci_get_agp_memory
            mov  ecx,eax          ; save the value
@@ -1676,13 +1756,6 @@ pci_bios_init_bridges_05:
            ; is not an AGP Device
 pci_bios_init_bridges_no_agp:
            pop  dx               ; restore the caller's bus/devfunc
-           
-           mov  bx,0x20          ; Memory Base Address Register
-           mov  eax,0x0000FFFF   ; bits 15:4 = address
-           call pci_config_write_dword
-           mov  bx,0x24          ; Prefetchable Memory Base Address Register
-          ;mov  eax,0x0000FFFF   ; bits 15:4 = address
-           call pci_config_write_dword
            
 pci_bios_init_bridges_done:
            mov  bx,0xEE          ; reserved area ?
@@ -1862,7 +1935,7 @@ pci_memory_mappings_1:
            call pci_config_read_dword
            ; if nothing there don't do it
            or   eax,eax          ; if size = 0, nothing here
-           jz   short pci_memory_mappings_next
+           jz   pci_memory_mappings_next
            ; if we are on bus 0, go ahead and do it
            cmp  dh,0
            je   short @f
@@ -1881,8 +1954,14 @@ pci_memory_mappings_1:
            
            test al,PCI_ADDRESS_SPACE_IO
            jz   short pci_memory_mappings1
+           
+           ; assume bus == 0
            lea  bx,[EBDA_DATA->pci_bios_io_addr]
-           mov  esi,16          ; minimum alignment
+           mov  esi,0x10        ; minimum alignment
+           cmp  dh,0
+           je   short pci_memory_mappings2
+           lea  bx,[EBDA_DATA->pci_bios_agp_io_addr]
+           mov  esi,0x1000      ; minimum alignment
            jmp  short pci_memory_mappings2
            
 pci_memory_mappings1:
@@ -1975,10 +2054,13 @@ pci_map_interrupt:
            mov  dword [EBDA_DATA->pm_io_base],PM_IO_BASE
            mov  dword [EBDA_DATA->smb_io_base],SMB_IO_BASE
            
+           ; acpi sci is hardwired to 9
+           mov  al,9
            mov  bx,PCI_INTERRUPT_LINE
+           call pci_config_write_byte
            call pci_config_read_byte
            mov  [EBDA_DATA->pm_sci_int],al
-
+           
            call piix4_pm_enable
            mov  byte [EBDA_DATA->acpi_enabled],1
             
