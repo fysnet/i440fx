@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.16                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 15 Feb 2025                                                *
+* Last Updated: 2 Apr 2025                                                 *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -1363,8 +1363,8 @@ atapi_cmd_get_sense proc near uses di
            sub  sp,32
 
 cdrom_sns_device     equ  [bp-2]
-cdrom_sns_atapi_cmd  equ  [bp-14]  ; cdrom_rdy_atapi_cmd[12]
-cdrom_sns_atapi_buf  equ  [bp-32]  ; cdrom_rdy_atapi_buf[18]
+cdrom_sns_atapi_cmd  equ  [bp-14]  ; cdrom_sns_atapi_cmd[12]
+cdrom_sns_atapi_buf  equ  [bp-32]  ; cdrom_sns_atapi_buf[18]
 
            mov  cdrom_sns_device,ax
            

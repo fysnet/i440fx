@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.16                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 24 Feb 2025                                                *
+* Last Updated: 2 Apr 2025                                                 *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -2319,7 +2319,7 @@ dpt_type     equ  [bp-4]
 dpt_device   equ  [bp-6]
 dpt_iface    equ  [bp-8]
 dpt_len_flag equ  [bp-9]
-
+           
            push eax              ; do not put above with 'uses'
            
            ; bx = device's information
@@ -2376,6 +2376,7 @@ dpt_len_flag equ  [bp-9]
            mov  eax,[bx+EBDA_DATA->ata_0_0_sectors_high]
            mov  es:[di+INT13_DPT->dpt_sector_count2],eax
            jmp  short dpt_is_not_atapi
+           
 dpt_is_atapi:
            cmp  word dpt_type,ATA_TYPE_ATAPI
            jne  short dpt_is_not_atapi
@@ -2402,8 +2403,8 @@ dpt_is_not_atapi:
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
            ; size is at least 30, so do EDD 2.x
            ; (put the address of our dpte and then fill the dpte)
-           call bios_get_ebda
            mov  word es:[di+INT13_DPT->dpt_size],30
+           mov  ax,ds
            mov  es:[di+INT13_DPT->dpt_dpte_segment],ax
            mov  ax,EBDA_DATA->dpte_iobase1
            mov  es:[di+INT13_DPT->dpt_dpte_offset],ax
@@ -2471,7 +2472,7 @@ dpt_is_not_atapi1:
 @@:        add  al,[si]
            inc  si
            loop @b
-           not  al
+           neg  al
            mov  [EBDA_DATA->dpte_checksum],al
            
 ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
