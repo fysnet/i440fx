@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.16                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 2 Apr 2025                                                 *
+* Last Updated: 3 Apr 2025                                                 *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -109,6 +109,7 @@ init_harddrive proc near uses ds
            mov  dx,0x03F6
            out  dx,al
            
+           xor  al,al
            mov  es:[0x0474],al   ; hard disk status of last operation
            mov  es:[0x0477],al   ; hard disk port offset (XT only ???)
            mov  es:[0x048C],al   ; hard disk status register
@@ -135,7 +136,7 @@ init_harddrive proc near uses ds
            mov  bx,EBDA_DATA->fdpt1
            mov  cx,EBDA_SEG
            call set_int_vector
-
+           
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
            ; move disk geometry data from CMOS to EBDA disk parameter table(s)
            mov  ah,0x12
@@ -183,7 +184,7 @@ init_harddrive endp
 ;   21/2A    landing zone low           0C
 ;   22/2B    landing zone high          0D
 ;   23/2C    sectors/track              0E
-init_harddrive_params proc near uses ds
+init_harddrive_params proc near uses ds di
            
            call cmos_get_byte
            cmp  al,47            ; decimal 47 - user definable
@@ -2382,7 +2383,7 @@ dpt_is_atapi:
            jne  short dpt_is_not_atapi
            ; removable, media change, lockable, max values
            ; cyl/head/spt field is not valid (0<<1)
-           mov  ax,((1<<2) | (1<<4) | (1<<5) | (1<< 6)) ; | (0<<1)
+           mov  ax,((1<<2) | (1<<4) | (1<<5) | (1<<6)) ; | (0<<1)
            mov  es:[di+INT13_DPT->dpt_infos],ax
            mov  eax,0xFFFFFFFF
            mov  es:[di+INT13_DPT->dpt_cylinders],eax
@@ -2437,7 +2438,7 @@ dpt_is_not_atapi:
 dpt_is_atapi1:
            cmp  word dpt_type,ATA_TYPE_ATAPI
            jne  short dpt_is_not_atapi1
-           or   dx,((1<<5) | (1<<6)) ; removable, atapi device
+           or   dx,((1<<5) | (1<<6)) ; removable, atapi device (todo: what about bit 8?)
 
 dpt_is_not_atapi1:
            ; make ds:[si+EBDA_DATA->  = channel info

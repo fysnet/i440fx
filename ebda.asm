@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.16                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 29 Mar 2025                                                *
+* Last Updated: 3 Apr 2025                                                 *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -90,8 +90,8 @@ EBDA_DATA  struct
   pci_bios_rom_start    dword
   pci_bios_agp_io_addr  dword
 
-  pm_io_base            dword
-  smb_io_base           dword
+  pm_io_base0           dword
+  smb_io_base0          dword
   pm_sci_int            byte
   acpi_enabled          byte
   
@@ -306,18 +306,18 @@ EBDA_DATA  struct
   ata_3_1_cdidmap       byte         ;
   
   ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-  dpte_iobase1          word         ;
-  dpte_iobase2          word         ;
-  dpte_prefix           byte         ;
-  dpte_unused           byte         ;
-  dpte_irq              byte         ;
+  dpte_iobase1          word         ; I/O port base address
+  dpte_iobase2          word         ; Control port address
+  dpte_prefix           byte         ; Head register upper nibble
+  dpte_unused           byte         ; BIOS vendor specific
+  dpte_irq              byte         ; IRQ information (bits 3:0 = irq)
   dpte_blkcount         byte         ;
-  dpte_dma              byte         ;
-  dpte_pio              byte         ;
-  dpte_options          word         ;
+  dpte_dma              byte         ; DMA type
+  dpte_pio              byte         ; PIO type (bits 3:0)
+  dpte_options          word         ; 
   dpte_reserved         word         ;
-  dpte_revision         byte         ;
-  dpte_checksum         byte         ;
+  dpte_revision         byte         ; revision is 0x11
+  dpte_checksum         byte         ; zero sum checksum
   
   trsfsectors           word         ; Count of transferred sectors and bytes
   trsfbytes             dword        ;

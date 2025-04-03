@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.16                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 2 Apr 2025                                                 *
+* Last Updated: 3 Apr 2025                                                 *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -1088,6 +1088,7 @@ cd_int13_ext_transfer:
            jb   short cd_int13_ext_transfer1
            cmp  eax,es:[bx+EBDA_DATA->ata_0_0_sectors_low]
            jae  cd_int13_fail
+           
 cd_int13_ext_transfer1:
            ; if we are verifying or seeking to sector(s), just return as good
            cmp  byte REG_AH,0x44
@@ -1278,7 +1279,6 @@ cd_int13_lock_1:
            ;
            ;jmp  cd_int13_success
 
-           
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
            ; print a message of this unknown call value
            push ds
@@ -1297,8 +1297,12 @@ cd_int13_lock_1:
 cd_int13_fail:
            mov  byte REG_AH,0x01 ; invalid function or parameter
 cd_int13_fail_noah:
+           push ds
+           xor  ax,ax
+           mov  ds,ax
            mov  al,REG_AH
-           mov  es:[0x0074],al
+           mov  [0x0474],al
+           pop  ds
 cd_int13_fail_nostatus:
            or   word REG_FLAGS,0x0001
            jmp  short @f
@@ -1308,8 +1312,11 @@ cd_int13_fail_nostatus:
 cd_int13_success:
            mov  byte REG_AH,0x00 ; success
 cd_int13_success_noah:
-           mov  al,REG_AH
-           mov  es:[0x0074],al
+           push ds
+           xor  ax,ax
+           mov  ds,ax
+           mov  [0x0474],al
+           pop  ds
            and  word REG_FLAGS,(~0x0001)
 
 @@:        pop  es

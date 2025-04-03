@@ -2051,8 +2051,8 @@ pci_map_interrupt:
            jne  short pci_bios_init_device_done
            
            ; PIIX4 Power Management device (for ACPI)
-           mov  dword [EBDA_DATA->pm_io_base],PM_IO_BASE
-           mov  dword [EBDA_DATA->smb_io_base],SMB_IO_BASE
+           mov  dword [EBDA_DATA->pm_io_base0],PM_IO_BASE
+           mov  dword [EBDA_DATA->smb_io_base0],SMB_IO_BASE
            
            ; acpi sci is hardwired to 9
            mov  al,9

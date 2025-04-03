@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.16                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 5 Mar 2025                                                 *
+* Last Updated: 3 Apr 2025                                                 *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -345,7 +345,7 @@ acpi_bios_init proc near uses alld ds
            mov  byte  fs:[edi+FADT_TABLE->acpi_disable],0xF0
            mov  byte  fs:[edi+FADT_TABLE->S4bios_req],0
            mov  byte  fs:[edi+FADT_TABLE->reserved2],0
-           mov  eax,pm_io_base
+           mov  eax,PM_IO_BASE
            mov        fs:[edi+FADT_TABLE->pm1a_evt_blk],eax
            mov  dword fs:[edi+FADT_TABLE->pm1b_evt_blk],0
            add  eax,4
