@@ -2065,7 +2065,7 @@ hd_int13_read:
 @@:        cmp  ah,0x41
            jne  short @f
            cmp  word REG_BX,0x55AA
-           jne  short @f
+           jne  hd_int13_fail
            mov  word REG_BX,0xAA55
            mov  byte REG_AH,0x30 ; EDD 3.0
            ; 0x0007 = bit 0 = functions 42h,43h,44h,47h,48h

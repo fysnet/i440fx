@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.16                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 29 Mar 2025                                                *
+* Last Updated: 3 Apr 2025                                                 *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -1844,7 +1844,7 @@ pci_b_init_bar   equ [bp-10]  ; byte (works as long as PCI_NUM_REGIONS <= 8)
            mov  bx,0x42
           ;mov  ax,0x8000        ; enable IDE1
            call pci_config_write_word
-           jmp  pci_map_interrupt
+           jmp  short pci_default_map
 
 pci_ide_not_intel:
            ; IDE: we map it as in ISA mode
