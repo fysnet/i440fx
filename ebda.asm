@@ -47,10 +47,65 @@ comment |*******************************************************************
 ; after we boot a device, the IPL table (256 bytes) is then
 ;  free to use for other purposes.
 EBDA_DATA  struct
+  ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+  ; the first items (up to note below) must remain in this order
+  ; (this order isn't standardized, though it is generally in this order)
+
   size                  byte         ; size in 1k (1 = 1k, 2 = 2k, ...)
   
-  escd_dirty            byte         ; 1 = the ESCD has been written to and needs to be committed
+  unknown0              dup  22      ; filler (available)
+
+  POST_errors           byte
+  error_log             dup  10
+
+  mouse_driver_offset   word         ; this needs to be at offset 0x22
+  mouse_driver_seg      word
+  mouse_index           byte         ; bits 3:0 = byte index into packet
+  mouse_flags           byte         ; bit 7 = handler given, bits 3:0 = 1-based packet size
+  mouse_data            dup  8
   
+  unknown1              dup  9       ; filler (available)
+  watch_dog_timer       word
+  unknown2              word         ; filler (available)
+
+  ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+  ; fixed disk parameter table(s) (FDPTs)
+  ; (needs to be at offset 0x3D)
+  fdpt0                 dup  16
+  fdpt1                 dup  16
+
+  unknown3              dup  11      ; filler (available)
+  cache_control         byte
+  unknown4              dup  5       ; filler (available)
+  keyboard_rep_rate     byte
+  keyboard_delay        byte
+  harddrv_count         byte         ; should be same as (ata_hdcount + atacdcount)? (todo)
+  harddrv_dma_channel   byte
+  harddrv_int_status    byte
+  harddrv_op_flag       byte
+  old_int76_vect        dword
+  harddrv_dma_type      byte
+  harddrv_status_last   byte
+  harddrv_timeout       byte
+  unknown5              dup  3       ; filler (available)
+  harddrv_return_stat   dup  16
+  unknown6              dup  89      ; filler (available)
+  fdd_type              byte
+  unknown7              dword
+  harddrv_params_load   byte
+  unknown8              byte
+  cpu_family_id         byte
+  cpu_stepping          byte
+  unknown9              dup  39      ; filler (available)
+  keyboard_id           word
+  unknown10             byte
+  nonBIOS18hflag        byte
+  unknown11             word
+  user18hptr            dword
+
+  ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+  ; the remaining don't have any specific order (can be in any order)
+
   ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
   ; video
   video_ram             dword
@@ -76,12 +131,6 @@ EBDA_DATA  struct
   video_icon_cnt        byte
   video_icon_type       byte
   video_icon_palette    word
-  
-  mouse_driver_offset   word         ; 
-  mouse_driver_seg      word
-  mouse_index           byte         ; bits 3:0 = byte index into packet
-  mouse_flags           byte         ; bit 7 = handler given, bits 3:0 = 1-based packet size
-  mouse_data            dup  8
 
   i440_pcidev           word         ; high byte = bus, low byte = dev/func (bbbbbbbbdddddfff)
   i440_pciisa           word         ; high byte = bus, low byte = dev/func (bbbbbbbbdddddfff)
@@ -125,15 +174,11 @@ EBDA_DATA  struct
 
   bios_uuid             dup  16      ; the bios' uuid (we clear it to zero) (DSP0124.3.7.0.pdf, page 36 defines format)
   qemu_cfg_port         byte         ; Found QEMU config port
+  escd_dirty            byte         ; 1 = the ESCD has been written to and needs to be committed
 
   ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
   ; count of floppy disk drives detected
   fdd_count             byte         ; count of floppy disk drives detected
-
-  ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-  ; fixed disk parameter table(s) (FDPTs)
-  fdpt0                 dup  16
-  fdpt1                 dup  16
   
   ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
   ; ata_channels
@@ -395,7 +440,7 @@ EBDA_DATA  struct
 
   ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
   ;
-  unused                dup 725     ; unused / available space
+  unused                dup 483     ; unused / available space
 
 EBDA_DATA  ends         ; end of structure declaration.
 

@@ -2009,7 +2009,6 @@ hd_int13_read:
            ; dl = count of drives
            mov  al,[EBDA_DATA->ata_hdcount]
            mov  REG_DL,al
-           ; es:di (floppies only)
            jmp  hd_int13_success
 
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -2431,7 +2430,7 @@ dpt_is_not_atapi:
            jne  short @f
            or   dx,(1<<9)        ;
 @@:        cmp  al,ATA_TRANSLATION_RECHS
-           jne  short @f
+           jne  short dpt_is_not_atapi1
            or   dx,(3<<9)        ;
            jmp  short dpt_is_not_atapi1
 
