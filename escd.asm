@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.16                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 5 Jan 2025                                                 *
+* Last Updated: 6 Apr 2025                                                 *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -259,7 +259,7 @@ bios_commit_escd proc far uses all es ds
            ; recalculate the file crc
            call bios_escd_crc
            
-           ; did we find the i440x pci to isa bridge?
+           ; did we find the i440fx pci to isa bridge?
            mov  bx,es:[EBDA_DATA->i440_pciisa]
            or   bx,bx
            jz   short bios_commit_escd_done

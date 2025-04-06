@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.16                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 3 Apr 2025                                                 *
+* Last Updated: 6 Apr 2025                                                 *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -473,7 +473,7 @@ pci_real_nextdev2:
            ; (this call assumes the Guest sets DS to 0xF000)
 @@:        cmp  al,0x0E
            jne  short @f
-
+           
            mov  ax,(pci_routing_table_structure_end - pci_routing_table_structure_start)
            cmp  es:[di],ax
            jb   short pci_real_too_small
@@ -488,7 +488,7 @@ pci_real_nextdev2:
            jmp  short pci_int1A_success
 pci_real_too_small:
            stosw                 ; size of our return data
-           mov  ah,0x89
+           mov  ah,0x59
            jmp  short pci_int1A_fail
 
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -1417,7 +1417,7 @@ pci_get_agp_memory_next:
            jb   pci_agp_memory_mappings0
            
            ; return (saddr | (eaddr << 16))
-           movzx eax,word pci_agp_eaddr
+           mov  ax,pci_agp_eaddr
            shl  eax,16
            mov  ax,pci_agp_saddr
 
@@ -1440,10 +1440,10 @@ pci_get_agp_io_base proc near uses bx cx dx si di
            sub  sp,2
 
 pci_agp_io_saddr   equ  [bp-1]   ; byte
-pci_agp_io_eaddr   equ  [bp-2]   ; byte
+;pci_agp_io_eaddr   equ  [bp-2]   ; byte
            
            mov  byte pci_agp_io_saddr,0xF0
-           mov  byte pci_agp_io_eaddr,0x00
+           ;mov  byte pci_agp_io_eaddr,0x00
            
            ; disable i/o and memory access
            mov  bx,PCI_COMMAND
@@ -1494,10 +1494,10 @@ pci_agp_base_mappings:
            mov  pci_agp_io_saddr,ah
 
            ; eaddr = ((addr + size - 1) >> 8)
-@@:        mov  ax,si
-           add  ax,di
-           dec  ax
-           mov  pci_agp_io_eaddr,ah
+@@:        ;mov  ax,si
+           ;add  ax,di
+           ;dec  ax
+           ;mov  pci_agp_io_eaddr,ah
 
            ; if size < 0x1000 (align)
            cmp  di,0x1000
@@ -1512,8 +1512,8 @@ pci_get_agp_base_next:
            jb   short pci_agp_base_mappings
 
            ; return (saddr | (eaddr << 8))
-           movzx eax,byte pci_agp_io_eaddr
-           shl  ax,8
+           ;movzx eax,byte pci_agp_io_eaddr
+           ;shl  ax,8
            mov  al,pci_agp_io_saddr
 
            mov  sp,bp
@@ -1622,8 +1622,8 @@ pci_bios_init_bridges_04:
            call bios_shadow_init
            
            push ds
-           mov  ax,BIOS_BASE2
-           mov  ds,ax
+           mov  bx,BIOS_BASE2
+           mov  ds,bx
            mov  bx,offset pci_routing_table_structure
            mov  byte [bx+0x09],0x38     ; IRQ router DevFunc
            mov  byte [bx+0x21],0x38     ; 1st entry: PCI2ISA
@@ -1666,20 +1666,22 @@ pci_bios_init_bridges_04:
            ; calculate the checksum
            mov  byte [bx+0x1F],0        ; clear the crc before the check
            mov  cx,[bx+0x06]            ; retrieve the size
+           push bx                      ;
            xor  al,al                   ;
 @@:        add  al,[bx]                 ;
            inc  bx                      ;
            loop @b                      ;
+           pop  bx                      ;
            neg  al                      ;
            mov  [bx+0x1F],al            ; store the new crc
            pop  ds
-
+           
            jmp  pci_bios_init_bridges_done
 
 pci_bios_init_bridges_05:
            cmp  ax,PCI_DEVICE_ID_INTEL_82443_1
            jne  pci_bios_init_bridges_done
-
+           
            ; https://datasheet.octopart.com/FW82443BX-Intel-datasheet-5334749.pdf
            ;   Device 1, Section 3.4, Page 3-48
            ; is a i440BX PCI/AGP Bridge
@@ -1694,7 +1696,7 @@ pci_bios_init_bridges_05:
            mov  al,0x01          ;
            call pci_config_write_byte
            mov  bx,0x1A          ; Subordinate Bus Number Register
-           mov  al,0x01          ;
+          ;mov  al,0x01          ;
            call pci_config_write_byte
            mov  bx,0x1B          ; Secondar Master Latency Timer Register
            mov  al,0x40          ; bits 7:3 = 2 PCI Clocks
@@ -1706,10 +1708,10 @@ pci_bios_init_bridges_05:
            mov  al,0x00          ; bits 7:4 = address = 0x00
            call pci_config_write_byte
            mov  bx,0x20          ; Memory Base Address Register
-           mov  eax,0x0000FFFF   ; bits 15:4 = address
+           mov  eax,0x0000FFF0   ; bits 15:4 = address
            call pci_config_write_dword
            mov  bx,0x24          ; Prefetchable Memory Base Address Register
-          ;mov  eax,0x0000FFFF   ; bits 15:4 = address
+          ;mov  eax,0x0000FFF0   ; bits 15:4 = address
            call pci_config_write_dword
            
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -1787,7 +1789,7 @@ pci_b_vendor_id  equ [bp-4]
 pci_b_device_id  equ [bp-6]
 pci_b_class      equ [bp-8]
 pci_b_mask       equ [bp-9]
-pci_b_init_bar   equ [bp-10]  ; byte (works as long as PCI_NUM_REGIONS <= 8)
+pci_b_init_bar   equ [bp-10]  ; byte (works as long as PCI_NUM_REGIONS < 8)
            
            mov  byte pci_is_i440bx,0
 
@@ -1927,7 +1929,7 @@ pci_memory_mappings_1:
            add  bx,PCI_BASE_ADDRESS_0
            mov  eax,0xFFFFFFFF
            cmp  cx,PCI_ROM_SLOT
-           jb   short @f
+           jne  short @f
            ; cx = 6 = ROM address at 0x30
            mov  bx,PCI_ROM_ADDRESS
            mov  al,0xFE          ; don't write bit 0
@@ -1956,16 +1958,16 @@ pci_memory_mappings_1:
            jz   short pci_memory_mappings1
            
            ; assume bus == 0
-           lea  bx,[EBDA_DATA->pci_bios_io_addr]
+           mov  bx,EBDA_DATA->pci_bios_io_addr
            mov  esi,0x10        ; minimum alignment
            cmp  dh,0
            je   short pci_memory_mappings2
-           lea  bx,[EBDA_DATA->pci_bios_agp_io_addr]
+           mov  bx,EBDA_DATA->pci_bios_agp_io_addr
            mov  esi,0x1000      ; minimum alignment
            jmp  short pci_memory_mappings2
            
 pci_memory_mappings1:
-           lea  bx,[EBDA_DATA->pci_bios_mem_addr]
+           mov  bx,EBDA_DATA->pci_bios_mem_addr
            mov  esi,0x00010000  ; minimum alignment
            
 pci_memory_mappings2:           ; edi = size
@@ -1997,7 +1999,7 @@ pci_memory_mappings2:           ; edi = size
            jb   short @f
            mov  eax,edi         ; is size
 @@:        add  [bx],eax
-
+           
            ; mark that we did this bar/region
            mov  al,1
            shl  al,cl
@@ -2281,7 +2283,7 @@ pci_set_io_region_addr proc near uses eax bx cx si ds
            shl  bx,2
            add  bx,PCI_BASE_ADDRESS_0
            cmp  cx,PCI_ROM_SLOT
-           jb   short @f
+           jne  short @f
            ; is a rom slot
            mov  bx,PCI_ROM_ADDRESS
            or   al,PCI_ROM_ADDRESS_ENABLE
