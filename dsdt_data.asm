@@ -5,7 +5,7 @@
 ; 
 ; Compilation of "acpi-dsdt.dsl"
 ; Assembly code source output
-; AML code block contains 0xE38 bytes
+; AML code block contains 0xE32 bytes
 ;
 acpi_dsdt_start:
   db  044h,053h,044h,054h,032h,00Eh,000h,000h   ; 00000000    "DSDT2..."
