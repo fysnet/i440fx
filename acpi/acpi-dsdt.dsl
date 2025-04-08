@@ -29,7 +29,7 @@
  * which will produce:
  *   acpi_dsdt.hex
  *
- * Last Updated: 7 Apr 2025
+ * Last Updated: 8 Apr 2025
  *
  */
 DefinitionBlock ("", "DSDT", 1, "BXPC", "BXDSDT", 0x00000001)
@@ -52,1029 +52,197 @@ DefinitionBlock ("", "DSDT", 1, "BXPC", "BXDSDT", 0x00000001)
             Name (_UID, One)  // _UID: Unique ID
             Name (_PRT, Package (0x80)  // _PRT: PCI Routing Table
             {
-                Package (0x04)
-                {
-                    0xFFFF, 
-                    Zero, 
-                    LNKD, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0xFFFF, 
-                    One, 
-                    LNKA, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0xFFFF, 
-                    0x02, 
-                    LNKB, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0xFFFF, 
-                    0x03, 
-                    LNKC, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x0001FFFF, 
-                    Zero, 
-                    LNKA, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x0001FFFF, 
-                    One, 
-                    LNKB, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x0001FFFF, 
-                    0x02, 
-                    LNKC, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x0001FFFF, 
-                    0x03, 
-                    LNKD, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x0002FFFF, 
-                    Zero, 
-                    LNKB, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x0002FFFF, 
-                    One, 
-                    LNKC, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x0002FFFF, 
-                    0x02, 
-                    LNKD, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x0002FFFF, 
-                    0x03, 
-                    LNKA, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x0003FFFF, 
-                    Zero, 
-                    LNKC, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x0003FFFF, 
-                    One, 
-                    LNKD, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x0003FFFF, 
-                    0x02, 
-                    LNKA, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x0003FFFF, 
-                    0x03, 
-                    LNKB, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x0004FFFF, 
-                    Zero, 
-                    LNKD, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x0004FFFF, 
-                    One, 
-                    LNKA, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x0004FFFF, 
-                    0x02, 
-                    LNKB, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x0004FFFF, 
-                    0x03, 
-                    LNKC, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x0005FFFF, 
-                    Zero, 
-                    LNKA, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x0005FFFF, 
-                    One, 
-                    LNKB, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x0005FFFF, 
-                    0x02, 
-                    LNKC, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x0005FFFF, 
-                    0x03, 
-                    LNKD, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x0006FFFF, 
-                    Zero, 
-                    LNKB, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x0006FFFF, 
-                    One, 
-                    LNKC, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x0006FFFF, 
-                    0x02, 
-                    LNKD, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x0006FFFF, 
-                    0x03, 
-                    LNKA, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x0007FFFF, 
-                    Zero, 
-                    LNKC, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x0007FFFF, 
-                    One, 
-                    LNKD, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x0007FFFF, 
-                    0x02, 
-                    LNKA, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x0007FFFF, 
-                    0x03, 
-                    LNKB, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x0008FFFF, 
-                    Zero, 
-                    LNKD, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x0008FFFF, 
-                    One, 
-                    LNKA, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x0008FFFF, 
-                    0x02, 
-                    LNKB, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x0008FFFF, 
-                    0x03, 
-                    LNKC, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x0009FFFF, 
-                    Zero, 
-                    LNKA, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x0009FFFF, 
-                    One, 
-                    LNKB, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x0009FFFF, 
-                    0x02, 
-                    LNKC, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x0009FFFF, 
-                    0x03, 
-                    LNKD, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x000AFFFF, 
-                    Zero, 
-                    LNKB, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x000AFFFF, 
-                    One, 
-                    LNKC, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x000AFFFF, 
-                    0x02, 
-                    LNKD, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x000AFFFF, 
-                    0x03, 
-                    LNKA, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x000BFFFF, 
-                    Zero, 
-                    LNKC, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x000BFFFF, 
-                    One, 
-                    LNKD, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x000BFFFF, 
-                    0x02, 
-                    LNKA, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x000BFFFF, 
-                    0x03, 
-                    LNKB, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x000CFFFF, 
-                    Zero, 
-                    LNKD, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x000CFFFF, 
-                    One, 
-                    LNKA, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x000CFFFF, 
-                    0x02, 
-                    LNKB, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x000CFFFF, 
-                    0x03, 
-                    LNKC, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x000DFFFF, 
-                    Zero, 
-                    LNKA, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x000DFFFF, 
-                    One, 
-                    LNKB, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x000DFFFF, 
-                    0x02, 
-                    LNKC, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x000DFFFF, 
-                    0x03, 
-                    LNKD, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x000EFFFF, 
-                    Zero, 
-                    LNKB, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x000EFFFF, 
-                    One, 
-                    LNKC, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x000EFFFF, 
-                    0x02, 
-                    LNKD, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x000EFFFF, 
-                    0x03, 
-                    LNKA, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x000FFFFF, 
-                    Zero, 
-                    LNKC, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x000FFFFF, 
-                    One, 
-                    LNKD, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x000FFFFF, 
-                    0x02, 
-                    LNKA, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x000FFFFF, 
-                    0x03, 
-                    LNKB, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x0010FFFF, 
-                    Zero, 
-                    LNKD, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x0010FFFF, 
-                    One, 
-                    LNKA, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x0010FFFF, 
-                    0x02, 
-                    LNKB, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x0010FFFF, 
-                    0x03, 
-                    LNKC, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x0011FFFF, 
-                    Zero, 
-                    LNKA, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x0011FFFF, 
-                    One, 
-                    LNKB, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x0011FFFF, 
-                    0x02, 
-                    LNKC, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x0011FFFF, 
-                    0x03, 
-                    LNKD, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x0012FFFF, 
-                    Zero, 
-                    LNKB, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x0012FFFF, 
-                    One, 
-                    LNKC, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x0012FFFF, 
-                    0x02, 
-                    LNKD, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x0012FFFF, 
-                    0x03, 
-                    LNKA, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x0013FFFF, 
-                    Zero, 
-                    LNKC, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x0013FFFF, 
-                    One, 
-                    LNKD, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x0013FFFF, 
-                    0x02, 
-                    LNKA, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x0013FFFF, 
-                    0x03, 
-                    LNKB, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x0014FFFF, 
-                    Zero, 
-                    LNKD, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x0014FFFF, 
-                    One, 
-                    LNKA, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x0014FFFF, 
-                    0x02, 
-                    LNKB, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x0014FFFF, 
-                    0x03, 
-                    LNKC, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x0015FFFF, 
-                    Zero, 
-                    LNKA, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x0015FFFF, 
-                    One, 
-                    LNKB, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x0015FFFF, 
-                    0x02, 
-                    LNKC, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x0015FFFF, 
-                    0x03, 
-                    LNKD, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x0016FFFF, 
-                    Zero, 
-                    LNKB, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x0016FFFF, 
-                    One, 
-                    LNKC, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x0016FFFF, 
-                    0x02, 
-                    LNKD, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x0016FFFF, 
-                    0x03, 
-                    LNKA, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x0017FFFF, 
-                    Zero, 
-                    LNKC, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x0017FFFF, 
-                    One, 
-                    LNKD, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x0017FFFF, 
-                    0x02, 
-                    LNKA, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x0017FFFF, 
-                    0x03, 
-                    LNKB, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x0018FFFF, 
-                    Zero, 
-                    LNKD, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x0018FFFF, 
-                    One, 
-                    LNKA, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x0018FFFF, 
-                    0x02, 
-                    LNKB, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x0018FFFF, 
-                    0x03, 
-                    LNKC, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x0019FFFF, 
-                    Zero, 
-                    LNKA, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x0019FFFF, 
-                    One, 
-                    LNKB, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x0019FFFF, 
-                    0x02, 
-                    LNKC, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x0019FFFF, 
-                    0x03, 
-                    LNKD, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x001AFFFF, 
-                    Zero, 
-                    LNKB, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x001AFFFF, 
-                    One, 
-                    LNKC, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x001AFFFF, 
-                    0x02, 
-                    LNKD, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x001AFFFF, 
-                    0x03, 
-                    LNKA, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x001BFFFF, 
-                    Zero, 
-                    LNKC, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x001BFFFF, 
-                    One, 
-                    LNKD, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x001BFFFF, 
-                    0x02, 
-                    LNKA, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x001BFFFF, 
-                    0x03, 
-                    LNKB, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x001CFFFF, 
-                    Zero, 
-                    LNKD, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x001CFFFF, 
-                    One, 
-                    LNKA, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x001CFFFF, 
-                    0x02, 
-                    LNKB, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x001CFFFF, 
-                    0x03, 
-                    LNKC, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x001DFFFF, 
-                    Zero, 
-                    LNKA, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x001DFFFF, 
-                    One, 
-                    LNKB, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x001DFFFF, 
-                    0x02, 
-                    LNKC, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x001DFFFF, 
-                    0x03, 
-                    LNKD, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x001EFFFF, 
-                    Zero, 
-                    LNKB, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x001EFFFF, 
-                    One, 
-                    LNKC, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x001EFFFF, 
-                    0x02, 
-                    LNKD, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x001EFFFF, 
-                    0x03, 
-                    LNKA, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x001FFFFF, 
-                    Zero, 
-                    LNKC, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x001FFFFF, 
-                    One, 
-                    LNKD, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x001FFFFF, 
-                    0x02, 
-                    LNKA, 
-                    Zero
-                }, 
-
-                Package (0x04)
-                {
-                    0x001FFFFF, 
-                    0x03, 
-                    LNKB, 
-                    Zero
-                }
+                // 0x0000
+                Package (0x04) { 0x0000FFFF, 0x00, LNKD, Zero }, 
+                Package (0x04) { 0x0000FFFF, 0x01, LNKA, Zero }, 
+                Package (0x04) { 0x0000FFFF, 0x02, LNKB, Zero }, 
+                Package (0x04) { 0x0000FFFF, 0x03, LNKC, Zero }, 
+
+                // 0x0001
+                Package (0x04) { 0x0001FFFF, 0x00, LNKA, Zero }, 
+                Package (0x04) { 0x0001FFFF, 0x01, LNKB, Zero }, 
+                Package (0x04) { 0x0001FFFF, 0x02, LNKC, Zero }, 
+                Package (0x04) { 0x0001FFFF, 0x03, LNKD, Zero }, 
+
+                // 0x0002
+                Package (0x04) { 0x0002FFFF, 0x00, LNKB, Zero }, 
+                Package (0x04) { 0x0002FFFF, 0x01, LNKC, Zero }, 
+                Package (0x04) { 0x0002FFFF, 0x02, LNKD, Zero }, 
+                Package (0x04) { 0x0002FFFF, 0x03, LNKA, Zero }, 
+
+                // 0x0003
+                Package (0x04) { 0x0003FFFF, 0x00, LNKC, Zero }, 
+                Package (0x04) { 0x0003FFFF, 0x01, LNKD, Zero }, 
+                Package (0x04) { 0x0003FFFF, 0x02, LNKA, Zero }, 
+                Package (0x04) { 0x0003FFFF, 0x03, LNKB, Zero }, 
+
+                // 0x0004
+                Package (0x04) { 0x0004FFFF, 0x00, LNKD, Zero }, 
+                Package (0x04) { 0x0004FFFF, 0x01, LNKA, Zero }, 
+                Package (0x04) { 0x0004FFFF, 0x02, LNKB, Zero }, 
+                Package (0x04) { 0x0004FFFF, 0x03, LNKC, Zero }, 
+
+                // 0x0005
+                Package (0x04) { 0x0005FFFF, 0x00, LNKA, Zero }, 
+                Package (0x04) { 0x0005FFFF, 0x01, LNKB, Zero }, 
+                Package (0x04) { 0x0005FFFF, 0x02, LNKC, Zero }, 
+                Package (0x04) { 0x0005FFFF, 0x03, LNKD, Zero }, 
+
+                // 0x0006
+                Package (0x04) { 0x0006FFFF, 0x00, LNKB, Zero }, 
+                Package (0x04) { 0x0006FFFF, 0x01, LNKC, Zero }, 
+                Package (0x04) { 0x0006FFFF, 0x02, LNKD, Zero }, 
+                Package (0x04) { 0x0006FFFF, 0x03, LNKA, Zero }, 
+
+                // 0x0007
+                Package (0x04) { 0x0007FFFF, 0x00, LNKA, Zero }, 
+                Package (0x04) { 0x0007FFFF, 0x01, LNKB, Zero }, 
+                Package (0x04) { 0x0007FFFF, 0x02, LNKC, Zero }, 
+                Package (0x04) { 0x0007FFFF, 0x03, LNKD, Zero }, 
+
+                // 0x0008
+                Package (0x04) { 0x0008FFFF, 0x00, LNKA, Zero }, 
+                Package (0x04) { 0x0008FFFF, 0x01, LNKB, Zero }, 
+                Package (0x04) { 0x0008FFFF, 0x02, LNKC, Zero }, 
+                Package (0x04) { 0x0008FFFF, 0x03, LNKD, Zero }, 
+
+                // 0x0009
+                Package (0x04) { 0x0009FFFF, 0x00, LNKB, Zero }, 
+                Package (0x04) { 0x0009FFFF, 0x01, LNKC, Zero }, 
+                Package (0x04) { 0x0009FFFF, 0x02, LNKD, Zero }, 
+                Package (0x04) { 0x0009FFFF, 0x03, LNKA, Zero }, 
+
+                // 0x000A
+                Package (0x04) { 0x000AFFFF, 0x00, LNKC, Zero }, 
+                Package (0x04) { 0x000AFFFF, 0x01, LNKD, Zero }, 
+                Package (0x04) { 0x000AFFFF, 0x02, LNKA, Zero }, 
+                Package (0x04) { 0x000AFFFF, 0x03, LNKB, Zero }, 
+
+                // 0x000B
+                Package (0x04) { 0x000BFFFF, 0x00, LNKD, Zero }, 
+                Package (0x04) { 0x000BFFFF, 0x01, LNKA, Zero }, 
+                Package (0x04) { 0x000BFFFF, 0x02, LNKB, Zero }, 
+                Package (0x04) { 0x000BFFFF, 0x03, LNKC, Zero }, 
+
+                // 0x000C
+                Package (0x04) { 0x000CFFFF, 0x00, LNKA, Zero }, 
+                Package (0x04) { 0x000CFFFF, 0x01, LNKB, Zero }, 
+                Package (0x04) { 0x000CFFFF, 0x02, LNKC, Zero }, 
+                Package (0x04) { 0x000CFFFF, 0x03, LNKD, Zero }, 
+
+                // 0x000D
+                Package (0x04) { 0x000DFFFF, 0x00, LNKA, Zero }, 
+                Package (0x04) { 0x000DFFFF, 0x01, LNKB, Zero }, 
+                Package (0x04) { 0x000DFFFF, 0x02, LNKC, Zero }, 
+                Package (0x04) { 0x000DFFFF, 0x03, LNKD, Zero }, 
+
+                // 0x000E
+                Package (0x04) { 0x000EFFFF, 0x00, LNKB, Zero }, 
+                Package (0x04) { 0x000EFFFF, 0x01, LNKC, Zero }, 
+                Package (0x04) { 0x000EFFFF, 0x02, LNKD, Zero }, 
+                Package (0x04) { 0x000EFFFF, 0x03, LNKA, Zero }, 
+
+                // 0x000F
+                Package (0x04) { 0x000FFFFF, 0x00, LNKC, Zero }, 
+                Package (0x04) { 0x000FFFFF, 0x01, LNKD, Zero }, 
+                Package (0x04) { 0x000FFFFF, 0x02, LNKA, Zero }, 
+                Package (0x04) { 0x000FFFFF, 0x03, LNKB, Zero }, 
+                
+                // 0x0010
+                Package (0x04) { 0x0010FFFF, 0x00, LNKD, Zero }, 
+                Package (0x04) { 0x0010FFFF, 0x01, LNKA, Zero }, 
+                Package (0x04) { 0x0010FFFF, 0x02, LNKB, Zero }, 
+                Package (0x04) { 0x0010FFFF, 0x03, LNKC, Zero }, 
+
+                // 0x0011
+                Package (0x04) { 0x0011FFFF, 0x00, LNKA, Zero }, 
+                Package (0x04) { 0x0011FFFF, 0x01, LNKB, Zero }, 
+                Package (0x04) { 0x0011FFFF, 0x02, LNKC, Zero }, 
+                Package (0x04) { 0x0011FFFF, 0x03, LNKD, Zero }, 
+
+                // 0x0012
+                Package (0x04) { 0x0012FFFF, 0x00, LNKB, Zero }, 
+                Package (0x04) { 0x0012FFFF, 0x01, LNKC, Zero }, 
+                Package (0x04) { 0x0012FFFF, 0x02, LNKD, Zero }, 
+                Package (0x04) { 0x0012FFFF, 0x03, LNKA, Zero }, 
+
+                // 0x0013
+                Package (0x04) { 0x0013FFFF, 0x00, LNKC, Zero }, 
+                Package (0x04) { 0x0013FFFF, 0x01, LNKD, Zero }, 
+                Package (0x04) { 0x0013FFFF, 0x02, LNKA, Zero }, 
+                Package (0x04) { 0x0013FFFF, 0x03, LNKB, Zero }, 
+
+                // 0x0014
+                Package (0x04) { 0x0014FFFF, 0x00, LNKD, Zero }, 
+                Package (0x04) { 0x0014FFFF, 0x01, LNKA, Zero }, 
+                Package (0x04) { 0x0014FFFF, 0x02, LNKB, Zero }, 
+                Package (0x04) { 0x0014FFFF, 0x03, LNKC, Zero }, 
+
+                // 0x0015
+                Package (0x04) { 0x0015FFFF, 0x00, LNKA, Zero }, 
+                Package (0x04) { 0x0015FFFF, 0x01, LNKB, Zero }, 
+                Package (0x04) { 0x0015FFFF, 0x02, LNKC, Zero }, 
+                Package (0x04) { 0x0015FFFF, 0x03, LNKD, Zero }, 
+
+                // 0x0016
+                Package (0x04) { 0x0016FFFF, 0x00, LNKB, Zero }, 
+                Package (0x04) { 0x0016FFFF, 0x01, LNKC, Zero }, 
+                Package (0x04) { 0x0016FFFF, 0x02, LNKD, Zero }, 
+                Package (0x04) { 0x0016FFFF, 0x03, LNKA, Zero }, 
+
+                // 0x0017
+                Package (0x04) { 0x0017FFFF, 0x00, LNKC, Zero }, 
+                Package (0x04) { 0x0017FFFF, 0x01, LNKD, Zero }, 
+                Package (0x04) { 0x0017FFFF, 0x02, LNKA, Zero }, 
+                Package (0x04) { 0x0017FFFF, 0x03, LNKB, Zero }, 
+
+                // 0x0018
+                Package (0x04) { 0x0018FFFF, 0x00, LNKD, Zero }, 
+                Package (0x04) { 0x0018FFFF, 0x01, LNKA, Zero }, 
+                Package (0x04) { 0x0018FFFF, 0x02, LNKB, Zero }, 
+                Package (0x04) { 0x0018FFFF, 0x03, LNKC, Zero }, 
+
+                // 0x0019
+                Package (0x04) { 0x0019FFFF, 0x00, LNKA, Zero }, 
+                Package (0x04) { 0x0019FFFF, 0x01, LNKB, Zero }, 
+                Package (0x04) { 0x0019FFFF, 0x02, LNKC, Zero }, 
+                Package (0x04) { 0x0019FFFF, 0x03, LNKD, Zero }, 
+
+                // 0x001A
+                Package (0x04) { 0x001AFFFF, 0x00, LNKB, Zero }, 
+                Package (0x04) { 0x001AFFFF, 0x01, LNKC, Zero }, 
+                Package (0x04) { 0x001AFFFF, 0x02, LNKD, Zero }, 
+                Package (0x04) { 0x001AFFFF, 0x03, LNKA, Zero }, 
+
+                // 0x001B
+                Package (0x04) { 0x001BFFFF, 0x00, LNKC, Zero }, 
+                Package (0x04) { 0x001BFFFF, 0x01, LNKD, Zero }, 
+                Package (0x04) { 0x001BFFFF, 0x02, LNKA, Zero }, 
+                Package (0x04) { 0x001BFFFF, 0x03, LNKB, Zero }, 
+
+                // 0x001C
+                Package (0x04) { 0x001CFFFF, 0x00, LNKD, Zero }, 
+                Package (0x04) { 0x001CFFFF, 0x01, LNKA, Zero }, 
+                Package (0x04) { 0x001CFFFF, 0x02, LNKB, Zero }, 
+                Package (0x04) { 0x001CFFFF, 0x03, LNKC, Zero }, 
+
+                // 0x001D
+                Package (0x04) { 0x001DFFFF, 0x00, LNKA, Zero }, 
+                Package (0x04) { 0x001DFFFF, 0x01, LNKB, Zero }, 
+                Package (0x04) { 0x001DFFFF, 0x02, LNKC, Zero }, 
+                Package (0x04) { 0x001DFFFF, 0x03, LNKD, Zero }, 
+
+                // 0x001E
+                Package (0x04) { 0x001EFFFF, 0x00, LNKB, Zero }, 
+                Package (0x04) { 0x001EFFFF, 0x01, LNKC, Zero }, 
+                Package (0x04) { 0x001EFFFF, 0x02, LNKD, Zero }, 
+                Package (0x04) { 0x001EFFFF, 0x03, LNKA, Zero }, 
+
+                // 0x001F
+                Package (0x04) { 0x001FFFFF, 0x00, LNKC, Zero }, 
+                Package (0x04) { 0x001FFFFF, 0x01, LNKD, Zero }, 
+                Package (0x04) { 0x001FFFFF, 0x02, LNKA, Zero }, 
+                Package (0x04) { 0x001FFFFF, 0x03, LNKB, Zero }, 
             })
             Name (_CRS, ResourceTemplate ()  // _CRS: Current Resource Settings
             {
