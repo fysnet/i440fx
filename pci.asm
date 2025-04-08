@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.16                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 6 Apr 2025                                                 *
+* Last Updated: 7 Apr 2025                                                 *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -1676,6 +1676,9 @@ pci_bios_init_bridges_04:
            mov  [bx+0x1F],al            ; store the new crc
            pop  ds
            
+           ; mark that we are a BX chipset
+           mov  byte [EBDA_DATA->chipset_i440bx],1
+           
            jmp  pci_bios_init_bridges_done
 
 pci_bios_init_bridges_05:
@@ -1783,29 +1786,13 @@ pci_bios_init_device proc near uses alld
            mov  bp,sp
            sub  sp,10
 
-pci_is_i440bx    equ [bp-1]
+;                equ [bp-1]
 pci_headt        equ [bp-2]
 pci_b_vendor_id  equ [bp-4]
 pci_b_device_id  equ [bp-6]
 pci_b_class      equ [bp-8]
 pci_b_mask       equ [bp-9]
 pci_b_init_bar   equ [bp-10]  ; byte (works as long as PCI_NUM_REGIONS < 8)
-           
-           mov  byte pci_is_i440bx,0
-
-           ; get the chipset
-           push dx
-           xor  dx,dx            ; bus = 0, devfunc = 0
-           mov  bx,PCI_VENDOR_ID
-           call pci_config_read_word
-           cmp  ax,PCI_VENDOR_ID_INTEL
-           jne  short @f
-           mov  bx,PCI_DEVICE_ID
-           call pci_config_read_word
-           cmp  ax,PCI_DEVICE_ID_INTEL_82443
-           jne  short @f
-           mov  byte pci_is_i440bx,1
-@@:        pop  dx
            
            ; dx = bus/devfunc
            mov  bx,PCI_VENDOR_ID
@@ -2039,7 +2026,7 @@ pci_map_interrupt:
            xor  ah,ah
            mov  bx,ax
            dec  bx
-           mov  al,pci_is_i440bx
+           mov  al,[EBDA_DATA->chipset_i440bx]
            call pci_slot_get_pirq
            xor  ah,ah
            mov  bx,ax

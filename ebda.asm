@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.16                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 3 Apr 2025                                                 *
+* Last Updated: 7 Apr 2025                                                 *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -132,6 +132,7 @@ EBDA_DATA  struct
   video_icon_type       byte
   video_icon_palette    word
 
+  chipset_i440bx        byte         ; are we on a i440BX chipset?
   i440_pcidev           word         ; high byte = bus, low byte = dev/func (bbbbbbbbdddddfff)
   i440_pciisa           word         ; high byte = bus, low byte = dev/func (bbbbbbbbdddddfff)
   pci_bios_io_addr      dword
@@ -440,7 +441,7 @@ EBDA_DATA  struct
 
   ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
   ;
-  unused                dup 483     ; unused / available space
+  unused                dup 482     ; unused / available space
 
 EBDA_DATA  ends         ; end of structure declaration.
 

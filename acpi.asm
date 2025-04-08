@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.16                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 3 Apr 2025                                                 *
+* Last Updated: 7 Apr 2025                                                 *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -179,6 +179,49 @@ MADT_HPET         struct
   min_tick           word    ; 
   page_protect       byte    ; 
 MADT_HPET         ends
+
+; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+; modify the DSDT because we found the BX chipset
+; on entry:
+;  ds -> EBDA
+;  fs:edi -> DSDT
+;  ax = size of DSDT
+; on return
+;  nothing
+; destroys none
+dsdt_acpi_is_bxchipset proc near uses ax cx dx esi edi
+           
+           ; save the address and size
+           mov  esi,edi
+           mov  dx,ax
+
+           ; find the 'ISA_'*'_ADR' string
+           mov  cx,ax
+isa_X_adr_loop:
+           cmp  dword fs:[edi+0],"ISA_"
+           jne  short @f
+           cmp  dword fs:[edi+5],"_ADR"
+           je   short isa_X_adr_fnd
+@@:        inc  edi
+           loop isa_X_adr_loop
+           
+           ; if we got here, we are in trouble
+           xchg cx,cx
+           ret
+
+isa_X_adr_fnd:
+           ; found it, so change the PCI2ISA device to 7
+           mov  byte fs:[edi+12],7
+           
+           ; now calculate a new crc
+           mov  edi,esi            ; restore the address
+           mov  byte fs:[edi+9],0
+           mov  ax,dx
+           call calc_checksum
+           mov  fs:[edi+9],al
+
+           ret
+dsdt_acpi_is_bxchipset endp
 
 ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 ; initialize the acpi tables
@@ -407,8 +450,16 @@ acpi_bios_init proc near uses alld ds
            loop @b
 
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+           ; if we are the BX chipset, we need to modify this DSDT
+           cmp  byte [EBDA_DATA->chipset_i440bx],1
+           jne  short @f
+           mov  ax,[EBDA_DATA->dsdt_addr_sz]
+           mov  edi,[EBDA_DATA->dsdt_addr]
+           call dsdt_acpi_is_bxchipset
+           
+           ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
            ; build the MADT table
-           mov  edi,[EBDA_DATA->madt_addr]
+@@:        mov  edi,[EBDA_DATA->madt_addr]
            mov  ax,[EBDA_DATA->madt_addr_sz]
            call memset32
            mov  dword fs:[edi+MADT_TABLE->local_apic_addr],APIC_BASE_ADDR
