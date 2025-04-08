@@ -29,7 +29,7 @@
  * which will produce:
  *   acpi_dsdt.hex
  *
- * Last Updated: 6 Apr 2025
+ * Last Updated: 7 Apr 2025
  *
  */
 DefinitionBlock ("", "DSDT", 1, "BXPC", "BXDSDT", 0x00000001)
@@ -1167,7 +1167,7 @@ DefinitionBlock ("", "DSDT", 1, "BXPC", "BXDSDT", 0x00000001)
 
         Device (ISA)
         {
-            Name (_ADR, 0x00070000)  // _ADR: Address
+            Name (_ADR, 0x00010000)  // _ADR: Address
             OperationRegion (P40C, PCI_Config, 0x60, 0x04)
             Device (RTC)
             {
@@ -1420,7 +1420,7 @@ DefinitionBlock ("", "DSDT", 1, "BXPC", "BXDSDT", 0x00000001)
             Method (_STA, 0, NotSerialized)  // _STA: Status
             {
                 Local0 = 0x0B
-                If (0x80 & PRQ0) /* \_SB_.PRQ0 */
+                If (0x80 & PRQ0 /* \_SB_.PRQ0 */)
                 {
                     Local0 = 0x09
                 }
@@ -1475,7 +1475,7 @@ DefinitionBlock ("", "DSDT", 1, "BXPC", "BXDSDT", 0x00000001)
             Method (_STA, 0, NotSerialized)  // _STA: Status
             {
                 Local0 = 0x0B
-                If (0x80 & PRQ1) /* \_SB_.PRQ1 */
+                If (0x80 & PRQ1 /* \_SB_.PRQ1 */)
                 {
                     Local0 = 0x09
                 }
@@ -1530,7 +1530,7 @@ DefinitionBlock ("", "DSDT", 1, "BXPC", "BXDSDT", 0x00000001)
             Method (_STA, 0, NotSerialized)  // _STA: Status
             {
                 Local0 = 0x0B
-                If (0x80 & PRQ2) /* \_SB_.PRQ2 */
+                If (0x80 & PRQ2 /* \_SB_.PRQ2 */)
                 {
                     Local0 = 0x09
                 }
@@ -1585,7 +1585,7 @@ DefinitionBlock ("", "DSDT", 1, "BXPC", "BXDSDT", 0x00000001)
             Method (_STA, 0, NotSerialized)  // _STA: Status
             {
                 Local0 = 0x0B
-                If (0x80 & PRQ3) /* \_SB_.PRQ3 */
+                If (0x80 & PRQ3 /* \_SB_.PRQ3 */)
                 {
                     Local0 = 0x09
                 }
