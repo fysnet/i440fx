@@ -2097,8 +2097,6 @@ optrom_skip_isa:
 @@:        ret
 pci_bios_init_optrom endp
 
-BIOS_TMP_STORAGE  equ  0x00030000  ; 128 KB used to copy the BIOS to shadow RAM
-
 ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 ; activate the shaddow ram for addresses 0xE0000 - > 0xFFFFF
 ; on entry:
@@ -2112,11 +2110,14 @@ bios_shadow_init proc near ; don't place anything here
            push ax
            push bx
 
-           ; make sure that we are reading from the ROM
+           ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+           ; make sure that we are reading from the ROM,
+           ;  and writing to physical RAM
            ; 0x59 = PAM0 = 0xF0000->0xFFFFF
            mov  bx,0x59
            call pci_config_read_byte
            and  al,0xCF
+           or   al,0x20
            call pci_config_write_byte
 
            ; 0x5E = PAM5.0 = 0xE0000->0xE3FFF
@@ -2124,6 +2125,7 @@ bios_shadow_init proc near ; don't place anything here
            mov  bx,0x5E
            call pci_config_read_byte
            and  al,0xCC
+           or   al,0x22
            call pci_config_write_byte
 
            ; 0x5F = PAM6.0 = 0xE8000->0xEBFFF
@@ -2131,29 +2133,22 @@ bios_shadow_init proc near ; don't place anything here
            mov  bx,0x5F
            call pci_config_read_byte
            and  al,0xCC
+           or   al,0x22
            call pci_config_write_byte
+
+           ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+           ; now copy the ROM to the RAM
+           mov  esi,0x000E0000
+           mov  ecx,(0x00020000 / 4)
+@@:        mov  eax,fs:[esi]     ; a read from ROM
+           mov  fs:[esi],eax     ; a write to RAM
+           add  esi,4
+           .adsize
+             loop @b
            
-           ; copy the ROM to BIOS_TMP_STORAGE
-           ; memcpy(BIOS_TMP_STORAGE, 0x000E0000, 0x20000);
-           pushd 0x00020000
-           pushd 0x000E0000
-           pushd BIOS_TMP_STORAGE
-           call memcpy32
-           add  sp,12
-
-           ; since as soon as we mark the memory as R/O,
-           ;  Bochs (and QEMU) no longer read the code,
-           ;  they read zeros. So we have to jump to our
-           ;  copied code which is in physical RAM to
-           ;  finish out the function
-           push BIOS_BASE
-           push offset bios_shadow_init_ret
-
-           ; jump to the physical RAM area of the next code
-           jmp  far ($+5),(BIOS_TMP_STORAGE >> 4)
-
-           ; change the memory PAM(s) to Write Only so that
-           ;  the write goes to physical RAM, not the ROM
+           ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+           ; change the memory PAM(s) to 'Normal Memory'
+           ; (reads and writes are to RAM)
            mov  bx,0x59
            call pci_config_read_byte
            or   al,0x30
@@ -2169,21 +2164,7 @@ bios_shadow_init proc near ; don't place anything here
            or   al,0x33
            call pci_config_write_byte
 
-           ; copy the temp ROM to physical memory
-           ; memcpy(0x000E0000, BIOS_TMP_STORAGE, 0x20000);
-           pushd 0x20000
-           pushd BIOS_TMP_STORAGE
-           pushd 0x000E0000
-           call memcpy32
-           add  sp,12
-
-           ; now return back to our BIOS code which is now
-           ;  in Shadow RAM
-.diag 0
-           retf               ; return far back to 'bios_shadow_init_ret' below
-.diag 1
-
-bios_shadow_init_ret:
+           ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
            ; save the PCI dev/func for later use
            mov  [EBDA_DATA->i440_pcidev],dx
 
