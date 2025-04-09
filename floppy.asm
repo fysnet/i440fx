@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.16                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 8 Dec 2024                                                 *
+* Last Updated: 9 Dec 2024                                                 *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -255,14 +255,14 @@ floppy_media_known endp
 ; media state in high byte, config data in low byte
 fd_media_sense:
   dw  0x0000         ; type 0 = not used here (filler word)
-  dw  0x2500         ; type 1 = 360k 5.25" disk
-  dw  0x2500         ; type 2 = 1.2meg 5.25" disk
-  dw  0x1700         ; type 3 = 720k 3.50" disk
-  dw  0x1700         ; type 4 = 1.44meg 3.50" disk
-  dw  0xD7CC         ; type 5 = 2.88meg 3.50" disk
-  dw  0x2700         ; type 6 = 160k 5.25" disk
-  dw  0x2700         ; type 7 = 180k 5.25" disk
-  dw  0x2700         ; type 8 = 320k 5.25" disk
+  dw  0x3500         ; type 1 = 360k 5.25" disk
+  dw  0x3500         ; type 2 = 1.2meg 5.25" disk
+  dw  0x3700         ; type 3 = 720k 3.50" disk
+  dw  0x3700         ; type 4 = 1.44meg 3.50" disk
+  dw  0xF7CC         ; type 5 = 2.88meg 3.50" disk
+  dw  0x3700         ; type 6 = 160k 5.25" disk
+  dw  0x3700         ; type 7 = 180k 5.25" disk
+  dw  0x3700         ; type 8 = 320k 5.25" disk
 
 ; media chs values for drive type
 ; first word is CX value, then a DH byte
