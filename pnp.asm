@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.16                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 14 Mar 2025                                                *
+* Last Updated: 22 Apr 2025                                                *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -345,35 +345,10 @@ pnp_node_03:
    db  0_1111_001b         ; end tag, 1 more byte
      db  0                 ;  0 = no crc (!0 = zero byte crc from first byte in this block?)
 
-; HPET
-pnp_node_04:
-   dw  30                  ; length 30
-   db  4                   ; handle
-   db  41h, 0D0h, 01h, 03h ; 0_10000_01110_10000__0000_0001_0000_0011b = PNP0103 = High precision event timer
-   db  8,0x80,0            ; Other System Peripheral
-   dw  0x0003              ; is not configurable, cannot be disabled
-
-   ; allocated resource configuration descriptor
-   db  1_0000110b          ; 32-bit fixed location memory range descriptor
-    dw  0x0009             ; 9 bytes in length
-     db  00011101b         ; info: 32-bit supported, high-address, non-cacheable, writable
-     dd  0xFED00000        ; base address (HPET)
-     dd  0x00001000        ; length
-   db  0_1111_001b         ; end tag, 1 more byte
-     db  0                 ;  0 = no crc (!0 = zero byte crc from first byte in this block?)
-   
-   ; possible resource configuration descriptor block:
-   db  0_1111_001b         ; end tag, 1 more byte
-     db  0                 ;  0 = no crc (!0 = zero byte crc from first byte in this block?)
-
-   ; compatible device identifiers
-   db  0_1111_001b         ; end tag, 1 more byte
-     db  0                 ;  0 = no crc (!0 = zero byte crc from first byte in this block?)
-
 ; Mouse Controller
-pnp_node_05:
+pnp_node_04:
    dw  26                  ; length 26
-   db  5                   ; handle
+   db  4                   ; handle
    db  41h, 0D0h, 0Fh, 13h ; 0_10000_01110_10000__0000_1111_0001_0011b = PNP0F13 = PS/2 Port for PS/2-style Mice
    db  9,2,0               ; Mouse Controller
    dw  0x0180              ; bits 8:7 = 11b = can only be configured at run time
@@ -397,9 +372,10 @@ pnp_node_05:
      db  0                 ;  0 = no crc (!0 = zero byte crc from first byte in this block?)
 
 ; System Board
-pnp_node_06:
+PNP_SYSTEM_BOARD  equ  pnp_node_05
+pnp_node_05:
    dw  94                  ; length 94
-   db  6                   ; handle
+   db  5                   ; handle
    db  41h, 0D0h, 0Ch, 01h ; 0_10000_01110_10000__0000_1100_0000_0001b = PNP0C01 = System Board
    db  5,0,0               ; General RAM
    dw  0x0003              ; is not configurable, cannot be disabled
@@ -462,9 +438,9 @@ pnp_node_06:
      db  0                 ;  0 = no crc (!0 = zero byte crc from first byte in this block?)
 
 ; ISA PIC (8259 Compatible)
-pnp_node_07:
+pnp_node_06:
    dw  45                  ; length 45
-   db  7                   ; handle
+   db  6                   ; handle
    db  41h, 0D0h, 00h, 00h ; 0_10000_01110_10000__0000_0000_0000_0000b = PNP0000 = AT Interrupt Controller
    db  8,0,1               ; ISA PIC (8259 Compatible)
    dw  0x0003              ; is not configurable, cannot be disabled
@@ -502,9 +478,9 @@ pnp_node_07:
      db  0                 ;  0 = no crc (!0 = zero byte crc from first byte in this block?)
 
 ; ISA System Timer
-pnp_node_08:
+pnp_node_07:
    dw  29                  ; length 29
-   db  8                   ; handle
+   db  7                   ; handle
    db  41h, 0D0h, 01h, 00h ; 0_10000_01110_10000__0000_0001_0000_0000b = PNP0100 = AT Timer
    db  8,2,1               ; ISA System Timer
    dw  0x0003              ; is not configurable, cannot be disabled
@@ -530,9 +506,9 @@ pnp_node_08:
      db  0                 ;  0 = no crc (!0 = zero byte crc from first byte in this block?)
 
 ; ISA RTC Controller
-pnp_node_09:
+pnp_node_08:
    dw  29                  ; length 29
-   db  9                   ; handle
+   db  8                   ; handle
    db  41h, 0D0h, 0Bh, 00h ; 0_10000_01110_10000__0000_1011_0000_0000b = PNP0B00 = AT Real-Time Clock
    db  8,3,1               ; ISA RTC Controller
    dw  0x0003              ; is not configurable, cannot be disabled
@@ -558,9 +534,9 @@ pnp_node_09:
      db  0                 ;  0 = no crc (!0 = zero byte crc from first byte in this block?)
 
 ; Keyboard Controller
-pnp_node_10:
+pnp_node_09:
    dw  37                  ; length 37
-   db  10                  ; handle
+   db  9                   ; handle
    db  41h, 0D0h, 03h, 03h ; 0_10000_01110_10000__0000_0011_0000_0011b = PNP0303 = IBM Enhanced (101/102-key, PS/2 mouse support)
    db  9,0,0               ; Keyboard Controller
    dw  0x000B              ; primary input device, is not configurable, cannot be disabled
@@ -592,9 +568,9 @@ pnp_node_10:
      db  0                 ;  0 = no crc (!0 = zero byte crc from first byte in this block?)
 
 ; Coprocessor
-pnp_node_11:
+pnp_node_10:
    dw  29                  ; length 29
-   db  11                  ; handle
+   db  10                  ; handle
    db  41h, 0D0h, 0Ch, 04h ; 0_10000_01110_10000__0000_0011_0000_0011b = PNP0C04 = Math Coprocessor
    db  8,0x80,0            ; Other System Peripheral
    dw  0x0003              ; is not configurable, cannot be disabled
@@ -620,9 +596,9 @@ pnp_node_11:
      db  0                 ;  0 = no crc (!0 = zero byte crc from first byte in this block?)
 
 ; ISA DMA Controller
-pnp_node_12:
+pnp_node_11:
    dw  45                  ; length 45
-   db  12                  ; handle
+   db  11                  ; handle
    db  41h, 0D0h, 02h, 00h ; 0_10000_01110_10000__0000_0010_0000_0000b = PNP0200 = AT DMA Controller
    db  8,1,1               ; ISA DMA Controller
    dw  0x0003              ; is not configurable, cannot be disabled
@@ -661,9 +637,9 @@ pnp_node_12:
      db  0                 ;  0 = no crc (!0 = zero byte crc from first byte in this block?)
 
 ; AT-style speaker sound
-pnp_node_13:
+pnp_node_12:
    dw  26                  ; length 26
-   db  13                  ; handle
+   db  12                  ; handle
    db  41h, 0D0h, 08h, 00h ; 0_10000_01110_10000__0000_1000_0000_0000b = PNP0800 = AT-style speaker sound
    db  8,0x80,0            ; Other System Peripheral
    dw  0x0003              ; is not configurable, cannot be disabled
@@ -687,9 +663,9 @@ pnp_node_13:
      db  0                 ;  0 = no crc (!0 = zero byte crc from first byte in this block?)
 
 ; General PCI Bridge
-pnp_node_14:
+pnp_node_13:
    dw  26                  ; length 26
-   db  14                  ; handle
+   db  13                  ; handle
    db  41h, 0D0h, 0Ah, 03h ; 0_10000_01110_10000__0000_1010_0000_0011b = PNP0A03 = PCI Bus
    db  6,4,0               ; General PCI Bridge
    dw  0x0003              ; is not configurable, cannot be disabled
@@ -713,9 +689,9 @@ pnp_node_14:
      db  0                 ;  0 = no crc (!0 = zero byte crc from first byte in this block?)
 
 ; Standard VGA (only used if no PCI vga found) (if PCI vga found, the floppy or hdd will overwrite this area)
-pnp_node_15:
+pnp_node_14:
    dw  70                  ; length 70
-   db  15                  ; handle
+   db  14                  ; handle
    db  41h, 0D0h, 09h, 00h ; 0_10000_01110_10000__0000_1001_0000_0000b = PNP0900 = VGA compatible
    db  3,0,0               ; VGA Compatible Controller
    dw  0x0003              ; is not configurable, cannot be disabled
@@ -759,9 +735,9 @@ pnp_node_15:
    db  0_1111_001b         ; end tag, 1 more byte
      db  0                 ;  0 = no crc (!0 = zero byte crc from first byte in this block?)
 
-pnp_node_16:
-  ; we reserved enough room for one floppy drive and two ATA controllers, each PNP_MSD_NODE_LEN bytes
-  dup (PNP_MSD_NODE_LEN * 3),0
+pnp_node_15:
+  ; we reserved enough room for one floppy drive and two ATA controllers each PNP_MSD_NODE_LEN bytes, and the HPET
+  dup (PNP_MSD_NODE_LEN * 4),0
 
 
 PNP_NODE_LIST_S struct
@@ -789,22 +765,22 @@ pnp_node_list  db  1                  ; handle
 
                db  4                  ; handle
                db  5                  ; next handle (or 0xFF for none)
-               dw  30                 ; size of node
+               dw  26                 ; size of node
                dw  offset pnp_node_04 ; offset of node
 
                db  5                  ; handle
                db  6                  ; next handle (or 0xFF for none)
-               dw  26                 ; size of node
+               dw  94                 ; size of node
                dw  offset pnp_node_05 ; offset of node
 
                db  6                  ; handle
                db  7                  ; next handle (or 0xFF for none)
-               dw  94                 ; size of node
+               dw  45                 ; size of node
                dw  offset pnp_node_06 ; offset of node
 
                db  7                  ; handle
                db  8                  ; next handle (or 0xFF for none)
-               dw  45                 ; size of node
+               dw  29                 ; size of node
                dw  offset pnp_node_07 ; offset of node
 
                db  8                  ; handle
@@ -814,45 +790,40 @@ pnp_node_list  db  1                  ; handle
 
                db  9                  ; handle
                db  10                 ; next handle (or 0xFF for none)
-               dw  29                 ; size of node
+               dw  37                 ; size of node
                dw  offset pnp_node_09 ; offset of node
 
                db  10                 ; handle
                db  11                 ; next handle (or 0xFF for none)
-               dw  37                 ; size of node
+               dw  29                 ; size of node
                dw  offset pnp_node_10 ; offset of node
 
                db  11                 ; handle
                db  12                 ; next handle (or 0xFF for none)
-               dw  29                 ; size of node
+               dw  45                 ; size of node
                dw  offset pnp_node_11 ; offset of node
 
                db  12                 ; handle
                db  13                 ; next handle (or 0xFF for none)
-               dw  45                 ; size of node
+               dw  26                 ; size of node
                dw  offset pnp_node_12 ; offset of node
 
                db  13                 ; handle
-               db  14                 ; next handle (or 0xFF for none)
+               db  0xFF               ; next handle (or 0xFF for none)
                dw  26                 ; size of node
                dw  offset pnp_node_13 ; offset of node
 
-               db  14                 ; handle
-               db  0xFF               ; next handle (or 0xFF for none)
-               dw  26                 ; size of node
-               dw  offset pnp_node_14 ; offset of node
-
-               ; we save room to add up to four more entries
-               ; (one VGA, one floppy drive, two ata controllers)
+               ; we save room to add up to five more entries
+               ; (one VGA, one floppy drive, two ata controllers, the HPET)
                ; these are added in 'pnp_initialize'
-               dup (4 * sizeof(PNP_NODE_LIST_S)),0
+               dup (5 * sizeof(PNP_NODE_LIST_S)),0
 
 ; during BIOS initialization, these will be read/write accessible.
 ; after initialization, they are read only
-pnp_node_count  db  14                ; count of valid nodes (before pnp_initialize call)
+pnp_node_count  db  13                ; count of valid nodes (before pnp_initialize call)
 pnp_node_size   dw  248               ; size of largest node
-pnp_next_node   dw  offset pnp_node_15
-pnp_next_idx    dw  (pnp_node_list + ((14 - 1) * sizeof(PNP_NODE_LIST_S))) ; *** points to the current last entry ***
+pnp_next_node   dw  offset pnp_node_14
+pnp_next_idx    dw  (pnp_node_list + ((13 - 1) * sizeof(PNP_NODE_LIST_S))) ; *** points to the current last entry ***
 
 ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 ; Initialize the PNP
@@ -869,11 +840,11 @@ pnp_initialize proc near uses eax bx cx dx ds
            ; we need to patch the extended memory value in our physical memory node
            mov  eax,[EBDA_DATA->mem_base_ram_size]
            sub  eax,0x00100000
-           mov  cs:[pnp_node_06 + ((4*12) - sizeof(dword))],eax  ; third 12-byte block, last dword of that block
+           mov  cs:[PNP_SYSTEM_BOARD + ((4*12) - sizeof(dword))],eax  ; third 12-byte block, last dword of that block
 
            ; check if a pci vga card is found
            ; if not, add a standard VGA entry
-           call pnp_add_vga
+@@:        call pnp_add_vga
 
            ; we add one floppy disk controller if we found one
            cmp  byte [EBDA_DATA->fdd_count],0
@@ -900,9 +871,73 @@ pnp_add_msd_0:
 
 @@:        add  bx,ATA_CHANNEL_SIZE
            loop short pnp_add_msd_0
+
+           ; did we find an hpet
+           cmp  byte [EBDA_DATA->found_hpet],0
+           je   short @f
+           call pnp_add_hpet
            
-           ret
+@@:        ret
 pnp_initialize endp
+
+; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+; update the list pointers incase we add another
+; on entry:
+;  cx = size of this node
+;  dx -> location
+;  ds = BIOS_BASE
+; on return
+;  nothing
+; destroys none
+pnp_unpdate_to_next proc near uses ax bx
+
+           ; update the list
+           mov  al,pnp_node_count
+           mov  bx,pnp_next_idx                ; pointer to last used entry
+           mov  [bx+PNP_NODE_LIST_S->next],al  ; mark the current last with next node
+           add  bx,sizeof(PNP_NODE_LIST_S)
+           mov  [bx+PNP_NODE_LIST_S->handle],al
+           mov  byte [bx+PNP_NODE_LIST_S->next],0xFF
+           mov  [bx+PNP_NODE_LIST_S->size],cx
+           mov  [bx+PNP_NODE_LIST_S->location],dx
+
+           ; update to this entry
+           mov  pnp_next_idx,bx
+
+           ret
+pnp_unpdate_to_next endp
+
+; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+; if a PCI VGA is not found, add a Standard VGA to the list
+; on entry:
+;  nothing
+; on return
+;  nothing
+; destroys none
+pnp_add_vga proc near uses ax bx dx si ds
+           ; search the PCI for a VGA device
+           mov  ax,0xB103
+           ;         unused   class   subclass prog int
+           mov  ecx,00000000_00000011_00000000_00000000b
+           xor  si,si
+           int  1Ah
+           jnc  short @f
+
+           mov  bx,BIOS_BASE
+           mov  ds,bx
+
+           ; no PCI VGA found, so 'increment' the entry count
+           ;  which will 'add' our standard VGA entry to the list
+           add  word pnp_next_node,70
+           inc  byte pnp_node_count ; increment the count
+
+           ; update the list
+           mov  dx,pnp_next_node
+           mov  cx,70
+           call pnp_unpdate_to_next
+
+@@:        ret
+pnp_add_vga endp
 
 ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 ; add a floppy/hard disk/cdrom to the pnp node list
@@ -970,61 +1005,68 @@ pnp_add_msd proc near uses eax bx cx dx ds
            add  word pnp_next_node,PNP_MSD_NODE_LEN
            
            ; update the list
-           mov  al,pnp_node_count
-           mov  dx,bx                          ; save location of this node
-           mov  bx,pnp_next_idx                ; pointer to last used entry
-           mov  [bx+PNP_NODE_LIST_S->next],al  ; mark the current last with next node
-           add  bx,sizeof(PNP_NODE_LIST_S)
-           mov  [bx+PNP_NODE_LIST_S->handle],al
-           mov  byte [bx+PNP_NODE_LIST_S->next],0xFF
-           mov  word [bx+PNP_NODE_LIST_S->size],PNP_MSD_NODE_LEN
-           mov  [bx+PNP_NODE_LIST_S->location],dx
-
-           ; update to this entry
-           mov  pnp_next_idx,bx
+           mov  dx,bx
+           mov  cx,PNP_MSD_NODE_LEN
+           call pnp_unpdate_to_next
 
            ret
 pnp_add_msd endp
 
 ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-; if a PCI VGA is not found, add a Standard VGA to the list
+; if a HPET was found, add a Standard HPET to the list
 ; on entry:
 ;  nothing
 ; on return
 ;  nothing
 ; destroys none
-pnp_add_vga proc near uses ax bx dx si ds
-           ; search the PCI for a VGA device
-           mov  ax,0xB103
-           ;         unused   class   subclass prog int
-           mov  ecx,00000000_00000011_00000000_00000000b
-           xor  si,si
-           int  1Ah
-           jnc  short @f
-
+pnp_add_hpet proc near uses ax bx dx si ds
            mov  bx,BIOS_BASE
            mov  ds,bx
-
-           ; no PCI VGA found, so 'increment' the entry count
-           ;  which will 'add' our standard VGA entry to the list
-           mov  dx,pnp_next_node
-           add  word pnp_next_node,70
+           
+           mov  bx,pnp_next_node    ; offset to next available space for node data
            inc  byte pnp_node_count ; increment the count
-           mov  al,pnp_node_count
+           mov  al,pnp_node_count   ;
 
-           mov  bx,pnp_next_idx
-           mov  [bx+PNP_NODE_LIST_S->next],al  ; mark the current last with next node
-           add  bx,sizeof(PNP_NODE_LIST_S)
-           mov  [bx+PNP_NODE_LIST_S->handle],al
-           mov  byte [bx+PNP_NODE_LIST_S->next],0xFF
-           mov  word [bx+PNP_NODE_LIST_S->size],70
-           mov  [bx+PNP_NODE_LIST_S->location],dx
+           ; build node
+           mov  word [bx+0],30   ; length
+           mov       [bx+2],al   ; handle
+           mov  dword [bx+3],0x0301D041 ; little_endian(0_10000_01110_10000__0000_0001_0000_0011b) = PNP0103 = High precision event timer
+           mov  byte [bx+7],8    ; 
+           mov  byte [bx+8],0x80 ; Other System Peripheral
+           mov  byte [bx+9],0    ;
+           mov  word [bx+10],0x0003 ; is not configurable, cannot be disabled
 
-           ; update to this entry
-           mov  pnp_next_idx,bx
+           ; allocated resource configuration descriptor
+           mov  byte [bx+12],1_0000110b          ; 32-bit fixed location memory range descriptor
+           mov  word [bx+13],0x0009              ; 9 bytes in length
+           mov  byte [bx+15],00011101b           ; info: 32-bit supported, high-address, non-cacheable, writable
+           mov  dword [bx+16],HPET_PHYS_ADDRESS  ; maximum base address
+           mov  dword [bx+20],0x00001000         ; length
+           
+           ; end tag
+           mov  byte [bx+24],0_1111_001b         ; end tag, 1 more byte
+           mov  byte [bx+25],0                   ;  0 = no crc (!0 = zero byte crc from first byte in this block?)
+           
+           ; possible resource configuration descriptor block:
+           ; end tag
+           mov  byte [bx+26],0_1111_001b         ; end tag, 1 more byte
+           mov  byte [bx+27],0                   ;  0 = no crc (!0 = zero byte crc from first byte in this block?)
+           
+           ; compatible device identifiers
+           ; end tag
+           mov  byte [bx+28],0_1111_001b         ; end tag, 1 more byte
+           mov  byte [bx+29],0                   ;  0 = no crc (!0 = zero byte crc from first byte in this block?)
 
-@@:        ret
-pnp_add_vga endp
+           ; update the location, size, and count
+           add  word pnp_next_node,30
+           
+           ; update the list
+           mov  dx,bx
+           mov  cx,30
+           call pnp_unpdate_to_next
+           
+           ret
+pnp_add_hpet endp
 
 ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 ; find a node and return its location

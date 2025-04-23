@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.16                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 7 Apr 2025                                                 *
+* Last Updated: 21 Apr 2025                                                *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -172,6 +172,8 @@ EBDA_DATA  struct
   madt_addr             dword        ; MADT table address
   madt_addr_sz          word         ; size of table in bytes
   hpet_addr             dword        ; ACPI HPET table address
+
+  found_hpet            byte         ; 1 = found an hpet
 
   bios_uuid             dup  16      ; the bios' uuid (we clear it to zero) (DSP0124.3.7.0.pdf, page 36 defines format)
   qemu_cfg_port         byte         ; Found QEMU config port
@@ -441,7 +443,7 @@ EBDA_DATA  struct
 
   ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
   ;
-  unused                dup 482     ; unused / available space
+  unused                dup 481     ; unused / available space
 
 EBDA_DATA  ends         ; end of structure declaration.
 

@@ -2,7 +2,7 @@ comment |*******************************************************************
 *  Copyright (c) 1984-2025    Forever Young Software  Benjamin David Lunt  *
 *                                                                          *
 *                         i440FX BIOS ROM v1.0                             *
-* FILE: tcg.asm                                                            *
+* FILE: hpet.asm                                                           *
 *                                                                          *
 * This code is freeware, not public domain.  Please use respectfully.      *
 *                                                                          *
@@ -23,84 +23,45 @@ comment |*******************************************************************
 *            https://github.com/fysnet/i440fx                              *
 *                                                                          *
 * DESCRIPTION:                                                             *
-*   tcg include file                                                       *
+*   hpet include file                                                      *
 *                                                                          *
 * BUILT WITH:   NewBasic Assembler                                         *
 *                 http://www.fysnet/newbasic.htm                           *
 *               NBASM ver 00.27.16                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 8 Dec 2024                                                 *
+* Last Updated: 22 Apr 2025                                                *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
 *                                                                          *
 ***************************************************************************|
 
+.if DO_INIT_BIOS32
+
+HPET_PHYS_ADDRESS    equ  0xFED00000
+
 ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-; Trusted Computing services function
+; detect if an hpet is available
 ; on entry:
-;  stack currently has (after we set bp):
-;   flags    cs      ip      es      ds
-;  [bp+44] [bp+42] [bp+40] [bp+38] [bp+36]
-;    edi     esi     ebp     esp     ebx     edx     ecx     eax
-;  [bp+04] [bp+08] [bp+12] [bp+16] [bp+20] [bp+24] [bp+28] [bp+32]
+;  ds -> EBDA
+;  fs -> 0x00000000:0xFFFFFFFF
 ; on return
 ;  nothing
-; destroys nothing
-tcgbios_function proc near ; don't put anything here
-           push bp
-           mov  bp,sp
-           ; sub  sp,4
-
-           ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-           ; TCG BIOS (Trusted Computing Group)
-           ; ah = 0xBB
-           ; al = service
-
-           ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-           ; 
-@@:        ;cmp  al,0x??
-           ;jne  short @f
-
-           ; TCG PC Client Specific Implementation Specification For Conventional BIOS
-           ;  (Version 1.20 FINAL/Revision 1.00/July 13, 2005/For TPM Family 1.2; Level 2)
-           ; http://www.trustedcomputinggroup.org/
-           ; https://learn.microsoft.com/en-us/previous-versions/dd424551(v=msdn.10)?redirectedfrom=MSDN
-           ; https://learn.microsoft.com/en-us/previous-versions/windows/hardware/wlk/ff567624(v=vs.85)
-           ; https://thestarman.pcministry.com/asm/mbr/W7MBR.htm
-
-           ; eax != 0 = not supported ????
-           mov  dword REG_EAX,0x12345678
-
-           ; mov  dword REG_EBX,0x41504354   ; ebx = 'TCPA' if supported
-           ; mov  word REG_CX,0x0102         ; version 1.2
-
-           ;jmp  short tcg_int1A_fail
-
-           ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-           ; unknown function call
-@@:
+; destroys none
+det_hpet_init proc near uses ax edi
            
-           ;mov  bx,$
-           ;mov  ax,0x1ABB
-           ;call unsupported
-           
+          ;mov  byte [EBDA_DATA->found_hpet],0
+           mov  edi,HPET_PHYS_ADDRESS
+           mov  eax,fs:[edi]
+           shr  eax,16
+           cmp  ax,0x8086
+           jne  short @f
+           mov  byte [EBDA_DATA->found_hpet],1
 
-tcg_int1A_fail:
-           or   word REG_FLAGS,0x0001
+@@:        ret
+det_hpet_init endp
 
-           mov  sp,bp
-           pop  bp
-           ret
-
-tcg_int1A_success:
-           mov  byte REG_AH,0x00 ; success
-           and  word REG_FLAGS,(~0x0001)
-
-           mov  sp,bp
-           pop  bp
-           ret
-tcgbios_function endp
+.endif
 
 .end

@@ -1,5 +1,5 @@
 comment |*******************************************************************
-*  Copyright (c) 1984-2024    Forever Young Software  Benjamin David Lunt  *
+*  Copyright (c) 1984-2025    Forever Young Software  Benjamin David Lunt  *
 *                                                                          *
 *                         i440FX BIOS ROM v1.0                             *
 * FILE: acpi.asm                                                           *
@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.16                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 7 Apr 2025                                                 *
+* Last Updated: 22 Apr 2025                                                *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -163,8 +163,6 @@ MADT_INT_OVERRIDE struct
   gsi                dword   ; GSI that source will signal
   flags              word    ; flags
 MADT_INT_OVERRIDE ends
-
-HPET_PHYS_ADDRESS    equ  0xFED00000
 
 MADT_HPET         struct
   header             dup  sizeof(ACPI_TABLE_HEADER)
@@ -300,7 +298,10 @@ acpi_bios_init proc near uses alld ds
            mov  [EBDA_DATA->madt_addr_sz],ax
            add  edx,eax
 
-           ; hpet address
+           ; hpet address (if available)
+           mov  dword [EBDA_DATA->hpet_addr],0
+           cmp  byte [EBDA_DATA->found_hpet],0
+           je   short @f
            add  edx,7         ; align on an 8-byte boundary
            and  edx,(~7)
            mov  [EBDA_DATA->hpet_addr],edx
@@ -308,7 +309,7 @@ acpi_bios_init proc near uses alld ds
 
            ; calculate size of these tables
            ; (must be <= 64k)
-           mov  eax,edx
+@@:        mov  eax,edx
            sub  eax,[EBDA_DATA->acpi_base_address]
            mov  [EBDA_DATA->acpi_tables_size],ax
 
@@ -499,6 +500,8 @@ acpi_bios_init proc near uses alld ds
 
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
            ; build the HPET table
+           cmp  byte [EBDA_DATA->found_hpet],0
+           je   short @f
            mov  edi,[EBDA_DATA->hpet_addr]
            mov  ax,sizeof(MADT_HPET)
            call memset32
@@ -519,6 +522,8 @@ acpi_bios_init proc near uses alld ds
            mov  eax,'TEPH'
            mov  dl,1                ; revision
            call acpi_build_header
+
+@@:
 
   ; writemem "C:\bochs\images\win98_test\dd.bin" 0x0FFF0000 34872
   ;mov  edx,[EBDA_DATA->rsdp_table]         ; 0x000F5750

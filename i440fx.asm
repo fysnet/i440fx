@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.16                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 29 Mar 2025                                                *
+* Last Updated: 22 Apr 2025                                                *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -1431,6 +1431,10 @@ rombios32_init proc near uses ds es
            call smbios_init
 
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+           ; initialize the hpet (if available)
+           call det_hpet_init
+
+           ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
            ; initialize the acpi
            call acpi_bios_init
 
@@ -1474,6 +1478,7 @@ include 'apm.asm'
 include 'mouse.asm'
 include 'printer.asm'
 include 'boot.asm'
+include 'hpet.asm'
 include 'acpi.asm'
 include 'memory.asm'
 include 'sys_man.asm'

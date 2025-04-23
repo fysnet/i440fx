@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.16                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 7 Apr 2025                                                 *
+* Last Updated: 20 Apr 2025                                                *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -1716,6 +1716,9 @@ pci_bios_init_bridges_05:
            mov  bx,0x24          ; Prefetchable Memory Base Address Register
           ;mov  eax,0x0000FFF0   ; bits 15:4 = address
            call pci_config_write_dword
+           mov  bx,0x3E          ; Bridge Control Register
+           mov  al,0x80          ; Fast back to back enable
+           call pci_config_write_byte
            
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
            ; is an AGP Device present?
@@ -1755,6 +1758,10 @@ pci_bios_init_bridges_05:
            mov  eax,ecx          ; restore the prefetch value
            call pci_config_write_dword
 
+           mov  bx,0x3E          ; Bridge Control Register
+           mov  al,0x88          ; Fast back to back enable and VGA Enable
+           call pci_config_write_byte
+
            jmp  short pci_bios_init_bridges_done
 
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -1763,10 +1770,6 @@ pci_bios_init_bridges_no_agp:
            pop  dx               ; restore the caller's bus/devfunc
            
 pci_bios_init_bridges_done:
-           mov  bx,0xEE          ; reserved area ?
-           mov  al,0x88          ; Another BIOS must set this, how would we know otherwise?
-           call pci_config_write_byte
-
            mov  sp,bp            ; restore the stack
            pop  bp
            ret
