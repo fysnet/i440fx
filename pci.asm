@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.16                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 20 Apr 2025                                                *
+* Last Updated: 14 May 2025                                                *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -43,6 +43,8 @@ comment |*******************************************************************
 PCI_FIXED_HOST_BRIDGE    equ  0x12378086  ; i440FX PCI bridge
 PCI_FIXED_HOST_BRIDGE2   equ  0x01228086  ; i430FX PCI bridge
 PCI_FIXED_HOST_BRIDGE3   equ  0x71908086  ; i440BX PCI bridge
+
+.if DO_INIT_BIOS32
 
 ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 ; this code is pmode code
@@ -557,6 +559,8 @@ pci_real_select_reg proc near uses dx
            ret
 pci_real_select_reg endp
 
+.endif
+
 .if (DO_INIT_BIOS32 == 0)
 
 pci_irq_list:
@@ -579,6 +583,64 @@ pcibios_init_sel_reg proc near uses eax
            out  dx,eax
            ret
 pcibios_init_sel_reg endp
+
+; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+; initialize the vga rom
+; on entry:
+;  eax = 
+; on return
+;  nothing
+; destroys all general
+pcibios_init_vgarom proc near
+           push bx
+           mov  ecx,eax
+           xor  bx,bx
+           mov  dl,0x58
+           call pcibios_init_sel_reg
+           mov  dx,0x0CFE
+           in   ax,dx
+           mov  al,0x22
+           cmp  ecx,0x8000
+           jbe  short @f
+           mov  ah,0x22
+@@:        out  dx,ax
+           pop  bx
+           mov  dl,0x30
+           call pcibios_init_sel_reg
+           mov  dx,0x0CFC
+           mov  eax,0x000C0001
+           out  dx,eax
+           push ds
+           mov  ax,0xC000
+           mov  ds,ax
+           mov  es,ax
+           xor  si,si
+           xor  di,di
+           push ecx
+           shr  ecx,1
+           rep
+             movsw
+           pop  ecx
+           pop  ds
+           push bx
+           xor  bx,bx
+           mov  dl,0x58
+           call pcibios_init_sel_reg
+           mov  dx,0x0CFE
+           in   ax,dx
+           or   al,0x11
+           cmp  ecx,0x8000
+           jbe  short @f
+           or   ah,0x11
+@@:        out  dx,ax
+           pop  bx
+           mov  dl,0x30
+           call pcibios_init_sel_reg
+           mov  dx,0x0CFC
+           xor  eax,eax
+           out  dx,eax
+           ret
+pcibios_init_vgarom endp
 
 ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 ; initialize the PCI
@@ -618,7 +680,7 @@ pci_init_io_loop2:
            mov  dx,0x0CFC
            in   eax,dx
            test al,0x01
-           jnz  init_io_base
+           jnz  short init_io_base
            mov  ecx,eax
            mov  eax,0xFFFFFFFF
            out  dx,eax
@@ -663,6 +725,28 @@ enable_iomem_space:
            in   al,dx
            or   al,0x03
            out  dx,al
+           
+           ; vga rom?
+           mov  dl,0x0A ;; check class code
+           call pcibios_init_sel_reg
+           mov  dx,0x0CFE
+           in   ax,dx
+           cmp  ax,0x0300 ;; class VGA
+           jne  short next_pci_dev
+           mov  dl,0x30
+           call pcibios_init_sel_reg
+           in   eax,dx
+           mov  ecx,eax
+           mov  dx,0x0CFC
+           mov  eax,0xFFFFFFFE
+           out  dx,eax
+           in   eax,dx
+           cmp  eax,ecx
+           je   short next_pci_dev
+           xor  eax,0xFFFFFFFF
+           inc  eax
+           call pcibios_init_vgarom
+
 next_pci_dev:
            mov  byte [bp-8],0x10
            inc  bx

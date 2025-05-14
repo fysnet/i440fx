@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.16                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 22 Apr 2025                                                *
+* Last Updated: 14 May 2025                                                *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -440,7 +440,9 @@ normal_post:
            ; initialize the harddrive(s)/cdrom(s)
            call init_harddrive
            call ata_init
+.if DO_INIT_BIOS32
            call sata_detect
+.endif
            call ata_detect
 
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -1070,12 +1072,14 @@ int1A_handler:
            call tcgbios_function
            jmp  short int1A_handler_done
 
+.if DO_INIT_BIOS32
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
            ; PCI Services?
 @@:        cmp  ah,0xB1
            jne  short @f
            call pcibios_function
            jmp  short int1A_handler_done
+.endif
 
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
            ; unknown service (Win95 calls this one with ax=0xB002)
@@ -1529,7 +1533,6 @@ bios32_structure:
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
            ; pci irq routing table
            ; (must be in the 0xF000 segment)
-.if DO_INIT_BIOS32
 .para
 pci_routing_table_structure:
   db  0x24, 0x50, 0x49, 0x52     ; "$PIR" signature
@@ -1624,7 +1627,6 @@ pci_routing_table_structure_start:
   db  0                          ; reserved
 pci_routing_table_structure_end:
 .checksum (32 + (6 * 16)), 31  ; do a byte checksum of the last (32 + (6 * 16)) bytes, placing the result at offset 31
-.endif
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
            ; next static item goes here
 

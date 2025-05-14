@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.16                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 3 Apr 2025                                                 *
+* Last Updated: 14 May 2025                                                *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -1854,7 +1854,10 @@ hd_sv_lba_high  equ  [bp-0x12]
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
            ; controller reset
            cmp  ah,0x00
+           je   short int13_ata_reset
+           cmp  ah,0x0D
            jne  short @f
+int13_ata_reset:
            mov  ax,hd_sv_device
            push es
            push ds

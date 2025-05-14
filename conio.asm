@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.16                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 31 Jan 2025                                                *
+* Last Updated: 14 May 2025                                                *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -496,6 +496,7 @@ put_banner proc near uses ds es
            cmp  ax,0xB0C5
            ja   short put_banner_no_bga
 
+.if DO_INIT_BIOS32
            ; find the BGA PCI device
            mov  ax,0xB102        ; find device
            mov  dx,0x1234        ; vendor id
@@ -547,6 +548,7 @@ put_banner proc near uses ds es
            mov  byte [EBDA_DATA->video_use_graphic],1
            mov  byte [EBDA_DATA->video_use_bga],1
            jmp  put_banner_have_bga
+.endif
 
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
            ; we first need to see if we have a VBE 2.0+ video 

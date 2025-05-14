@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.16                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 22 Apr 2025                                                *
+* Last Updated: 14 May 2025                                                *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -872,10 +872,12 @@ pnp_add_msd_0:
 @@:        add  bx,ATA_CHANNEL_SIZE
            loop short pnp_add_msd_0
 
+.if DO_INIT_BIOS32
            ; did we find an hpet
            cmp  byte [EBDA_DATA->found_hpet],0
            je   short @f
            call pnp_add_hpet
+.endif
            
 @@:        ret
 pnp_initialize endp
@@ -1012,6 +1014,7 @@ pnp_add_msd proc near uses eax bx cx dx ds
            ret
 pnp_add_msd endp
 
+.if DO_INIT_BIOS32
 ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 ; if a HPET was found, add a Standard HPET to the list
 ; on entry:
@@ -1067,6 +1070,7 @@ pnp_add_hpet proc near uses ax bx dx si ds
            
            ret
 pnp_add_hpet endp
+.endif
 
 ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 ; find a node and return its location

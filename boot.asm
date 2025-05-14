@@ -124,7 +124,7 @@ boot_drive         equ [bp-7]   ; byte
            shl  cx,2
            shr  ax,cl
            ; ax = ax_nibbles[cx] = boot device
-
+           
            push cs
            pop  ds
 
@@ -269,11 +269,8 @@ boot_media_okay:
            
            mov  si,offset boot_failure_str1
            call display_string
-.if DO_INIT_BIOS32
            jmp  nonbootable_device
-.else
-           jmp  short nonbootable_device
-.endif
+           
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
            ; are we a USB disk
 boot_type_type_usb:
@@ -350,8 +347,10 @@ boot_jump_to_sector:
            
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
            ; disable the ioapic and restore the 8259 pic
+.if DO_INIT_BIOS32
            call apic_disable
            call ioapic_disable
+.endif     
            
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
            ; restore the screen mode
@@ -365,7 +364,12 @@ boot_jump_to_sector:
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
            ; make sure that we write the escd back to the flash rom
            call far offset bios_commit_escd,BIOS_BASE
-
+           
+           ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+           ; The 'Ghost OS' Guest assumes the BIOS has initialized the FPU
+           ; How many others will (in error by the way)
+           fninit
+           
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
            ; setup the registers and jump to the boot code
            mov  dl,boot_drive

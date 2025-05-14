@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.16                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 11 Dec 2024                                                *
+* Last Updated: 14 May 2025                                                *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -165,20 +165,21 @@ diskette_param_table:
     ;  Since no provisions are made for multiple drive types, most
     ;  values in this table are ignored.  I set parameters for 1.44M
     ;  floppy here
-    db  0xAF
-    db  0x02                     ; head load time 0000001, DMA used
-    db  0x25
-    db  0x02
-    db    18
-    db  0x1B
-    db  0xFF
-    db  0x6C
-    db  0xF6
-    db  0x0F
-    db  0x08
-    db    79                     ; maximum track
-    db     0                     ; data transfer rate
-    db     4                     ; drive type in cmos
+    db  0xAF        ; first specify byte (bits 7:4=step rate, 3:0=head unload time)
+    db  0x02        ; second specify byte (bits 7:1=head load time 0x01, 0=DMA used)
+    db  0x25        ; delay until motor off (in clock ticks) 37 = 2.0+ seconds
+    db  0x02        ; bytes per sector (00h = 128, 01h = 256, 02h = 512, 03h = 1024)
+    db    18        ; sectors per track
+    db  0x1B        ; gap length
+    db  0xFF        ; data length (ignored if bytes per sector > 0)
+    db  0x6C        ; gap length when formatting
+    db  0xF6        ; format filler byte
+    db  0x0F        ; head settle time in milliseconds
+    db  0x08        ; motor start time in 1/8th seconds (8 = 1 second)
+    ; remaining only used by IBM Surepath BIOS???
+    db    79        ; maximum track number
+    db     0        ; data transfer rate
+    db     4        ; drive type in cmos
 
 ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 ; does floppy drive exist
@@ -528,6 +529,7 @@ fd_sv_type      equ  [bp-0x07]
            cmp  ah,0x00
            jne  short @f
            ; todo: why don't we actually reset the device?  (call floppy_reset_controller)
+           ;call floppy_reset_controller
            xor  al,al
            call set_floppy_cylinder
            jmp  fd_int13_success
@@ -1210,7 +1212,7 @@ fd_int13_success:
            mov  byte REG_AH,0x00 ; success
 fd_int13_success_noah:
            mov  al,REG_AH
-           mov  es:[BDA_FDD_LAST_STATUS],al
+           mov  [BDA_FDD_LAST_STATUS],al
            and  word REG_FLAGS,(~0x0001)
 
 @@:        pop  es
