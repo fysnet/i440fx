@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.16                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 14 May 2025                                                *
+* Last Updated: 16 May 2025                                                *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -90,13 +90,7 @@ outfile 'i440fx.bin'
            
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
            ;  Check for 386+ machine.
-           pushf                   ; save the interrupt bit
-           push 0F000h             ; if bits 15:14 are still set
-           popf                    ;  after pushing/poping to/from
-           pushf                   ;  the flags register then we have
-           pop  ax                 ;  a 386+
-           and  ax,0F000h          ;
-@@:        jz   short @b           ; it's not a 386+
+           call cpu_is32bit
            
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
            ; since we have a working conio that uses int 10h
@@ -410,7 +404,7 @@ normal_post:
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
            ; we can finally print our banner
            call put_banner
-
+           
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
            ; if we marked (or already marked) that the cmos crc
            ;  was bad, give message

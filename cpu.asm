@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.16                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 8 Dec 2024                                                 *
+* Last Updated: 16 May 2025                                                *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -76,7 +76,47 @@ MTRR_MEMTYPE_WP    equ  5
 MTRR_MEMTYPE_WB    equ  6
 
 ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-; detect the cpu
+; detect a 386
+; on entry:
+;  nothing
+; on return
+;  nothing
+;  * if not at least a 386, we don't return *
+; destroys none
+cpu_is32bit proc near uses ax cx
+            pushf                   ; save the original flags value
+
+            mov  cx,0121h           ; If CH can be shifted by 21h,
+            shl  ch,cl              ; then it's an 8086, because
+            jz   short cpu_nota386  ; a 186+ limits shift counts.
+            push sp                 ; If SP is pushed as its
+            pop  ax                 ;  original value, then
+            cmp  ax,sp              ;  it's a 286+.
+            jne  short cpu_nota386  ;
+            mov  ax,7000h           ; if bits 12,13,14 are still set
+            push ax                 ; after pushing/poping to/from
+            popf                    ; the flags register then we have
+            pushf                   ; a 386+
+            pop  ax                 ;
+            and  ax,7000h           ;
+            cmp  ax,7000h           ;
+            jne  short cpu_nota386  ;
+
+            popf                    ; restore the original flags value
+            ret
+
+            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+            ; not a 386. Print something stating so.
+            ;  However, we haven't initialized the video yet,
+            ;  so we can't do anything but maybe beep...
+cpu_nota386:
+
+           ;popf                    ; restore the original flags value
+@@:         jmp  short @b
+cpu_is32bit endp
+
+; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+; detect a 486+
 ; on entry:
 ;  ds -> EBDA
 ; on return
