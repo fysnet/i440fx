@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.16                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 30 Jan 2025                                                *
+* Last Updated: 25 May 2025                                                *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -267,6 +267,7 @@ boot_media_okay:
            cmp  ax,0x55AA        ; some incorrectly use this too
            je   short boot_jump_to_sector
            
+boot_failure_1:
            mov  si,offset boot_failure_str1
            call display_string
            jmp  nonbootable_device
@@ -289,7 +290,7 @@ boot_type_type_usb:
            mov  si,offset boot_failure_str3
            call bios_printf
            add  sp,2
-           jmp  short nonbootable_device
+           jmp  nonbootable_device
 
 boot_usb_good:
            mov  boot_drive,ah
@@ -337,8 +338,16 @@ boot_type_try_bev:
 
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
            ; 'jump' to the newly loaded sector
+           ;  (first checking if the first few bytes are not zeros)
 boot_jump_to_sector:
-           
+           push ds
+           mov  bx,boot_offset
+           mov  ax,boot_segment
+           mov  ds,ax
+           cmp  word [bx],0x0000
+           pop  ds
+           je   boot_failure_1
+
            ; incase the boot code 'returns' (ret, retf, iret),
            ;  lets have it return to INT 18h
            pushf

@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.16                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 14 May 2025                                                *
+* Last Updated: 25 May 2025                                                *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -587,7 +587,7 @@ pcibios_init_sel_reg endp
 ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 ; initialize the vga rom
 ; on entry:
-;  eax = 
+;  eax = PCI ROM size (32k or 64k)
 ; on return
 ;  nothing
 ; destroys all general

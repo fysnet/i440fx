@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.16                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 21 Apr 2025                                                *
+* Last Updated: 25 May 2025                                                *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -903,7 +903,15 @@ delay_ticks_and_check_for_keystroke_str proc near uses ax cx si
            or   al,al
            pop  ax
            loopz @b
-           mov  si,offset boot_count_down_str_crlf
+           jnz  short @f
+
+           ; if no key press, print zero seconds
+           push 0
+           mov  si,offset boot_count_down_str
+           call bios_printf
+           add  sp,2
+
+@@:        mov  si,offset boot_count_down_str_crlf
            call bios_printf
            ret
 delay_ticks_and_check_for_keystroke_str endp
