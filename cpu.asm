@@ -30,14 +30,12 @@ comment |*******************************************************************
 *               NBASM ver 00.27.16                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 16 May 2025                                                *
+* Last Updated: 24 Sept 2025                                               *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
 *                                                                          *
 ***************************************************************************|
-
-.if DO_INIT_BIOS32
 
 cpu_not_supported_str  db "A 80x586 CPU w/MSR's and CPUID is required...",13,10,0
 
@@ -114,6 +112,8 @@ cpu_nota386:
            ;popf                    ; restore the original flags value
 @@:         jmp  short @b
 cpu_is32bit endp
+
+.if DO_INIT_BIOS32
 
 ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 ; detect a 486+

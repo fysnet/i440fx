@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.16                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 16 May 2025                                                *
+* Last Updated: 24 Sept 2025                                               *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -52,7 +52,11 @@ comment |*******************************************************************
 
 include 'i440fx.inc'
 
+.ifdef BX_QEMU
+outfile 'i440fx_qemu.bin'
+.else
 outfile 'i440fx.bin'
+.endif
 
 .code
 

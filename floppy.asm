@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.16                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 14 May 2025                                                *
+* Last Updated: 24 Sept 2025                                               *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -568,17 +568,19 @@ fd_int13_transfer:
            mov  al,REG_DH
            mov  fd_sv_head,ax
            
-           ; if head > 1, count > 72, or count == 0, or sector == 0, error
-           mov  ax,fd_sv_count
-           or   ax,ax
-           jz   fd_int13_fail
-           cmp  ax,72
-           ja   fd_int13_fail
-           cmp  word fd_sv_sector,00
-           je   fd_int13_fail
-           cmp  word fd_sv_head,1
-           ja   fd_int13_fail
+           ; check the parameters to be good, returning carry if bad
+           push dx                ; save the drive
+           mov  al,fd_sv_type     ; type of drive
+           mov  bx,fd_sv_count    ; sectors to transfer
+           mov  cx,fd_sv_sector   ; starting sector (1 based)
+           mov  dx,fd_sv_head     ; current head number
+           call fd_check_params   ; check these parameters
+           pop  dx                ; restore the drive
+           jnc  short fd_int13_transfer_0
+           mov  byte REG_AL,0     ; we transferred zero sectors
+           jmp  fd_int13_fail
 
+fd_int13_transfer_0:
            ; see if media in the drive and type is known
            call floppy_media_known
            or   al,al
@@ -1220,5 +1222,57 @@ fd_int13_success_noah:
            pop  bp
            ret
 int13_diskette_function endp
+
+; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+; check that the parameters passed are within range
+;  not allowing to cross a cylinder boundary
+;  (which will catch crossing past the last cylinder)
+; on entry:
+;  al = disk type
+;  bx = sector count
+;  cx = starting sector
+;  dx = starting head
+; on return
+;  if error:
+;    ah = error code
+;    carry set
+;  if no error
+;    carry clear
+; preserves all other used registers
+fd_check_params proc near uses si
+           
+           ; retrieve the max values and store offset in si
+           xor  ah,ah
+           imul si,ax,3
+
+           ; if the count is zero, error
+           or   bx,bx
+           jz   short fd_check_params_bad
+           
+           ; if the starting sector is zero, error
+           or   cx,cx
+           jz   short fd_check_params_bad
+           
+           ; if increasing the sector by the count of sectors to 'transfer' rolls over
+           ;  and increments the cylinder (head > count of heads), return error.
+           add  cx,bx
+           dec  cx
+           movzx ax,byte cs:[si+fd_media_chs+0] ; get the spt for this type of disk
+           cmp  cx,ax        ; if we didn't roll over the spt, we are good
+           jbe  short fd_check_params_good
+
+           inc  dx           ; else, increment the head
+           movzx ax,byte cs:[si+fd_media_chs+2] ; get the head count for this type of disk
+           cmp  dx,ax        ; if we didn't roll over the head, we are good
+           jbe  short fd_check_params_good
+
+fd_check_params_bad:
+           stc
+           ret
+           
+fd_check_params_good:
+           clc
+           ret
+fd_check_params endp
 
 .end

@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.16                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 25 May 2025                                                *
+* Last Updated: 24 Sept 2025                                               *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -2184,6 +2184,108 @@ optrom_skip_isa:
 @@:        ret
 pci_bios_init_optrom endp
 
+
+; I don't know why yet, but for some reason, QEMU doesn't like the way I did this below
+;  so I have reverted back to this technique (when using QEMU) for now.
+.ifdef BX_QEMU
+
+BIOS_TMP_STORAGE  equ  0x00030000  ; 128 KB used to copy the BIOS to shadow RAM
+
+; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+; activate the shaddow ram for addresses 0xE0000 - > 0xFFFFF
+; on entry:
+;  ds = EBDA
+;  dh = bus
+;  dl = devfunc
+; on return
+;  nothing
+; destroys nothing
+bios_shadow_init proc near ; don't place anything here
+           push ax
+           push bx
+
+           ; make sure that we are reading from the ROM
+           ; 0x59 = PAM0 = 0xF0000->0xFFFFF
+           mov  bx,0x59
+           call pci_config_read_byte
+           and  al,0xCF
+           call pci_config_write_byte
+
+           ; 0x5E = PAM5.0 = 0xE0000->0xE3FFF
+           ;        PAM5.1 = 0xE4000->0xE7FFF
+           mov  bx,0x5E
+           call pci_config_read_byte
+           and  al,0xCC
+           call pci_config_write_byte
+
+           ; 0x5F = PAM6.0 = 0xE8000->0xEBFFF
+           ;        PAM6.1 = 0xEC000->0xEFFFF
+           mov  bx,0x5F
+           call pci_config_read_byte
+           and  al,0xCC
+           call pci_config_write_byte
+           
+           ; copy the ROM to BIOS_TMP_STORAGE
+           ; memcpy(BIOS_TMP_STORAGE, 0x000E0000, 0x20000);
+           pushd 0x00020000
+           pushd 0x000E0000
+           pushd BIOS_TMP_STORAGE
+           call memcpy32
+           add  sp,12
+
+           ; since as soon as we mark the memory as R/O,
+           ;  Bochs (and QEMU) no longer read the code,
+           ;  they read zeros. So we have to jump to our
+           ;  copied code which is in physical RAM to
+           ;  finish out the function
+           push BIOS_BASE
+           push offset bios_shadow_init_ret
+
+           ; jump to the physical RAM area of the next code
+           jmp  far ($+5),(BIOS_TMP_STORAGE >> 4)
+
+           ; change the memory PAM(s) to Write Only so that
+           ;  the write goes to physical RAM, not the ROM
+           mov  bx,0x59
+           call pci_config_read_byte
+           or   al,0x30
+           call pci_config_write_byte
+
+           mov  bx,0x5E
+           call pci_config_read_byte
+           or   al,0x33
+           call pci_config_write_byte
+
+           mov  bx,0x5F
+           call pci_config_read_byte
+           or   al,0x33
+           call pci_config_write_byte
+
+           ; copy the temp ROM to physical memory
+           ; memcpy(0x000E0000, BIOS_TMP_STORAGE, 0x20000);
+           pushd 0x20000
+           pushd BIOS_TMP_STORAGE
+           pushd 0x000E0000
+           call memcpy32
+           add  sp,12
+
+           ; now return back to our BIOS code which is now
+           ;  in Shadow RAM
+.diag 0
+           retf               ; return far back to 'bios_shadow_init_ret' below
+.diag 1
+
+bios_shadow_init_ret:
+           ; save the PCI dev/func for later use
+           mov  [EBDA_DATA->i440_pcidev],dx
+
+           pop  bx
+           pop  ax
+           ret                ; is a near ret
+bios_shadow_init endp
+
+.else
+
 ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 ; activate the shaddow ram for addresses 0xE0000 - > 0xFFFFF
 ; on entry:
@@ -2259,6 +2361,8 @@ bios_shadow_init proc near ; don't place anything here
            pop  ax
            ret                ; is a near ret
 bios_shadow_init endp
+
+.endif
 
 ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 ; mark r/o for addresses. ex: 0xC0000 - > 0xDFFFF

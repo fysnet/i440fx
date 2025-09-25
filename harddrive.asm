@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.16                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 14 May 2025                                                *
+* Last Updated: 24 Sept 2025                                               *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -1901,14 +1901,17 @@ hd_int13_transfer:
            mov  al,REG_DH
            mov  hd_sv_head,ax
 
-           ; if count > 128, or count == 0, or sector == 0, error
-           cmp  word hd_sv_count,0
-           je   hd_int13_fail
-           cmp  word hd_sv_count,128
-           ja   hd_int13_fail
-           cmp  word hd_sv_sector,0
-           je   hd_int13_fail
-           
+           ; check the parameters to be good, returning carry if bad
+           mov  ax,hd_sv_count    ; sectors to transfer
+           mov  cx,hd_sv_sector   ; starting sector (1 based)
+           mov  dx,hd_sv_head     ; current head number
+           mov  si,hd_sv_cylinder ; current cylinder number
+           call hd_check_params   ; check these parameters
+           jnc  short hd_int13_transfer_0
+           mov  byte REG_AL,0     ; we transferred zero sectors
+           jmp  hd_int13_fail
+
+hd_int13_transfer_0:
            ; check that the chs value is within our lchs value
            mov  ax,[bx+EBDA_DATA->ata_0_0_lchs_cyl]
            cmp  hd_sv_cylinder,ax
@@ -2595,5 +2598,64 @@ int13_edd_error:
            pop  bp
            ret
 int13_edd  endp
+
+; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+; check that the parameters passed are within range
+;  not allowing to cross a cylinder boundary
+;  (which will catch crossing past the last cylinder)
+; on entry:
+;  ax = sector count
+;  bx ->EBDA_DATA->device
+;  cx = starting sector
+;  dx = starting head
+;  si = cylinder
+; on return
+;  if error:
+;    ah = error code
+;    carry set
+;  if no error
+;    carry clear
+; preserves all other used registers
+hd_check_params proc near
+           
+           ; if the count is zero, error
+           or   ax,ax
+           jz   short hd_check_params_bad
+
+           ; if the count is greater than 128
+           cmp  ax,128
+           ja   short hd_check_params_bad
+           
+           ; if the starting sector is zero, error
+           or   cx,cx
+           jz   short hd_check_params_bad
+
+           ; if we are not on the last cylinder, then no need to check further
+           inc  si
+           cmp  si,[bx+EBDA_DATA->ata_0_0_lchs_cyl]
+           jb   short hd_check_params_good
+           
+           ; if increasing the sector by the count of sectors to 'transfer' rolls over
+           ;  and increments the cylinder (head > count of heads), return error.
+           add  cx,ax
+           dec  cx
+           mov  ax,[bx+EBDA_DATA->ata_0_0_lchs_spt] ; get the spt for this type of disk
+           cmp  cx,ax        ; if we didn't roll over the spt, we are good
+           jbe  short hd_check_params_good
+
+           inc  dx           ; else, increment the head
+           mov  ax,[bx+EBDA_DATA->ata_0_0_lchs_heads] ; get the head count for this type of disk
+           dec  ax
+           cmp  dx,ax        ; if we didn't roll over the head, we are good
+           jbe  short hd_check_params_good
+
+hd_check_params_bad:
+           stc
+           ret
+           
+hd_check_params_good:
+           clc
+           ret
+hd_check_params endp
 
 .end
