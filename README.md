@@ -33,6 +33,9 @@ The documentation can be found at [https://fysnet.github.io/i440fx/](https://fys
    `romimage: file=$BXSHARE/bios/i440fx.bin, flash_data="escd.bin"`
     
    (substituting `$BXSHARE` for an actual path if you don't have the `BXSHARE` environment variable initialized)
+  
+  Recommended addition:\
+  `cpu: model=broadwell_ult`
 
 * You can use this BIOS with QEMU as well using the following parameters:
 
