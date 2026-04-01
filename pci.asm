@@ -1,5 +1,5 @@
 comment |*******************************************************************
-*  Copyright (c) 1984-2025    Forever Young Software  Benjamin David Lunt  *
+*  Copyright (c) 1984-2026    Forever Young Software  Benjamin David Lunt  *
 *                                                                          *
 *                         i440FX BIOS ROM v1.0                             *
 * FILE: pci.asm                                                            *
@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.16                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 24 Sept 2025                                               *
+* Last Updated: 31 March 2026                                              *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -887,6 +887,7 @@ pcibios_init_set_elcr endp
 
 ;PCI_ADDRESS_SPACE_MEM           equ  0x00
 PCI_ADDRESS_SPACE_IO            equ  0x01
+PCI_ADDRESS_SPACE_MEM_64_BIT    equ  0x04
 PCI_ADDRESS_SPACE_MEM_PREFETCH  equ  0x08
 
 PCI_ROM_SLOT            equ  6
@@ -1873,7 +1874,7 @@ pci_bios_init_device proc near uses alld
            mov  bp,sp
            sub  sp,10
 
-;                equ [bp-1]
+pci_b_type       equ [bp-1]
 pci_headt        equ [bp-2]
 pci_b_vendor_id  equ [bp-4]
 pci_b_device_id  equ [bp-6]
@@ -2012,6 +2013,7 @@ pci_memory_mappings_1:
            ; if nothing there don't do it
            or   eax,eax          ; if size = 0, nothing here
            jz   pci_memory_mappings_next
+           mov  pci_b_type,al    ; save for later
            ; if we are on bus 0, go ahead and do it
            cmp  dh,0
            je   short @f
@@ -2020,7 +2022,7 @@ pci_memory_mappings_1:
            and  al,PCI_ADDRESS_SPACE_MEM_PREFETCH
            cmp  pci_b_mask,al
            pop  ax
-           jne  short pci_memory_mappings_next
+           jne  pci_memory_mappings_next
 
            ; size = ~(return & ~0xF) + 1
 @@:        mov  edi,eax
@@ -2077,6 +2079,25 @@ pci_memory_mappings2:           ; edi = size
            ; mark that we did this bar/region
            mov  al,1
            shl  al,cl
+           or   pci_b_init_bar,al
+
+           ; if the BAR is 64-bit, clear the top half and mark as used
+           mov  al,pci_b_type   ; restore the type of this BAR
+           and  al,0x06
+           cmp  al,PCI_ADDRESS_SPACE_MEM_64_BIT
+           jne  short pci_memory_mappings_next
+           
+           ; clear out the high dword and mark it as used
+           ;   (cx = current BAR, dx = pci dev/func)
+           xor  eax,eax
+           mov  bx,cx
+           inc  bx
+           call pci_set_io_region_addr
+           
+           ; mark that we did this bar/region as well
+           mov  al,1
+           shl  al,cl
+           shl  al,1
            or   pci_b_init_bar,al
            
 pci_memory_mappings_next:
