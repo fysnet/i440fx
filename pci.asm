@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.16                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 31 March 2026                                              *
+* Last Updated: 9 Aug 2026                                                 *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -1675,12 +1675,20 @@ pci_bios_init_bridges_00:
            jb   short @b
 
            ; write them
+           push dx               ; save bus/devfunc
            mov  ax,pci_elcr
            mov  dx,0x04D0
            out  dx,al
            mov  al,ah
            inc  dx
            out  dx,al
+           pop  dx               ; restore bus/devfunc
+           
+           ; enable coprocessor error function
+           mov  bx,0x4E          ; register 0x4E
+           mov  al,0x23          ; 
+           call pci_config_write_byte
+           
            jmp  pci_bios_init_bridges_done
 
 pci_bios_init_bridges_01:
