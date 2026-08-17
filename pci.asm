@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.16                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 9 Aug 2026                                                 *
+* Last Updated: 17 Aug 2026                                                *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -1684,12 +1684,17 @@ pci_bios_init_bridges_00:
            out  dx,al
            pop  dx               ; restore bus/devfunc
            
+           ; only enable the coprocessor error function if
+           ;  we only have one cpu
+           cmp  word [EBDA_DATA->smp_cpus],1
+           jne  short @f
+
            ; enable coprocessor error function
            mov  bx,0x4E          ; register 0x4E
            mov  al,0x23          ; 
            call pci_config_write_byte
            
-           jmp  pci_bios_init_bridges_done
+@@:        jmp  pci_bios_init_bridges_done
 
 pci_bios_init_bridges_01:
            cmp  ax,PCI_DEVICE_ID_INTEL_82441
