@@ -785,6 +785,13 @@ init_pci_irqs proc near uses ds
            in   ax,dx
            cmp  ax,[si+12]       ; check irq router
            jne  pci_init_end
+
+           mov  dl,0x4C
+           call pcibios_init_sel_reg
+           mov  dx,0x0CFE
+           mov  al,0x23          ; enable coprocessor error function
+           out  dx,al
+
            mov  dl,[si+34]
            call pcibios_init_sel_reg
            push bx               ; save irq router bus + devfunc
