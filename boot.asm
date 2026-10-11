@@ -1,5 +1,5 @@
 comment |*******************************************************************
-*  Copyright (c) 1984-2025    Forever Young Software  Benjamin David Lunt  *
+*  Copyright (c) 1984-2026    Forever Young Software  Benjamin David Lunt  *
 *                                                                          *
 *                         i440FX BIOS ROM v1.0                             *
 * FILE: boot.asm                                                           *
@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.16                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 25 May 2025                                                *
+* Last Updated: 11 Oct 2026                                                *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -201,11 +201,6 @@ boot_invalid_boot_device:
            mov  al,10
            call display_char
 
-           ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-           ; for older software, disable the A20 line ?
-           ;xor  al,al
-           ;call set_enable_a20
-           
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
            ; now we can try to load the media
            
@@ -380,11 +375,22 @@ boot_jump_to_sector:
            fninit
            
            ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+           ; set or clear the A20 line
+           ;  read from the CMOS and if bit 1 of reg 2D is set, set the A20 line.
+           ;  if it is clear, clear the A20 line
+.if INIT_A20_LINE
+           mov  al,0x2D
+           call cmos_get_byte
+           and  al,(1<<1)
+           shr  al,1
+           call set_enable_a20
+.endif
+           ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
            ; setup the registers and jump to the boot code
            mov  dl,boot_drive
            mov  ax,BIOS_BASE2
            mov  es,ax
-           xor  ax,ax            ; I can find nowhere where it states ds=0
+           xor  ax,ax            ; I can't find nowhere where it states ds=0
            mov  ds,ax            ; however, most references say they might be
            mov  di,offset pnpbios_structure
            jmp  far boot_offset

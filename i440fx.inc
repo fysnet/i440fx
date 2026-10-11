@@ -1,5 +1,5 @@
 comment |*******************************************************************
-*  Copyright (c) 1984-2025    Forever Young Software  Benjamin David Lunt  *
+*  Copyright (c) 1984-2026    Forever Young Software  Benjamin David Lunt  *
 *                                                                          *
 *                         i440FX BIOS ROM v1.0                             *
 * FILE: cmos.asm                                                           *
@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.16                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 5 Feb 2025                                                 *
+* Last Updated: 11 Oct 2026                                                *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -46,6 +46,9 @@ BIOS_BASE2        equ  0xF000
 ; set to 1 to add debug code
 DO_DEBUG          equ  0
 DO_SERIAL_DEBUG   equ  0
+
+; Do the Set/Clear A20 line just before we jump to 0x07C00
+INIT_A20_LINE     equ  0
 
 ; what version of the ACPI specs we support
 ; 0 = 1.0 (though we specify x.1 in the headers)
