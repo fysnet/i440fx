@@ -1,5 +1,5 @@
 comment |*******************************************************************
-*  Copyright (c) 1984-2025    Forever Young Software  Benjamin David Lunt  *
+*  Copyright (c) 1984-2026    Forever Young Software  Benjamin David Lunt  *
 *                                                                          *
 *                         i440FX BIOS ROM v1.0                             *
 * FILE: cpu.asm                                                            *
@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.16                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 24 Sept 2025                                               *
+* Last Updated: 02 Nov 2026                                                *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -574,7 +574,10 @@ smp_probe  proc near uses alld ds es
 
            mov  ecx,MSR_FEATURE_CTRL
            rdmsr
-           or   eax,FEATURE_CTRL_VMX   ;  or   eax,(FEATURE_CTRL_LOCK | FEATURE_CTRL_VMX) ; bochs Panics if we set the LOCK bit
+           test eax,FEATURE_CTRL_LOCK
+           jnz  short smp_probe_done
+           
+           or   eax,(FEATURE_CTRL_LOCK | FEATURE_CTRL_VMX)
            wrmsr
 
 smp_probe_done:
