@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.16                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 02 Nov 2026                                                *
+* Last Updated: 7 Nov 2026                                                 *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -533,9 +533,11 @@ smp_probe  proc near uses alld ds es
            call init_apic
            jc   short smp_probe_done
            
+.if IOAPIC_ENABLE
            ; try to initalize the IOAPIC
            call init_ioapic
            jc   short smp_probe_done
+.endif
            
            ; copy the AP boot code to AP_BOOT_ADDR
            push word cs:[smp_ap_boot_code_start_sz]

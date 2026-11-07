@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.16                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 11 Oct 2026                                                *
+* Last Updated: 7 Nov 2026                                                 *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -352,6 +352,14 @@ APIC_REG_PERFORM      equ  0x340
 APIC_REG_LINT0        equ  0x350
 APIC_REG_LINT1        equ  0x360
 APIC_REG_LERROR       equ  0x370
+
+;;; We currently can't use the IOAPIC since apic_eoi() assumes FS will
+;;;  always have a base of 0 and a limit of 0xFFFFFFFF.  As soon as
+;;;  the Guest takes over, it can modify FS and the GDT and we no long
+;;;  can assume this.  More work will need to be done to make this
+;;;  work again.
+;;; We still allow the BIOS to report that this may be an IOAPIC available.
+IOAPIC_ENABLE         equ 0   ; set to 1 to use the ioapic
 
 IOAPIC_BASE_ADDR      equ  0xFEC00000
 IOAPIC_REG_ID         equ  0x000

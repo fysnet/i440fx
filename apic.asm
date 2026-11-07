@@ -1,5 +1,5 @@
 comment |*******************************************************************
-*  Copyright (c) 1984-2025    Forever Young Software  Benjamin David Lunt  *
+*  Copyright (c) 1984-2026    Forever Young Software  Benjamin David Lunt  *
 *                                                                          *
 *                         i440FX BIOS ROM v1.0                             *
 * FILE: apic.asm                                                           *
@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.16                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 14 May 2025                                                *
+* Last Updated: 7 Nov 2026                                                 *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -184,6 +184,21 @@ init_apic_error:
            ret
 init_apic  endp
 
+; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+; APIC Spourious interrupt vector
+; simply returns, no IOE needed
+; on entry:
+;  nothing
+; on return
+;  nothing
+; destroys none
+int7F_handler:
+           iret
+
+
+; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+; io apic starts here
+.if IOAPIC_ENABLE
 
 IOAPIC_HANDLER_LEN  equ 10
 
@@ -271,17 +286,6 @@ int5F_handler:
            call far offset int77_handler_0,BIOS_BASE
            call apic_eoi
            iret           
-
-; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-; APIC Spourious interrupt vector
-; simply returns, no IOE needed
-; on entry:
-;  nothing
-; on return
-;  nothing
-; destroys none
-int7F_handler:
-           iret
 
 ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 ; APIC EOI
@@ -380,6 +384,7 @@ init_ioapic_error:
            stc
            ret
 init_ioapic endp
+.endif
 
 ; =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 ; 'disable' the APIC
