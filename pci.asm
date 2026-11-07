@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.16                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 17 Aug 2026                                                *
+* Last Updated: 7 Nov 2026                                                 *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -481,7 +481,7 @@ pci_real_nextdev2:
            jb   short pci_real_too_small
            stosw                 ; size of our return data
            mov  si,offset pci_routing_table_structure_start
-           les  di,es:[di+2]
+           les  di,es:[di]
            mov  cx,ax
            cld
            rep
