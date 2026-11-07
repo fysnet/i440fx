@@ -1,5 +1,5 @@
 comment |*******************************************************************
-*  Copyright (c) 1984-2025    Forever Young Software  Benjamin David Lunt  *
+*  Copyright (c) 1984-2026    Forever Young Software  Benjamin David Lunt  *
 *                                                                          *
 *                         i440FX BIOS ROM v1.0                             *
 * FILE: xhci.asm                                                           *
@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.16                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 8 Dec 2024                                                 *
+* Last Updated: 7 Nov 2026                                                 *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -1674,6 +1674,13 @@ xhci_address_address    equ  [bp-6]
            movzx ecx,byte es:[esi+USB_CONTROLLER->context_size]
            mov  dword fs:[eax+0],0x00000000
            mov  dword fs:[eax+4],0x00000003   ; slot context and ep0
+           
+           ; the slot state and device address must be zero when sending the SET ADDRESS command
+           push eax
+           lea  eax,fs:[ebx+USB_DEVICE->slot_context]
+           mov  byte fs:[eax+xHCI_SLOT_CONTEXT->slot_state],0
+           mov  byte fs:[eax+xHCI_SLOT_CONTEXT->device_address],0
+           pop  eax
            
            ; write the slot context
            add  eax,ecx
