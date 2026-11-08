@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.16                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 7 Nov 2026                                                 *
+* Last Updated: 31 March 2026                                              *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -788,9 +788,11 @@ init_pci_irqs proc near uses ds
 
            mov  dl,0x4C
            call pcibios_init_sel_reg
+           push bx
            mov  dx,0x0CFE
            mov  al,0x23          ; enable coprocessor error function
            out  dx,al
+           pop  bx
 
            mov  dl,[si+34]
            call pcibios_init_sel_reg
@@ -1690,17 +1692,18 @@ pci_bios_init_bridges_00:
            inc  dx
            out  dx,al
            pop  dx               ; restore bus/devfunc
-           
+
            ; only enable the coprocessor error function if
            ;  we only have one cpu
            cmp  word [EBDA_DATA->smp_cpus],1
            jne  short @f
 
            ; enable coprocessor error function
-           mov  bx,0x4E          ; register 0x4E
-           mov  al,0x23          ; 
-           call pci_config_write_byte
-           
+           ;;;; This doesn't let WinXP boot.....
+           ;mov  bx,0x4E          ; register 0x4E
+           ;mov  al,0x23          ; 
+           ;call pci_config_write_byte
+
 @@:        jmp  pci_bios_init_bridges_done
 
 pci_bios_init_bridges_01:
