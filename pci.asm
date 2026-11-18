@@ -30,7 +30,7 @@ comment |*******************************************************************
 *               NBASM ver 00.27.16                                         *
 *          Command line: nbasm i440fx /z<enter>                            *
 *                                                                          *
-* Last Updated: 07 Nov 2026                                                *
+* Last Updated: 18 Nov 2026                                                *
 *                                                                          *
 ****************************************************************************
 * Notes:                                                                   *
@@ -938,6 +938,7 @@ PCI_DEVICE_ID_INTEL_82371SB_1     equ  0x7010
 PCI_DEVICE_ID_INTEL_82371AB_0     equ  0x7110
 PCI_DEVICE_ID_INTEL_82371AB       equ  0x7111
 PCI_DEVICE_ID_INTEL_82371AB_3     equ  0x7113
+PCI_DEVICE_ID_INTEL_ICH7_IDE      equ  0x27DF
 
 PCI_VENDOR_ID_IBM                 equ  0x1014
 PCI_VENDOR_ID_APPLE               equ  0x106B
@@ -1936,6 +1937,8 @@ pci_b_init_bar   equ [bp-10]  ; byte (works as long as PCI_NUM_REGIONS < 8)
            cmp  ax,PCI_DEVICE_ID_INTEL_82371SB_1
            je   short @f
            cmp  ax,PCI_DEVICE_ID_INTEL_82371AB
+           je   short @f
+           cmp  ax,PCI_DEVICE_ID_INTEL_ICH7_IDE
            jne  short pci_ide_not_intel
 @@:        ; PIIX3/PIIX4 IDE
            mov  bx,0x40
